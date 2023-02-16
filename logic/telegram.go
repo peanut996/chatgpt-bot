@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 var (
 	chatId int64
 	bot    *tgbotapi.BotAPI
+	offset int = 0
 )
 
 func init() {
@@ -37,4 +39,55 @@ func SendMessageToBot(sentence string) string {
 		return err.Error()
 	}
 	return response
+}
+
+func FetchUpdates() {
+	config := tgbotapi.NewUpdate(offset)
+	config.Timeout = 60
+
+	for update := range bot.GetUpdatesChan(config) {
+		go handleUpdate(update)
+	}
+}
+
+func handleUpdate(update tgbotapi.Update) {
+	if update.Message == nil {
+		return
+	}
+	log.Printf("[%d] From [%s]: %s", update.UpdateID, update.Message.From.UserName, update.Message.Text)
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+	if update.Message.IsCommand() {
+		switch update.Message.Command() {
+		case "ping":
+			msg.Text = "pong"
+		default:
+			msg.Text = "I don't know that command"
+		}
+	} else {
+		if update.Message.Text != "" {
+			msg = tgbotapi.NewMessage(update.Message.Chat.ID, ChatWithAI(update.Message.Text))
+		}
+	}
+	bot.Send(msg)
+}
+
+func RefreshLastestOffset() {
+	o := 0
+
+	u := tgbotapi.UpdateConfig{}
+	u.Timeout = 60
+
+	updates, err := bot.GetUpdates(u)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	for _, update := range updates {
+		if update.UpdateID >= o {
+			o = update.UpdateID + 1
+		}
+	}
+	fmt.Println("Starting from offset " + strconv.Itoa(o))
+	offset = o
 }

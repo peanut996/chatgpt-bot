@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -26,15 +25,13 @@ func init() {
 }
 
 func ChatWithAI(sentence string) string {
-	ctx := context.Background()
-	resp, err := client.Completion(ctx, gpt3.CompletionRequest{
+	resp, err := client.Completion(context.Background(), gpt3.CompletionRequest{
 		Prompt:    []string{sentence},
 		MaxTokens: gpt3.IntPtr(4000),
 		Echo:      false,
 	})
 	if err != nil {
-		return "unknown error"
+		return err.Error()
 	}
-	fmt.Println(resp.Choices[0].Text)
 	return resp.Choices[0].Text
 }

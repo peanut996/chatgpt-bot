@@ -1,11 +1,10 @@
 package main
 
 import (
-	"chatgpt-bot/api"
+	"chatgpt-bot/logic"
 	"fmt"
 	"log"
 
-	gin "github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -17,11 +16,14 @@ func init() {
 }
 
 func main() {
-	fmt.Println("hello world")
-	r := gin.Default()
-	r.GET("/chat", api.Chat)
-	err := r.Run(":8080")
-	if err != nil {
-		fmt.Println(err)
-	}
+	log.Println("Start ChatGPT3 bot...")
+
+	log.Println("Start fetching offset...")
+	// logic.RefreshLastestOffset()
+	log.Println("Fetching offset Completed..")
+
+	log.Println("Start Fetching Updates...")
+	logic.FetchUpdates()
+
+	fmt.Println("process exited")
 }
