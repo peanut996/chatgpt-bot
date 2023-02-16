@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/joho/godotenv"
@@ -25,13 +26,22 @@ func init() {
 }
 
 func ChatWithAI(sentence string) string {
-	resp, err := client.Completion(context.Background(), gpt3.CompletionRequest{
-		Prompt:    []string{sentence},
-		MaxTokens: gpt3.IntPtr(4000),
-		Echo:      false,
-	})
-	if err != nil {
-		return err.Error()
+	var resp *gpt3.CompletionResponse
+	var err error
+	for i := 0; i < 10; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*300)
+		defer cancel()
+		resp, err = client.Completion(ctx, gpt3.CompletionRequest{
+			Prompt:    []string{sentence},
+			MaxTokens: gpt3.IntPtr(4000),
+			Echo:      false,
+		})
+		if err != nil {
+			log.Println(err)
+			continue
+		} else {
+			return resp.Choices[0].Text
+		}
 	}
-	return resp.Choices[0].Text
+	return "exceed max retry."
 }
