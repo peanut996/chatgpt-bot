@@ -17,6 +17,7 @@ import (
 var (
 	client        gpt3.Client
 	isEngineReady bool = false
+	engineUrl     string
 )
 
 func init() {
@@ -26,6 +27,13 @@ func init() {
 	}
 	apiKey := os.Getenv("OPEN_AI_API_KEY")
 	engine := os.Getenv("OPEN_AI_ENGINE")
+
+	if os.Getenv("ENGINE_URL") != "" {
+		engineUrl = os.Getenv("ENGINE_URL")
+	} else {
+		engineUrl = "http://127.0.0.1:5000"
+	}
+
 	c := gpt3.NewClient(apiKey, gpt3.WithDefaultEngine(engine))
 	client = c
 
@@ -62,7 +70,7 @@ func ChatWithChatGPT(sentence string) (string, error) {
 	}
 	// encode sentence
 	encodeSentence := url.QueryEscape(sentence)
-	resp, err := http.Get("http://127.0.0.1:5000/chat?sentence=" + encodeSentence)
+	resp, err := http.Get(engineUrl + "/chat?sentence=" + encodeSentence)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -89,7 +97,7 @@ func GetChatGPTResponseWithRetry(sentence string) string {
 }
 
 func healthCheck() bool {
-	resp, err := http.Get("http://127.0.0.1:5000/ping")
+	resp, err := http.Get(engineUrl + "/ping")
 	if err != nil || resp.StatusCode != 200 {
 		return false
 	}

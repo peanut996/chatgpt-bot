@@ -2,6 +2,19 @@ version: '3'
 
 services:
   bot:
-    build: .
-    container_name: bot
+    build: 
+      context: .
+      dockerfile: GoDockerfile
+    container_name: BotClient
+    restart: always
+    environment:
+      - ENGINE_URL=http://engine:5000
+    depends_on:
+      - engine
+
+  engine:
+    build: 
+      context: .
+      dockerfile: PythonDockerfile
+    container_name: BotEngine
     restart: always

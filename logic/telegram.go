@@ -55,7 +55,8 @@ func NewChatTask(question string, chat, from int64) *ChatTask {
 	}
 }
 
-func SendTaskToChannel(question string, chat, from int64) {
+func sendTaskToChannel(question string, chat, from int64) {
+	session.Store(from, &struct{}{})
 	log.Printf("[SendTaskToChannel] with question %s, chat id: %d, from: %d", question, chat, from)
 	chatTask := NewChatTask(question, chat, from)
 	TaskChannel <- chatTask
@@ -112,27 +113,28 @@ func handleUpdate(update tgbotapi.Update) {
 	}
 	log.Printf("[BotUpdate] update id:[%d] from [%s] : %s", update.UpdateID, update.Message.From.String(), update.Message.Text)
 
-	from := update.Message.From.ID
+	msg, hasSentChatTask := handleUserMessage(update)
+	if !hasSentChatTask {
+		bot.Send(msg)
+	}
 
+}
+
+func canUserChat(from, chat int64) bool {
 	_, thisUserHasMessage := session.Load(from)
 
 	if thisUserHasMessage {
-		log.Println("[MessageLimiter] this user has message, ignore this message. from: ", update.Message.From.ID)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+		msg := tgbotapi.NewMessage(chat, "")
 		msg.Text = "you are chatting with me, please wait for a while."
 		bot.Send(msg)
-		return
-	} else {
-		session.Store(from, &struct{}{})
-		msg, hasSentChatTask := handleUserMessage(update)
-		if !hasSentChatTask {
-			bot.Send(msg)
-			defer session.Delete(from)
-		}
+		return false
 	}
+	return true
 }
 
 func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, hasSentChatTask bool) {
+	_, thisUserHasMessage := session.Load(update.Message.From.ID)
+
 	m := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	msg = &m
 	hasSentChatTask = false
@@ -142,24 +144,37 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 			msg.Text = "pong"
 		case "chat":
 			if strings.Trim(update.Message.CommandArguments(), " ") != "" {
-				SendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID)
-				hasSentChatTask = true
+				if !thisUserHasMessage {
+					sendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID)
+					hasSentChatTask = true
+				} else {
+					log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+					sendRateLimitMessage(update.Message.Chat.ID)
+				}
 			} else {
 				msg.Text = "Please provide a sentence."
-				return msg, false
 			}
 		default:
 			msg.Text = "I don't know that command"
 		}
 	} else {
 		if strings.Trim(update.Message.Text, " ") != "" {
-			SendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID)
-			hasSentChatTask = true
+			if !thisUserHasMessage {
+				sendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID)
+				hasSentChatTask = true
+			} else {
+				log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+				sendRateLimitMessage(update.Message.Chat.ID)
+			}
 		} else {
 			msg.Text = "Please provide a sentence."
 		}
 	}
 	return msg, hasSentChatTask
+}
+
+func sendRateLimitMessage(chat int64) {
+	bot.Send(tgbotapi.NewMessage(chat, "you are chatting with me, please wait for a while."))
 }
 
 func loopAndFinishChatTask() {
