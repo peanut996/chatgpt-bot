@@ -2,7 +2,11 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -45,4 +49,23 @@ func ChatWithAI(sentence string) string {
 		}
 	}
 	return "exceed max retry."
+}
+
+func GetChatGPTResponse(sentence string) string {
+	// encode sentence
+	encodeSentence := url.QueryEscape(sentence)
+	resp, err := http.Get("http://127.0.0.1:5000/chat?sentence=" + encodeSentence)
+	if err != nil {
+		log.Println(err)
+		return err.Error()
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return err.Error()
+	}
+	log.Println("response from chatgpt: ", string(body))
+	data := make(map[string]string, 0)
+	json.Unmarshal(body, &data)
+	return data["message"]
 }

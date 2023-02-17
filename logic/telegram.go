@@ -64,7 +64,7 @@ func handleUpdate(update tgbotapi.Update) {
 			msg.Text = "pong"
 		case "chat":
 			if strings.Trim(update.Message.CommandArguments(), " ") != "" {
-				msg.Text = ChatWithAI(update.Message.CommandArguments())
+				msg.Text = GetChatGPTResponse(update.Message.CommandArguments())
 			} else {
 				msg.Text = "Please provide a sentence."
 			}
