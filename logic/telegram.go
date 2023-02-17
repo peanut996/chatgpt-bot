@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
@@ -61,12 +62,19 @@ func handleUpdate(update tgbotapi.Update) {
 		switch update.Message.Command() {
 		case "ping":
 			msg.Text = "pong"
+		case "chat":
+			if strings.Trim(update.Message.CommandArguments(), " ") != "" {
+				msg.Text = ChatWithAI(update.Message.CommandArguments())
+			} else {
+				msg.Text = "Please provide a sentence."
+			}
+
 		default:
 			msg.Text = "I don't know that command"
 		}
 	} else {
-		if update.Message.Text != "" {
-			msg = tgbotapi.NewMessage(update.Message.Chat.ID, ChatWithAI(update.Message.Text))
+		if strings.Trim(update.Message.Text, " ") != "" {
+			msg.Text = ChatWithAI(update.Message.Text)
 		}
 	}
 	bot.Send(msg)

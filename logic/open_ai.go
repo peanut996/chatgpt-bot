@@ -29,6 +29,7 @@ func ChatWithAI(sentence string) string {
 	var resp *gpt3.CompletionResponse
 	var err error
 	for i := 0; i < 10; i++ {
+		log.Println("send request to open ai, text: ", sentence)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*300)
 		defer cancel()
 		resp, err = client.Completion(ctx, gpt3.CompletionRequest{
