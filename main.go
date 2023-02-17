@@ -16,14 +16,9 @@ func init() {
 }
 
 func main() {
-	log.Println("Start ChatGPT3 bot...")
-
-	log.Println("Start fetching offset...")
-	// logic.RefreshLastestOffset()
-	log.Println("Fetching offset Completed..")
-
-	log.Println("Start Fetching Updates...")
+	log.Println("[Main] Start ChatGPT3 bot...")
+	log.Println("[Main] Start Fetching Updates...")
 	logic.FetchUpdates()
 
-	fmt.Println("process exited")
+	fmt.Println("[Main] process exited")
 }

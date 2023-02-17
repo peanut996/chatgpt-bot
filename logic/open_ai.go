@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	client gpt3.Client
+	client        gpt3.Client
+	isEngineReady bool = false
 )
 
 func init() {
@@ -27,6 +28,8 @@ func init() {
 	engine := os.Getenv("OPEN_AI_ENGINE")
 	c := gpt3.NewClient(apiKey, gpt3.WithDefaultEngine(engine))
 	client = c
+
+	go checkChatGPTEngine()
 }
 
 func ChatWithAI(sentence string) string {
@@ -51,22 +54,62 @@ func ChatWithAI(sentence string) string {
 	return "exceed max retry."
 }
 
-func GetChatGPTResponse(sentence string) string {
-	log.Println("send request to chatgpt, text: ", sentence)
+func ChatWithChatGPT(sentence string) (string, error) {
+	log.Println("[ChatGPT] send request to chatgpt, text: ", sentence)
+
+	if !isEngineReady {
+		return "chatgpt engine is not ready, please wait a moment.", nil
+	}
 	// encode sentence
 	encodeSentence := url.QueryEscape(sentence)
 	resp, err := http.Get("http://127.0.0.1:5000/chat?sentence=" + encodeSentence)
 	if err != nil {
 		log.Println(err)
-		return err.Error()
+		return "", err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
-		return err.Error()
+		return "", err
 	}
-	log.Println("response from chatgpt: ", string(body))
+	log.Println("[ChatGPT] response from chatgpt: ", string(body))
 	data := make(map[string]string, 0)
 	json.Unmarshal(body, &data)
-	return data["message"]
+	return data["message"], nil
+}
+
+func GetChatGPTResponseWithRetry(sentence string) string {
+	for i := 0; i < 10; i++ {
+		resp, err := ChatWithChatGPT(sentence)
+		if err == nil {
+			return resp
+		}
+	}
+	return "Get gpt bot response fail, exceed max retry 10 times."
+}
+
+func healthCheck() bool {
+	resp, err := http.Get("http://127.0.0.1:5000/ping")
+	if err != nil || resp.StatusCode != 200 {
+		return false
+	}
+	return true
+}
+
+func checkChatGPTEngine() {
+	for {
+		status := healthCheck()
+		if !status {
+			log.Println("[HealthCheck] chatgpt engine is not ready")
+			isEngineReady = false
+		} else {
+			isEngineReady = true
+			log.Println("[HealthCheck] chatgpt engine is ready")
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func GetIsEngineReady() bool {
+	return isEngineReady
 }

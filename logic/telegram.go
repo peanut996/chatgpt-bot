@@ -56,7 +56,7 @@ func NewChatTask(question string, chat, from int64) *ChatTask {
 }
 
 func SendTaskToChannel(question string, chat, from int64) {
-	log.Printf("SendTaskToChannel with question %s, chat id: %d, from: %d", question, chat, from)
+	log.Printf("[SendTaskToChannel] with question %s, chat id: %d, from: %d", question, chat, from)
 	chatTask := NewChatTask(question, chat, from)
 	TaskChannel <- chatTask
 }
@@ -69,7 +69,8 @@ func (t *ChatTask) Send() {
 }
 
 func (t *ChatTask) GetAnswerFromChatGPT() {
-	t.Answer = GetChatGPTResponse(t.Question)
+	a := GetChatGPTResponseWithRetry(t.Question)
+	t.Answer = a
 }
 
 func (t *ChatTask) GetAnswerWithGPT() {
@@ -109,7 +110,7 @@ func handleUpdate(update tgbotapi.Update) {
 	if update.Message == nil {
 		return
 	}
-	log.Printf("[%d] From [%s]: %s", update.UpdateID, update.Message.From.UserName, update.Message.Text)
+	log.Printf("[BotUpdate] update id:[%d] from [%s] : %s", update.UpdateID, update.Message.From.String(), update.Message.Text)
 
 	from := update.Message.From.ID
 
