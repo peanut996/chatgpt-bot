@@ -160,7 +160,7 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	} else {
 		if strings.Trim(update.Message.Text, " ") != "" {
 			if !thisUserHasMessage {
-				sendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID)
+				sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID)
 				hasSentChatTask = true
 			} else {
 				log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)

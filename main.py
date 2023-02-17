@@ -6,9 +6,9 @@ from bottle import route, run ,request
 @route('/chat')
 def chat():
     sentence = request.query.sentence
-    logging.info(f"Received sentence: {sentence}")
+    logging.info(f"[Engine] Request: {sentence}")
     res = chat_with_chatgpt(sentence)
-    logging.info(f"Response: {res}")
+    logging.info(f"[Engine] Response: {res}")
     return {"message": res}
 
 @route('/ping')
