@@ -2,3 +2,4 @@
 .idea
 .vscode
 __pycache__
+__debug_bin

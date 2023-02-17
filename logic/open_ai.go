@@ -52,6 +52,7 @@ func ChatWithAI(sentence string) string {
 }
 
 func GetChatGPTResponse(sentence string) string {
+	log.Println("send request to chatgpt, text: ", sentence)
 	// encode sentence
 	encodeSentence := url.QueryEscape(sentence)
 	resp, err := http.Get("http://127.0.0.1:5000/chat?sentence=" + encodeSentence)
