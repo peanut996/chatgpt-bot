@@ -6,4 +6,14 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
+
+ENV MY_PROXY_URL="http://192.168.31.249:7890"
+ENV HTTP_PROXY=$MY_PROXY_URL \
+    HTTPS_PROXY=$MY_PROXY_URL \
+    FTP_PROXY=$MY_PROXY_URL \
+    http_proxy=$MY_PROXY_URL \
+    https_proxy=$MY_PROXY_URL \
+    ftp_proxy=$MY_PROXY_URL
+
+
 CMD ["python", "main.py"]
