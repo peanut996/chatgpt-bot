@@ -3,7 +3,6 @@ package logic
 import (
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +19,6 @@ type ChatTask struct {
 }
 
 var (
-	chatId      int64
 	bot         *tgbotapi.BotAPI
 	offset      int = 0
 	session     *sync.Map
@@ -33,14 +31,12 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
-	id, _ := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
 	b, err := tgbotapi.NewBotAPI(token)
 
 	if err != nil {
 		panic(err)
 	}
 	bot = b
-	chatId = id
 	session = &sync.Map{}
 	TaskChannel = make(chan *ChatTask, 1)
 
@@ -89,8 +85,19 @@ func FetchUpdates() {
 	config := tgbotapi.NewUpdate(offset)
 	config.Timeout = 60
 
-	for update := range bot.GetUpdatesChan(config) {
-		go handleUpdate(update)
+	botChannel := bot.GetUpdatesChan(config)
+	for {
+		select {
+		case update, ok := <-botChannel:
+			if !ok {
+				botChannel = bot.GetUpdatesChan(config)
+				log.Println("[FetchUpdates] channel closed, fetch again")
+				continue
+			}
+			go handleUpdate(update)
+		case <-time.After(30 * time.Second):
+			log.Println("[FetchUpdates] timeout, fetch again")
+		}
 	}
 }
 
