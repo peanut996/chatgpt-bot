@@ -40,7 +40,9 @@ func ChatWithChatGPT(sentence string) (string, error) {
 		return "chatgpt engine is not ready, please wait a moment.", nil
 	}
 	// encode sentence
+	// set timeout
 	encodeSentence := url.QueryEscape(sentence)
+	http.DefaultClient.Timeout = 300 * time.Second
 	resp, err := http.Get(engineUrl + "/chat?sentence=" + encodeSentence)
 	if err != nil {
 		log.Println(err)
@@ -61,13 +63,11 @@ func ChatWithChatGPT(sentence string) (string, error) {
 }
 
 func GetChatGPTResponseWithRetry(sentence string) string {
-	for i := 0; i < 10; i++ {
-		resp, err := ChatWithChatGPT(sentence)
-		if err == nil {
-			return resp
-		}
+	resp, err := ChatWithChatGPT(sentence)
+	if err == nil {
+		return resp
 	}
-	return "Get gpt bot response fail, exceed max retry 10 times."
+	return "get from chatgpt timeout, please try again later."
 }
 
 func healthCheck() bool {
