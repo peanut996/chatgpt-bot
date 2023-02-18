@@ -58,6 +58,7 @@ func sendTaskToChannel(question string, chat, from int64, msgID int) {
 	log.Printf("[SendTaskToChannel] with question %s, chat id: %d, from: %d", question, chat, from)
 	chatTask := NewChatTask(question, chat, from, msgID)
 	TaskChannel <- chatTask
+	chatTask.SendTyping()
 }
 
 func (t *ChatTask) Send() {
@@ -71,6 +72,11 @@ func (t *ChatTask) Send() {
 func (t *ChatTask) GetAnswerFromChatGPT() {
 	a := GetChatGPTResponseWithRetry(t.Question)
 	t.Answer = a
+}
+
+func (t *ChatTask) SendTyping() {
+	action := tgbotapi.NewChatAction(t.Chat, tgbotapi.ChatTyping)
+	bot.Send(action)
 }
 
 func (t *ChatTask) Finish() {
