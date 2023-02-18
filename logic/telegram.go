@@ -96,7 +96,6 @@ func FetchUpdates() {
 			}
 			go handleUpdate(update)
 		case <-time.After(30 * time.Second):
-			log.Println("[FetchUpdates] timeout, fetch again")
 		}
 	}
 }
@@ -168,7 +167,6 @@ func loopAndFinishChatTask() {
 			log.Println("[LoopAndFinishChatTask] got a task to finish")
 			task.Finish()
 		case <-time.After(30 * time.Second):
-			log.Println("[LoopAndFinishChatTask] timeout after 30s")
 		}
 
 	}

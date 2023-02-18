@@ -10,12 +10,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/PullRequestInc/go-gpt3"
 	"github.com/joho/godotenv"
 )
 
 var (
-	client        gpt3.Client
 	isEngineReady bool = false
 	engineUrl     string
 )
@@ -25,17 +23,12 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	apiKey := os.Getenv("OPEN_AI_API_KEY")
-	engine := os.Getenv("OPEN_AI_ENGINE")
 
 	if os.Getenv("ENGINE_URL") != "" {
 		engineUrl = os.Getenv("ENGINE_URL")
 	} else {
 		engineUrl = "http://127.0.0.1:5000"
 	}
-
-	c := gpt3.NewClient(apiKey, gpt3.WithDefaultEngine(engine))
-	client = c
 
 	go checkChatGPTEngine()
 }
@@ -93,7 +86,6 @@ func checkChatGPTEngine() {
 			isEngineReady = false
 		} else {
 			isEngineReady = true
-			log.Println("[HealthCheck] chatgpt engine is ready")
 		}
 		time.Sleep(10 * time.Second)
 	}
