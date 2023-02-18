@@ -74,10 +74,6 @@ func (t *ChatTask) GetAnswerFromChatGPT() {
 	t.Answer = a
 }
 
-func (t *ChatTask) GetAnswerWithGPT() {
-	t.Answer = ChatWithAI(t.Question)
-}
-
 func (t *ChatTask) Finish() {
 	log.Printf("[Finish] start chat task with question %s, chat id: %d, from: %d", t.Question, t.Chat, t.From)
 	defer session.Delete(t.From)
@@ -87,15 +83,6 @@ func (t *ChatTask) Finish() {
 
 	log.Printf("[Finish] end chat task with question %s, chat id: %d, from: %d", t.Question, t.Chat, t.From)
 
-}
-
-func SendMessageToBot(sentence string) string {
-	response := ChatWithAI(sentence)
-	_, err := bot.Send(tgbotapi.NewMessage(chatId, response))
-	if err != nil {
-		return err.Error()
-	}
-	return response
 }
 
 func FetchUpdates() {
