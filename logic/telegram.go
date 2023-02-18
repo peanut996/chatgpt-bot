@@ -107,18 +107,6 @@ func handleUpdate(update tgbotapi.Update) {
 
 }
 
-func canUserChat(from, chat int64) bool {
-	_, thisUserHasMessage := session.Load(from)
-
-	if thisUserHasMessage {
-		msg := tgbotapi.NewMessage(chat, "")
-		msg.Text = "you are chatting with me, please wait for a while."
-		bot.Send(msg)
-		return false
-	}
-	return true
-}
-
 func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, hasSentChatTask bool) {
 	_, thisUserHasMessage := session.Load(update.Message.From.ID)
 
@@ -127,6 +115,8 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	hasSentChatTask = false
 	if update.Message.IsCommand() {
 		switch update.Message.Command() {
+		case "start":
+			msg.Text = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you."
 		case "ping":
 			msg.Text = "pong"
 		case "chat":
