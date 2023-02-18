@@ -12,10 +12,11 @@ import (
 )
 
 type ChatTask struct {
-	Question string
-	Answer   string
-	Chat     int64
-	From     int64
+	Question  string
+	Answer    string
+	Chat      int64
+	From      int64
+	MessageID int
 }
 
 var (
@@ -43,18 +44,19 @@ func init() {
 	go loopAndFinishChatTask()
 }
 
-func NewChatTask(question string, chat, from int64) *ChatTask {
+func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
 	return &ChatTask{
-		Question: question,
-		Chat:     chat,
-		From:     from,
+		Question:  question,
+		Chat:      chat,
+		From:      from,
+		MessageID: int(msgID),
 	}
 }
 
-func sendTaskToChannel(question string, chat, from int64) {
+func sendTaskToChannel(question string, chat, from int64, msgID int) {
 	session.Store(from, &struct{}{})
 	log.Printf("[SendTaskToChannel] with question %s, chat id: %d, from: %d", question, chat, from)
-	chatTask := NewChatTask(question, chat, from)
+	chatTask := NewChatTask(question, chat, from, msgID)
 	TaskChannel <- chatTask
 }
 
@@ -62,6 +64,7 @@ func (t *ChatTask) Send() {
 	msg := tgbotapi.NewMessage(t.Chat, t.Question)
 	msg.ParseMode = "markdown"
 	msg.Text = t.Answer
+	msg.ReplyToMessageID = t.MessageID
 	bot.Send(msg)
 }
 
@@ -119,6 +122,11 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	m := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	msg = &m
 	hasSentChatTask = false
+
+	if shouldIgnoreMsg(update) {
+		return
+	}
+
 	if update.Message.IsCommand() {
 		switch update.Message.Command() {
 		case "start":
@@ -128,7 +136,7 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 		case "chat":
 			if strings.Trim(update.Message.CommandArguments(), " ") != "" {
 				if !thisUserHasMessage {
-					sendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID)
+					sendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
 					hasSentChatTask = true
 				} else {
 					log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
@@ -143,7 +151,7 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	} else {
 		if strings.Trim(update.Message.Text, " ") != "" {
 			if !thisUserHasMessage {
-				sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID)
+				sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
 				hasSentChatTask = true
 			} else {
 				log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
@@ -154,6 +162,12 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 		}
 	}
 	return msg, hasSentChatTask
+}
+
+func shouldIgnoreMsg(update tgbotapi.Update) bool {
+	// ignore message target not to me
+	return update.Message.Chat.IsGroup() && update.Message.ReplyToMessage != nil &&
+		update.Message.ReplyToMessage.From.ID != bot.Self.ID
 }
 
 func sendRateLimitMessage(chat int64) {
