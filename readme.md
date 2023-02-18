@@ -27,6 +27,6 @@ Finally，start the app by following method:
 
 + `go run .` (make sure you have golang runtime.)
 
-+ docker-compose up -d --build (make sure you have docker & docker-compose)
++ `docker-compose up -d --build` (make sure you have docker & docker-compose)
 
 OK.
