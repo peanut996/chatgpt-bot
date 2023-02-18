@@ -166,8 +166,8 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 
 func shouldIgnoreMsg(update tgbotapi.Update) bool {
 	// ignore message target not to me
-	return update.Message.Chat.IsGroup() && update.Message.ReplyToMessage != nil &&
-		update.Message.ReplyToMessage.From.ID != bot.Self.ID
+	return update.Message.ReplyToMessage != nil &&
+		!update.Message.ReplyToMessage.From.IsBot
 }
 
 func sendRateLimitMessage(chat int64) {
