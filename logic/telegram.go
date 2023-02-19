@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -20,10 +21,12 @@ type ChatTask struct {
 }
 
 var (
-	bot         *tgbotapi.BotAPI
-	offset      int = 0
-	session     *sync.Map
-	TaskChannel chan *ChatTask
+	bot           *tgbotapi.BotAPI
+	offset        int = 0
+	session       *sync.Map
+	TaskChannel   chan *ChatTask
+	tgChannelName string
+	tgGroupName   string
 )
 
 func init() {
@@ -40,6 +43,8 @@ func init() {
 	bot = b
 	session = &sync.Map{}
 	TaskChannel = make(chan *ChatTask, 1)
+	tgChannelName = os.Getenv("TELEGRAM_CHANNEL_NAME")
+	tgGroupName = os.Getenv("TELEGRAM_GROUP_NAME")
 
 	go loopAndFinishChatTask()
 }
@@ -133,6 +138,11 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 		return
 	}
 
+	if shouldLimitUser(update) {
+		sendLimitMessage(update.Message.Chat.ID)
+		return
+	}
+
 	if update.Message.IsCommand() {
 		switch update.Message.Command() {
 		case "start":
@@ -170,8 +180,52 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	return msg, hasSentChatTask
 }
 
+func sendLimitMessage(i int64) {
+	text := fmt.Sprintf("You should join channel %s and group %s, then you can pm me", tgChannelName, tgGroupName) +
+		"\n\n" + fmt.Sprintf("你需要加入频道 %s 和群组 %s，然后才能和我私聊", tgChannelName, tgGroupName)
+	msg := tgbotapi.NewMessage(i, text)
+	bot.Send(msg)
+}
+
+func findMemberFromChat(chatName string, userID int64) bool {
+	findUserConfig := tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			SuperGroupUsername: chatName,
+			UserID:             userID,
+		},
+	}
+	member, err := bot.GetChatMember(findUserConfig)
+	if err != nil || member.Status == "left" || member.Status == "kicked" {
+		log.Printf("[ShouldLimitUser] memeber should be limit. id: %d", userID)
+		return false
+	}
+	return true
+}
+
+func shouldLimitUser(update tgbotapi.Update) bool {
+	// come from private
+	if update.Message.Chat.IsPrivate() {
+		userID := update.Message.From.ID
+		canFindInChannel := findMemberFromChat(tgChannelName, userID)
+		canFindInGroup := findMemberFromChat(tgGroupName, userID)
+		if !(canFindInChannel && canFindInGroup) {
+			return true
+		}
+	}
+	return false
+}
+
 func shouldIgnoreMsg(update tgbotapi.Update) bool {
 	// ignore message target not to me
+	if update.Message == nil {
+		return true
+	}
+
+	if update.Message.NewChatMembers != nil ||
+		update.Message.LeftChatMember != nil {
+		return true
+	}
+
 	return update.Message.ReplyToMessage != nil &&
 		!update.Message.ReplyToMessage.From.IsBot
 }
