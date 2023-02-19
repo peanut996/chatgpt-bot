@@ -7,9 +7,14 @@ from bottle import route, run ,request
 def chat():
     sentence = request.query.sentence
     logging.info(f"[Engine] Request: {sentence}")
-    res = chat_with_chatgpt(sentence)
-    logging.info(f"[Engine] Response: {res}")
-    return {"message": res}
+    try:
+        res = chat_with_chatgpt(sentence)
+        logging.info(f"[Engine] Response: {res}")
+        return {"message": res}
+    except Exception as e:
+        logging.error(f"[Engine] Error: {e}")
+        return {"message": "Error: " + str(e)}
+
 
 @route('/ping')
 def ping():
@@ -20,4 +25,4 @@ if __name__ == "__main__":
     load_dotenv()
     logging.basicConfig(level=logging.INFO)
     logging.info("Starting server")
-    run(host="0.0.0.0", port=5000, debug=True)
+    run(host="0.0.0.0", port=5000, debug=False)
