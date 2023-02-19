@@ -156,10 +156,6 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	msg = &m
 	hasSentChatTask = false
 
-	if strings.Trim(update.Message.Text, " ") != "" {
-		return
-	}
-
 	if shouldIgnoreMsg(update) {
 		hasSentChatTask = true
 		return
@@ -171,7 +167,7 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 	}
 	isPrivate := update.Message.Chat.IsPrivate()
 
-	if isPrivate || (update.Message.ReplyToMessage != nil && update.Message.ReplyToMessage.From.ID != bot.Self.ID) {
+	if isPrivate || (update.Message.ReplyToMessage != nil && update.Message.ReplyToMessage.From.ID == bot.Self.ID) {
 		if !thisUserHasMessage {
 			sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
 			hasSentChatTask = true
