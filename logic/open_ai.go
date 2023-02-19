@@ -63,7 +63,7 @@ func ChatWithChatGPT(sentence string) (string, error) {
 		if data["detail"] != "" {
 			return data["detail"], nil
 		}
-		return "", errors.New("chatgpt engine return empty, please try again later")
+		return "", errors.New("chatgpt engine return empty, may be too many requests in one hour, try again later")
 	}
 	return data["message"], nil
 }
