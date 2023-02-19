@@ -148,13 +148,20 @@ func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
 }
 
 func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, hasSentChatTask bool) {
+	hasSentChatTask = false
+
 	_, thisUserHasMessage := session.Load(update.Message.From.ID)
 
 	m := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	msg = &m
 	hasSentChatTask = false
 
+	if strings.Trim(update.Message.Text, " ") != "" {
+		return
+	}
+
 	if shouldIgnoreMsg(update) {
+		hasSentChatTask = true
 		return
 	}
 
@@ -162,7 +169,9 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 		sendLimitMessage(update.Message.Chat.ID)
 		return
 	}
-	if strings.Trim(update.Message.Text, " ") != "" {
+	isPrivate := update.Message.Chat.IsPrivate()
+
+	if isPrivate || (update.Message.ReplyToMessage != nil && update.Message.ReplyToMessage.From.ID != bot.Self.ID) {
 		if !thisUserHasMessage {
 			sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
 			hasSentChatTask = true
@@ -170,8 +179,6 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
 			sendRateLimitMessage(update.Message.Chat.ID)
 		}
-	} else {
-		msg.Text = "Please provide a sentence."
 	}
 
 	return msg, hasSentChatTask
@@ -220,6 +227,10 @@ func shouldIgnoreMsg(update tgbotapi.Update) bool {
 
 	if update.Message.NewChatMembers != nil ||
 		update.Message.LeftChatMember != nil {
+		return true
+	}
+
+	if strings.Trim(update.Message.Text, " ") == "" {
 		return true
 	}
 
