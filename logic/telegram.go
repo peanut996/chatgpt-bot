@@ -148,17 +148,18 @@ func handleUserMessage(update tgbotapi.Update) {
 
 	_, thisUserHasMessage := session.Load(update.Message.From.ID)
 
+	isPrivate := update.Message.Chat.IsPrivate()
+	shouldHandleMessage := isPrivate || (update.Message.ReplyToMessage != nil && update.Message.ReplyToMessage.From.ID == bot.Self.ID)
+
 	if shouldIgnoreMsg(update) {
 		return
 	}
 
-	if shouldLimitUser(update) {
-		sendLimitMessage(update.Message.Chat.ID)
-		return
-	}
-	isPrivate := update.Message.Chat.IsPrivate()
-
-	if isPrivate || (update.Message.ReplyToMessage != nil && update.Message.ReplyToMessage.From.ID == bot.Self.ID) {
+	if shouldHandleMessage {
+		if shouldLimitUser(update) {
+			sendLimitMessage(update.Message.Chat.ID, update.Message.MessageID)
+			return
+		}
 		if !thisUserHasMessage {
 			sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
 		} else {
@@ -169,10 +170,11 @@ func handleUserMessage(update tgbotapi.Update) {
 
 }
 
-func sendLimitMessage(i int64) {
-	text := fmt.Sprintf("You should join channel %s and group %s, then you can pm me", tgChannelName, tgGroupName) +
-		"\n\n" + fmt.Sprintf("你需要加入频道 %s 和群组 %s，然后才能和我私聊", tgChannelName, tgGroupName)
-	msg := tgbotapi.NewMessage(i, text)
+func sendLimitMessage(chatID int64, msgID int) {
+	text := fmt.Sprintf("You should join channel %s and group %s, then you can talk to me", tgChannelName, tgGroupName) +
+		"\n\n" + fmt.Sprintf("你需要加入频道 %s 和群组 %s，然后才能和我交谈", tgChannelName, tgGroupName)
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ReplyToMessageID = msgID
 	bot.Send(msg)
 }
 
@@ -195,6 +197,7 @@ func shouldLimitUser(update tgbotapi.Update) bool {
 	userID := update.Message.From.ID
 	canFindInChannel := findMemberFromChat(tgChannelName, userID)
 	canFindInGroup := findMemberFromChat(tgGroupName, userID)
+
 	return !(canFindInChannel && canFindInGroup)
 }
 
