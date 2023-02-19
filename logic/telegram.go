@@ -120,11 +120,29 @@ func handleUpdate(update tgbotapi.Update) {
 	}
 	log.Printf("[BotUpdate] update id:[%d] from [%s] : %s", update.UpdateID, update.Message.From.String(), update.Message.Text)
 
-	msg, hasSentChatTask := handleUserMessage(update)
-	if !hasSentChatTask {
+	if update.Message.IsCommand() {
+		msg := handleCommandMsg(update)
 		bot.Send(msg)
+	} else {
+		msg, hasSentChatTask := handleUserMessage(update)
+		if !hasSentChatTask {
+			bot.Send(msg)
+		}
 	}
 
+}
+
+func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+	switch update.Message.Command() {
+	case "start":
+		msg.Text = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you."
+	case "ping":
+		msg.Text = "pong"
+	default:
+		msg.Text = "I don't know that command"
+	}
+	return msg
 }
 
 func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, hasSentChatTask bool) {
@@ -142,41 +160,18 @@ func handleUserMessage(update tgbotapi.Update) (msg *tgbotapi.MessageConfig, has
 		sendLimitMessage(update.Message.Chat.ID)
 		return
 	}
-
-	if update.Message.IsCommand() {
-		switch update.Message.Command() {
-		case "start":
-			msg.Text = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you."
-		case "ping":
-			msg.Text = "pong"
-		case "chat":
-			if strings.Trim(update.Message.CommandArguments(), " ") != "" {
-				if !thisUserHasMessage {
-					sendTaskToChannel(update.Message.CommandArguments(), update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
-					hasSentChatTask = true
-				} else {
-					log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-					sendRateLimitMessage(update.Message.Chat.ID)
-				}
-			} else {
-				msg.Text = "Please provide a sentence."
-			}
-		default:
-			msg.Text = "I don't know that command"
+	if strings.Trim(update.Message.Text, " ") != "" {
+		if !thisUserHasMessage {
+			sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
+			hasSentChatTask = true
+		} else {
+			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+			sendRateLimitMessage(update.Message.Chat.ID)
 		}
 	} else {
-		if strings.Trim(update.Message.Text, " ") != "" {
-			if !thisUserHasMessage {
-				sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
-				hasSentChatTask = true
-			} else {
-				log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-				sendRateLimitMessage(update.Message.Chat.ID)
-			}
-		} else {
-			msg.Text = "Please provide a sentence."
-		}
+		msg.Text = "Please provide a sentence."
 	}
+
 	return msg, hasSentChatTask
 }
 
