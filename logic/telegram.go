@@ -164,7 +164,6 @@ func handleUserMessage(update tgbotapi.Update) {
 		} else {
 			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
 			sendRateLimitMessage(update.Message.Chat.ID)
-
 		}
 	}
 
@@ -193,16 +192,10 @@ func findMemberFromChat(chatName string, userID int64) bool {
 }
 
 func shouldLimitUser(update tgbotapi.Update) bool {
-	// come from private
-	if update.Message.Chat.IsPrivate() {
-		userID := update.Message.From.ID
-		canFindInChannel := findMemberFromChat(tgChannelName, userID)
-		canFindInGroup := findMemberFromChat(tgGroupName, userID)
-		if !(canFindInChannel && canFindInGroup) {
-			return true
-		}
-	}
-	return false
+	userID := update.Message.From.ID
+	canFindInChannel := findMemberFromChat(tgChannelName, userID)
+	canFindInGroup := findMemberFromChat(tgGroupName, userID)
+	return !(canFindInChannel && canFindInGroup)
 }
 
 func shouldIgnoreMsg(update tgbotapi.Update) bool {
