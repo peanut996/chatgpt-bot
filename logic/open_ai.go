@@ -59,6 +59,12 @@ func ChatWithChatGPT(sentence string) (string, error) {
 	log.Println("[ChatGPT] response from chatgpt: ", string(body))
 	data := make(map[string]string, 0)
 	json.Unmarshal(body, &data)
+	if data["message"] == "" {
+		if data["detail"] != "" {
+			return data["detail"], nil
+		}
+		return "", errors.New("chatgpt engine return empty, please try again later")
+	}
 	return data["message"], nil
 }
 
@@ -67,7 +73,7 @@ func GetChatGPTResponseWithRetry(sentence string) string {
 	if err == nil {
 		return resp
 	}
-	return "get from chatgpt timeout, please try again later."
+	return err.Error()
 }
 
 func healthCheck() bool {

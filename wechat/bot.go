@@ -53,9 +53,16 @@ func HandleWechatMessage(msg *openwechat.Message) {
 
 	var originString = "@GPT机器人\u2005"
 
-	if msg.IsText() && msg.IsAt() && strings.Contains(msg.Content, "GPT") {
+	if msg.IsText() && msg.IsSendByGroup() && msg.IsAt() && strings.Contains(msg.Content, "GPT") {
+		sender, err := msg.SenderInGroup()
+		if err != nil {
+			return
+		}
 		var text = strings.Replace(msg.Content, originString, "", -1)
 		var res = logic.GetChatGPTResponseWithRetry(text)
-		msg.ReplyText(res)
+
+		var replyText = fmt.Sprintf("@%s\u2005", sender.NickName) + "\n" + res
+		msg.ReplyText(replyText)
+		msg.AppMsgType = openwechat.AppMsgTypeAttach
 	}
 }
