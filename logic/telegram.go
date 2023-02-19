@@ -136,9 +136,11 @@ func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	switch update.Message.Command() {
 	case "start":
-		msg.Text = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you."
+	case "chatgpt":
+		msg.Text = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you. \n\n 请在这条消息下回复你的问题，我会回复你的。"
 	case "ping":
 		msg.Text = "pong"
+
 	default:
 		msg.Text = "I don't know that command"
 	}
