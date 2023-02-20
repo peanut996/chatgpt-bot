@@ -152,7 +152,7 @@ func shouldHandleMessage(update tgbotapi.Update) bool {
 func handleUserMessage(update tgbotapi.Update) {
 	log.Printf("[HandleMessage] [%s] update id[%d], from id[%d], from name[%s], msg[%s], chat id[%d], chat name[%s]",
 		update.Message.Chat.Type, update.UpdateID,
-		update.Message.From.ID, fmt.Sprintf("%s %s %s", update.Message.From.FirstName, update.Message.From.LastName, update.Message.From.UserName),)),
+		update.Message.From.ID, fmt.Sprintf("%s %s %s", update.Message.From.FirstName, update.Message.From.LastName, update.Message.From.UserName),
 		update.Message.Text, update.Message.Chat.ID, update.Message.Chat.Title)
 
 	_, thisUserHasMessage := session.Load(update.Message.From.ID)
