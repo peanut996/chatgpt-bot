@@ -118,8 +118,7 @@ func handleUpdate(update tgbotapi.Update) {
 	if update.Message == nil {
 		return
 	}
-	log.Printf("[BotUpdate] update id:[%d] from [%s] : %s", update.UpdateID, update.Message.From.String(), update.Message.Text)
-
+	log.Printf("[Update] chat[%v] from[%v] msg[%v]", update.Message.Chat, update.Message.From, update.Message)
 	if update.Message.IsCommand() {
 		msg := handleCommandMsg(update)
 		bot.Send(msg)
@@ -144,19 +143,26 @@ func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
 	return msg
 }
 
-func handleUserMessage(update tgbotapi.Update) {
-
-	_, thisUserHasMessage := session.Load(update.Message.From.ID)
-
+func shouldHandleMessage(update tgbotapi.Update) bool {
 	isPrivate := update.Message.Chat.IsPrivate()
 	shouldHandleMessage := isPrivate || (update.Message.ReplyToMessage != nil && update.Message.ReplyToMessage.From.ID == bot.Self.ID)
+	return shouldHandleMessage
+}
+
+func handleUserMessage(update tgbotapi.Update) {
+	log.Printf("[HandleMessage] [%s] update id[%d], from[%s], msg[%s], chat id[%d], chat name[%s]",
+		update.Message.Chat.Type, update.UpdateID,
+		update.Message.From.String(), update.Message.Text,
+		update.Message.Chat.ID, update.Message.Chat.Title)
+
+	_, thisUserHasMessage := session.Load(update.Message.From.ID)
 
 	if shouldIgnoreMsg(update) {
 		return
 	}
 
-	if shouldHandleMessage {
-		if isPrivate && shouldLimitUser(update) {
+	if shouldHandleMessage(update) {
+		if shouldLimitUser(update) {
 			sendLimitMessage(update.Message.Chat.ID, update.Message.MessageID)
 			return
 		}
