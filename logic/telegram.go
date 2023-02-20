@@ -156,7 +156,7 @@ func handleUserMessage(update tgbotapi.Update) {
 	}
 
 	if shouldHandleMessage {
-		if shouldLimitUser(update) {
+		if isPrivate && shouldLimitUser(update) {
 			sendLimitMessage(update.Message.Chat.ID, update.Message.MessageID)
 			return
 		}
