@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"chatgpt-bot/utils"
 	"fmt"
 	"log"
 	"os"
@@ -118,7 +119,9 @@ func handleUpdate(update tgbotapi.Update) {
 	if update.Message == nil {
 		return
 	}
-	log.Printf("[Update] chat[%#v] from[%#v] msg[%#v]", update.Message.Chat, update.Message.From, update.Message)
+	log.Printf("[Update] chat[%s] from[%s] msg[%s]", utils.ToJsonString(update.Message.Chat),
+		utils.ToJsonString(update.Message.From),
+		utils.ToJsonString(update.Message))
 	if update.Message.IsCommand() {
 		msg := handleCommandMsg(update)
 		bot.Send(msg)
