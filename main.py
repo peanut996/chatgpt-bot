@@ -18,7 +18,7 @@ async def chat():
         return {"message": res}
     except Exception as e:
         logging.error(f"[Engine] Error: {e}")
-        return {"message": "Error: " + str(e)}
+        return {"message": str(e)}
 
 # @app.route('/bing')
 # async def bing_chat():
