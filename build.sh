@@ -1,3 +1,8 @@
+#!/bin/bash
+
 echo "Building bot..."
+start=$(date +%s)
 go build -ldflags '-w -s' -o bot .
-echo "Done!"
+end=$(date +%s)
+take=$(( end - start ))
+echo "Done in ${take} seconds."
