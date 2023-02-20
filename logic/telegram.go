@@ -118,7 +118,7 @@ func handleUpdate(update tgbotapi.Update) {
 	if update.Message == nil {
 		return
 	}
-	log.Printf("[Update] chat[%v] from[%v] msg[%v]", update.Message.Chat, update.Message.From, update.Message)
+	log.Printf("[Update] chat[%#v] from[%#v] msg[%#v]", update.Message.Chat, update.Message.From, update.Message)
 	if update.Message.IsCommand() {
 		msg := handleCommandMsg(update)
 		bot.Send(msg)
@@ -150,10 +150,10 @@ func shouldHandleMessage(update tgbotapi.Update) bool {
 }
 
 func handleUserMessage(update tgbotapi.Update) {
-	log.Printf("[HandleMessage] [%s] update id[%d], from[%s], msg[%s], chat id[%d], chat name[%s]",
+	log.Printf("[HandleMessage] [%s] update id[%d], from id[%d], from name[%s], msg[%s], chat id[%d], chat name[%s]",
 		update.Message.Chat.Type, update.UpdateID,
-		update.Message.From.String(), update.Message.Text,
-		update.Message.Chat.ID, update.Message.Chat.Title)
+		update.Message.From.ID, fmt.Sprintf("%s %s %s", update.Message.From.FirstName, update.Message.From.LastName, update.Message.From.UserName),)),
+		update.Message.Text, update.Message.Chat.ID, update.Message.Chat.Title)
 
 	_, thisUserHasMessage := session.Load(update.Message.From.ID)
 
