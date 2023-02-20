@@ -1,3 +1,4 @@
+EdgeGPT>=0.0.51
 Flask[async]==2.2.3
 python-dotenv==0.21.1
 revChatGPT>=2.3.4
