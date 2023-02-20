@@ -1,10 +1,8 @@
 from dotenv import load_dotenv
 from logic.chatgpt import async_chat_with_chatgpt
-from logic.edgegpt import chat_with_edgegpt
 import logging
 import os
 from flask import Flask, request
-import asyncio
 
 
 app = Flask(__name__)
@@ -22,17 +20,17 @@ async def chat():
         logging.error(f"[Engine] Error: {e}")
         return {"message": "Error: " + str(e)}
 
-@app.route('/bing')
-async def bing_chat():
-    sentence = request.args.get("sentence")
-    logging.info(f"[Engine] Request: {sentence}")
-    try:
-        res = await chat_with_edgegpt(sentence)
-        logging.info(f"[Engine] Response: {res}")
-        return {"message": res}
-    except Exception as e:
-        logging.error(f"[Engine] Error: {e}")
-        return {"message": "Error: " + str(e)}
+# @app.route('/bing')
+# async def bing_chat():
+#     sentence = request.args.get("sentence")
+#     logging.info(f"[Engine] Request: {sentence}")
+#     try:
+#         res = await chat_with_edgegpt(sentence)
+#         logging.info(f"[Engine] Response: {res}")
+#         return {"message": res}
+#     except Exception as e:
+#         logging.error(f"[Engine] Error: {e}")
+#         return {"message": "Error: " + str(e)}
 
 
 @app.route('/ping')
