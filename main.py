@@ -11,13 +11,13 @@ app = Flask(__name__)
 @app.route('/chat')
 async def chat():
     sentence = request.args.get("sentence")
-    logging.info(f"[Engine] Request: {sentence}")
+    logging.info(f"[Engine] chat gpt engine get request: {sentence}")
     try:
         res = await async_chat_with_chatgpt(sentence)
-        logging.info(f"[Engine] Response: {res}")
+        logging.info(f"[Engine] chat gpt engine get response: {res}")
         return {"message": res}
     except Exception as e:
-        logging.error(f"[Engine] Error: {e}")
+        logging.error(f"[Engine] chat gpt engine get error: {e}")
         return {"message": str(e)}
 
 # @app.route('/bing')
