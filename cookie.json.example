@@ -1,0 +1,14 @@
+[
+    {
+        "domain": ".bing.com",
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "ENSEARCH",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": true,
+        "storeId": null,
+        "value": "BENVER=0"
+    }
+]

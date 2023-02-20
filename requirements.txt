@@ -1,3 +1,4 @@
-bottle==0.12.23
+EdgeGPT>=0.0.51
+Flask==2.2.3
 python-dotenv==0.21.1
-revChatGPT>=2.3.1
+revChatGPT>=2.3.4

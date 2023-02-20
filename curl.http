@@ -1,0 +1,2 @@
+GET http://localhost:5000/bing?sentence=helloworld
+Content-Type: text/plain; charset=utf-8
