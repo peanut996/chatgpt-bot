@@ -7,3 +7,4 @@ venv
 *.log
 run-wechatbot
 run-telegrambot
+cookie.json
