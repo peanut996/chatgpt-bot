@@ -1,0 +1,11 @@
+bot:
+  type: telegram
+  token: your bot token
+  channelName: @your channel name
+  groupName: @your group name
+
+engine:
+  port: 5000
+  account: your account
+  password: your password
+  conversationId: your conversation id
