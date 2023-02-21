@@ -1,7 +1,7 @@
 package constant
 
 var (
-	START   = "/start"
-	PING    = "/ping"
-	CHATGPT = "/chatgpt"
+	START   = "start"
+	PING    = "ping"
+	CHATGPT = "chatgpt"
 )

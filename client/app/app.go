@@ -24,7 +24,7 @@ var (
 
 func GetApp() *App {
 	once.Do(func() {
-		NewApp()
+		app = NewApp()
 	})
 	return app
 }
