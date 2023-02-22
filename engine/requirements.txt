@@ -1,4 +1,5 @@
-EdgeGPT>=0.0.51
+OpenAIAuth>=0.3.2
+PyYAML==6.0
 Flask[async]==2.2.3
 python-dotenv==0.21.1
-revChatGPT>=2.3.4
+revChatGPT>=2.3.5
