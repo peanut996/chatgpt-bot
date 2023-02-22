@@ -6,7 +6,7 @@ import yaml
 from OpenAIAuth import Error as OpenAIError
 from flask import Flask, request
 
-from engine.session.session import Session
+from session.session import Session
 
 app = Flask(__name__)
 session = None
