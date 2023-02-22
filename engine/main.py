@@ -87,8 +87,9 @@ def main():
     config = load_config()
     session = Session(config=config)
     port = config['engine']['port']
+    debug = config['engine'].get('debug', False)
     logging.info("Starting server")
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=debug)
 
 
 if __name__ == "__main__":

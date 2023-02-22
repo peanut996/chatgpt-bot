@@ -11,7 +11,7 @@ class Session:
         self.chatgpt_credentials = list(map(Session.map_token_to_dict, config["engine"]["chatgpt"]["tokens"]))
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
-        self.verbose = config["engine"].get("verbose", False)
+        self.verbose = config['engine'].get('debug', False)
 
     def _get_random_chat_gpt_credential(self):
         length_range = len(self.chatgpt_credentials) - 1
