@@ -12,9 +12,10 @@ func main() {
 	}
 	app := app.GetApp()
 
-	app.Init(c)
-
+	err = app.Init(c)
+	if err != nil {
+		panic(err)
+	}
 	app.Run()
-
 	app.Block()
 }
