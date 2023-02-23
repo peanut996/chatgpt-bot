@@ -29,6 +29,8 @@ type BotConfig struct {
 	TelegramGroupName   string `yaml:"groupName"`
 	WechatBotName       string `yaml:"botName"`
 	WechatLoginType     string `yaml:"loginType"`
+	ShouldLimitPrivate  bool   `yaml:"limitPrivate"`
+	ShouldLimitGroup    bool   `yaml:"limitGroup"`
 }
 
 func NewConfig() *Config {

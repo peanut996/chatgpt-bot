@@ -2,6 +2,8 @@ package engine
 
 import (
 	"chatgpt-bot/cfg"
+	"chatgpt-bot/constant"
+	"chatgpt-bot/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -45,7 +47,7 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 	log.Println("[ChatGPT] send request to chatgpt, text: ", sentence)
 
 	if !e.Alive() {
-		return "chatgpt engine is not ready, please wait a moment.", nil
+		return constant.ChatGPTEngineNotOnline, nil
 	}
 
 	encodeSentence := url.QueryEscape(sentence)
@@ -56,31 +58,38 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 		return "", err
 	}
 	if resp.StatusCode != 200 {
-		return "", errors.New("chatgpt engine return error")
+		return "", errors.New(constant.ChatGPTError)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 		return "", err
 	}
-	log.Println("[ChatGPT] response from chatgpt: ", string(body))
 	data := make(map[string]string, 0)
-	json.Unmarshal(body, &data)
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return "", err
+	}
+	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJsonString(data))
 	if data["message"] == "" {
 		if data["detail"] != "" {
 			return data["detail"], nil
 		}
-		return "", errors.New("chatgpt engine return empty, may be too many requests in one hour, try again later")
+		return "", errors.New(constant.ChatGPTError)
 	}
 	return data["message"], nil
 }
 
 func (e *ChatGPTEngine) Chat(sentence string) (string, error) {
 	resp, err := e.chat(sentence)
-	if err == nil {
+	if err == nil && "" != resp {
 		return resp, nil
 	}
-	return "", err
+	if err != nil {
+		log.Println("[ChatGPT] chatgpt engine error: ", err)
+		return fmt.Sprintf(constant.ChatGPTErrorTemplate, err.Error()), nil
+	}
+	return constant.ChatGPTError, err
 }
 
 func (e *ChatGPTEngine) checkChatGPTEngine() {

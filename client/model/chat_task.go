@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 type ChatTask struct {
 	Question  string
 	Answer    string
@@ -8,11 +10,15 @@ type ChatTask struct {
 	MessageID int
 }
 
+func (c *ChatTask) String() string {
+	return fmt.Sprintf("[ChatTask] [question: %s, answer: %s, chat: %d, from: %d, message id: %d]", c.Question, c.Answer, c.Chat, c.From, c.MessageID)
+}
+
 func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
 	return &ChatTask{
 		Question:  question,
 		Chat:      chat,
 		From:      from,
-		MessageID: int(msgID),
+		MessageID: msgID,
 	}
 }

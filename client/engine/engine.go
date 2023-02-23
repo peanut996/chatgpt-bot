@@ -3,8 +3,8 @@ package engine
 import "chatgpt-bot/cfg"
 
 var (
-	ENGINE_CHATGPT = "chatgpt"
-	ENGINE_BING    = "bing"
+	CHATGPT = "chatgpt"
+	BING    = "bing"
 )
 
 type Engine interface {
@@ -15,9 +15,9 @@ type Engine interface {
 
 func GetEngine(engineType string) Engine {
 	switch engineType {
-	case ENGINE_BING:
+	case BING:
 		return NewBingEngine()
-	case ENGINE_CHATGPT:
+	case CHATGPT:
 		return NewChatGPTEngine()
 	default:
 		return NewChatGPTEngine()

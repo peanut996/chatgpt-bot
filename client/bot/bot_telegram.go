@@ -22,18 +22,22 @@ type TelegramBot struct {
 	session  *sync.Map
 	taskChan chan *model.ChatTask
 
-	groupName   string
-	channelName string
+	groupName    string
+	channelName  string
+	limitGroup   bool
+	limitPrivate bool
 }
 
 func (t *TelegramBot) Init(cfg *cfg.Config) error {
 	if utils.IsAnyStringEmpty(cfg.BotConfig.TelegramBotToken,
 		cfg.BotConfig.TelegramChannelName,
 		cfg.BotConfig.TelegramGroupName) {
-		return errors.New(constant.MISSING_REQUIRED_CONFIG)
+		return errors.New(constant.MissingRequiredConfig)
 	}
 	t.channelName = cfg.BotConfig.TelegramChannelName
 	t.groupName = cfg.BotConfig.TelegramGroupName
+	t.limitPrivate = cfg.BotConfig.ShouldLimitPrivate
+	t.limitGroup = cfg.BotConfig.ShouldLimitGroup
 
 	t.session = &sync.Map{}
 	bot, err := tgbotapi.NewBotAPI(cfg.BotConfig.TelegramBotToken)
@@ -93,28 +97,32 @@ func (t *TelegramBot) loopAndFinishChatTask() {
 	}
 }
 
-func (bot *TelegramBot) Finish(t *model.ChatTask) {
-	log.Printf("[Finish] start chat task with question %s, chat id: %d, from: %d", t.Question, t.Chat, t.From)
-	defer bot.session.Delete(t.From)
+func (t *TelegramBot) Finish(task *model.ChatTask) {
+	log.Printf("[Finish] start chat task %s", task.String())
+	defer t.session.Delete(task.From)
 
-	res, err := bot.engine.Chat(t.Question)
+	res, err := t.engine.Chat(task.Question)
 	if err != nil {
 		log.Printf("[Finish] chat task failed, err: %s", err)
-		t.Answer = err.Error()
+		task.Answer = err.Error()
 	} else {
-		t.Answer = res
+		task.Answer = res
 	}
-	bot.Send(t)
-	log.Printf("[Finish] end chat task with question %s, chat id: %d, from: %d", t.Question, t.Chat, t.From)
+	t.Send(task)
+	log.Printf("[Finish] end chat task: %s", task.String())
 
 }
 
-func (bot *TelegramBot) Send(t *model.ChatTask) {
-	msg := tgbotapi.NewMessage(t.Chat, t.Question)
+func (t *TelegramBot) Send(task *model.ChatTask) {
+	msg := tgbotapi.NewMessage(task.Chat, task.Question)
 	msg.ParseMode = "markdown"
-	msg.Text = t.Answer
-	msg.ReplyToMessageID = t.MessageID
-	bot.tgBot.Send(msg)
+	msg.Text = task.Answer
+	msg.ReplyToMessageID = task.MessageID
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
@@ -126,7 +134,11 @@ func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
 		utils.ToJsonString(update.Message))
 	if update.Message.IsCommand() {
 		msg := handleCommandMsg(update)
-		t.tgBot.Send(msg)
+		_, err := t.tgBot.Send(msg)
+		if err != nil {
+			log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+			return
+		}
 	} else {
 		t.handleUserMessage(update)
 	}
@@ -138,11 +150,11 @@ func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
 	switch update.Message.Command() {
 	case constant.START:
 	case constant.CHATGPT:
-		msg.Text = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you. \n\n 请在这条消息下回复你的问题，我会回复你的。"
+		msg.Text = constant.BotStartTip
 	case constant.PING:
-		msg.Text = "pong"
+		msg.Text = constant.BotPingTip
 	default:
-		msg.Text = "I don't know that command"
+		msg.Text = constant.UnknownCmdTip
 	}
 	return msg
 }
@@ -168,7 +180,7 @@ func (t *TelegramBot) handleUserMessage(update tgbotapi.Update) {
 	}
 
 	if shouldHandleMessage(update, t.tgBot.Self.ID) {
-		if t.shouldLimitUser(update) {
+		if shouldLimitChat(update, t.limitPrivate, t.limitGroup) && t.shouldLimitUser(update) {
 			t.sendLimitMessage(update.Message.Chat.ID, update.Message.MessageID)
 			return
 		}
@@ -183,11 +195,14 @@ func (t *TelegramBot) handleUserMessage(update tgbotapi.Update) {
 }
 
 func (t *TelegramBot) sendLimitMessage(chatID int64, msgID int) {
-	text := fmt.Sprintf("You should join channel %s and group %s, then you can talk to me", t.channelName, t.groupName) +
-		"\n\n" + fmt.Sprintf("你需要加入频道 %s 和群组 %s，然后才能和我交谈", t.channelName, t.groupName)
+	text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyToMessageID = msgID
-	t.tgBot.Send(msg)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func (t *TelegramBot) findMemberFromChat(chatName string, userID int64) bool {
@@ -232,7 +247,12 @@ func shouldIgnoreMsg(update tgbotapi.Update) bool {
 }
 
 func (t *TelegramBot) sendRateLimitMessage(chat int64) {
-	t.tgBot.Send(tgbotapi.NewMessage(chat, "you are chatting with me, please wait for a while."))
+	msg := tgbotapi.NewMessage(chat, constant.OnlyOneChatAtATime)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID int) {
@@ -244,5 +264,19 @@ func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID
 }
 
 func (t *TelegramBot) sendTyping(task *model.ChatTask) {
-	t.tgBot.Send(tgbotapi.NewChatAction(task.Chat, tgbotapi.ChatTyping))
+	msg := tgbotapi.NewChatAction(task.Chat, tgbotapi.ChatTyping)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
+}
+
+func shouldLimitChat(update tgbotapi.Update, shouldLimitPrivate bool, shouldLimitGroup bool) bool {
+	if update.Message.Chat.IsPrivate() && shouldLimitPrivate {
+		return true
+	} else if (update.Message.Chat.IsGroup() || update.Message.Chat.IsSuperGroup()) && shouldLimitGroup {
+		return true
+	}
+	return false
 }
