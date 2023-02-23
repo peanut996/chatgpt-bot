@@ -20,6 +20,7 @@ func NewLimiter(capacity int64, duration int64) *Limiter {
 		capacity:   capacity,
 		tokens:     make(map[string]float64),
 		lastUpdate: make(map[string]time.Time),
+		duration:   duration,
 	}
 }
 
