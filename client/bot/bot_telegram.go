@@ -120,7 +120,9 @@ func (t *TelegramBot) Send(task *model.ChatTask) {
 	msg.ReplyToMessageID = task.MessageID
 	_, err := t.tgBot.Send(msg)
 	if err != nil {
-		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		msg.Text = constant.SendBackMsgFailed
+		_, _ = t.tgBot.Send(msg)
 		return
 	}
 }
@@ -136,7 +138,9 @@ func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
 		msg := handleCommandMsg(update)
 		_, err := t.tgBot.Send(msg)
 		if err != nil {
-			log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+			log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+			msg.Text = constant.SendBackMsgFailed
+			_, _ = t.tgBot.Send(msg)
 			return
 		}
 	} else {
@@ -200,7 +204,9 @@ func (t *TelegramBot) sendLimitMessage(chatID int64, msgID int) {
 	msg.ReplyToMessageID = msgID
 	_, err := t.tgBot.Send(msg)
 	if err != nil {
-		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		msg.Text = constant.SendBackMsgFailed
+		_, _ = t.tgBot.Send(msg)
 		return
 	}
 }
@@ -250,7 +256,9 @@ func (t *TelegramBot) sendRateLimitMessage(chat int64) {
 	msg := tgbotapi.NewMessage(chat, constant.OnlyOneChatAtATime)
 	_, err := t.tgBot.Send(msg)
 	if err != nil {
-		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		msg.Text = constant.SendBackMsgFailed
+		_, _ = t.tgBot.Send(msg)
 		return
 	}
 }
