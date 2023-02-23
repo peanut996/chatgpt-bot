@@ -3,8 +3,8 @@ package bot
 import "chatgpt-bot/cfg"
 
 var (
-	BOT_TELEGRAM = "telegram"
-	BOT_WECHAT   = "wechat"
+	Telegram = "telegram"
+	Wechat   = "wechat"
 )
 
 type Bot interface {
@@ -14,9 +14,9 @@ type Bot interface {
 
 func GetBot(botType string) Bot {
 	switch botType {
-	case BOT_WECHAT:
+	case Wechat:
 		return NewWechatBot()
-	case BOT_TELEGRAM:
+	case Telegram:
 		return NewTelegramBot()
 	default:
 		return NewTelegramBot()

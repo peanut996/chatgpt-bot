@@ -26,18 +26,21 @@ type TelegramBot struct {
 	channelName  string
 	limitGroup   bool
 	limitPrivate bool
+	logChat      int64
 }
 
 func (t *TelegramBot) Init(cfg *cfg.Config) error {
-	if utils.IsAnyStringEmpty(cfg.BotConfig.TelegramBotToken,
-		cfg.BotConfig.TelegramChannelName,
-		cfg.BotConfig.TelegramGroupName) {
-		return errors.New(constant.MissingRequiredConfig)
-	}
+
 	t.channelName = cfg.BotConfig.TelegramChannelName
 	t.groupName = cfg.BotConfig.TelegramGroupName
 	t.limitPrivate = cfg.BotConfig.ShouldLimitPrivate
 	t.limitGroup = cfg.BotConfig.ShouldLimitGroup
+	t.logChat = cfg.BotConfig.LogChannelID
+
+	if utils.IsAnyStringEmpty(
+		t.channelName, t.groupName) {
+		return errors.New(constant.MissingRequiredConfig)
+	}
 
 	t.session = &sync.Map{}
 	bot, err := tgbotapi.NewBotAPI(cfg.BotConfig.TelegramBotToken)
@@ -100,8 +103,8 @@ func (t *TelegramBot) loopAndFinishChatTask() {
 func (t *TelegramBot) Finish(task *model.ChatTask) {
 	log.Printf("[Finish] start chat task %s", task.String())
 	defer t.session.Delete(task.From)
-
 	res, err := t.engine.Chat(task.Question)
+	t.Log(task.Question)
 	if err != nil {
 		log.Printf("[Finish] chat task failed, err: %s", err)
 		task.Answer = err.Error()
@@ -109,8 +112,16 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 		task.Answer = res
 	}
 	t.Send(task)
+	t.Log(task.Answer)
 	log.Printf("[Finish] end chat task: %s", task.String())
 
+}
+
+func (t *TelegramBot) Log(log string) {
+	go func(s string) {
+		msg := tgbotapi.NewMessage(t.logChat, s)
+		_, _ = t.tgBot.Send(msg)
+	}(log)
 }
 
 func (t *TelegramBot) Send(task *model.ChatTask) {

@@ -27,6 +27,7 @@ type BotConfig struct {
 	TelegramBotToken    string `yaml:"token"`
 	TelegramChannelName string `yaml:"channelName"`
 	TelegramGroupName   string `yaml:"groupName"`
+	LogChannelID        int64  `yaml:"logChannel"`
 	WechatBotName       string `yaml:"botName"`
 	WechatLoginType     string `yaml:"loginType"`
 	ShouldLimitPrivate  bool   `yaml:"limitPrivate"`
