@@ -7,6 +7,8 @@ var (
 	OnlyOneChatAtATime       = "you are chatting with me, please wait for a while. \n\n😅你已经发送了一条信息，请耐心等待"
 	LimitUserMessageTemplate = "You should join channel %s and group %s, then you can talk to me \n\n😢你需要加入频道 %s 和群组 %s，然后才能和我交谈"
 
+	RateLimitMessageTemplate = "You can only send %d messages in %d min, please try later\n\n😅 你只能在 %d 分钟内发送 %d 条消息，请稍候再试"
+
 	ChatGPTError           = "ChatGPT return error, try later again \n\n😇出错了, 稍后重试下吧"
 	ChatGPTErrorTemplate   = "ChatGPT return error, try later again \n\n😇出错了, 稍后重试下吧 \n\n %s"
 	ChatGPTEngineNotOnline = "Chatgpt engine is not ready, please wait a moment. \n\n😇ChatGPT 引擎还没有准备好，请稍等一下"

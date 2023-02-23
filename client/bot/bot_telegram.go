@@ -4,11 +4,13 @@ import (
 	"chatgpt-bot/cfg"
 	"chatgpt-bot/constant"
 	"chatgpt-bot/engine"
+	"chatgpt-bot/middleware"
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,12 +23,14 @@ type TelegramBot struct {
 	engine   engine.Engine
 	session  *sync.Map
 	taskChan chan *model.ChatTask
+	limiter  *middleware.Limiter
 
-	groupName    string
-	channelName  string
-	limitGroup   bool
-	limitPrivate bool
-	logChat      int64
+	groupName     string
+	channelName   string
+	limitGroup    bool
+	limitPrivate  bool
+	logChat       int64
+	enableLimiter bool
 }
 
 func (t *TelegramBot) Init(cfg *cfg.Config) error {
@@ -55,6 +59,10 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 	}
 
 	t.taskChan = make(chan *model.ChatTask, 1)
+
+	t.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
+	t.limiter = middleware.NewLimiter(cfg.BotConfig.RateLimiterConfig.Capacity,
+		cfg.BotConfig.RateLimiterConfig.Duration)
 	go t.loopAndFinishChatTask()
 	log.Printf("[Init] telegram bot init success, bot name: %s", t.tgBot.Self.UserName)
 	return nil
@@ -201,21 +209,28 @@ func (t *TelegramBot) handleUserMessage(update tgbotapi.Update) {
 
 	if shouldHandleMessage(update, t.tgBot.Self.ID) {
 		if shouldLimitChat(update, t.limitPrivate, t.limitGroup) && t.shouldLimitUser(update) {
-			t.sendLimitMessage(update.Message.Chat.ID, update.Message.MessageID)
+			text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
+			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
+			return
+		}
+
+		if t.enableLimiter && !t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) {
+			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+			text := fmt.Sprintf(constant.RateLimitMessageTemplate, t.limiter.GetCapacity(), t.limiter.GetDuration()/60,
+				t.limiter.GetDuration()/60, t.limiter.GetCapacity())
+			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
 			return
 		}
 		if !thisUserHasMessage {
 			t.sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
 		} else {
 			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-			t.sendRateLimitMessage(update.Message.Chat.ID)
+			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, constant.OnlyOneChatAtATime)
 		}
 	}
 
 }
-
-func (t *TelegramBot) sendLimitMessage(chatID int64, msgID int) {
-	text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
+func (t *TelegramBot) sendErrorMessage(chatID int64, msgID int, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyToMessageID = msgID
 	_, err := t.tgBot.Send(msg)
@@ -266,17 +281,6 @@ func shouldIgnoreMsg(update tgbotapi.Update) bool {
 
 	return update.Message.ReplyToMessage != nil &&
 		!update.Message.ReplyToMessage.From.IsBot
-}
-
-func (t *TelegramBot) sendRateLimitMessage(chat int64) {
-	msg := tgbotapi.NewMessage(chat, constant.OnlyOneChatAtATime)
-	_, err := t.tgBot.Send(msg)
-	if err != nil {
-		log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
-		msg.Text = constant.SendBackMsgFailed
-		_, _ = t.tgBot.Send(msg)
-		return
-	}
 }
 
 func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID int) {

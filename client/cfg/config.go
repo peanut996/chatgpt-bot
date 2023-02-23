@@ -9,8 +9,8 @@ import (
 )
 
 type Config struct {
-	EngineConfig EngineConfig `yaml:"engine"`
-	BotConfig    BotConfig    `yaml:"bot"`
+	EngineConfig `yaml:"engine"`
+	BotConfig    `yaml:"bot"`
 }
 
 type EngineConfig struct {
@@ -23,6 +23,7 @@ type EngineConfig struct {
 }
 
 type BotConfig struct {
+	RateLimiterConfig   `yaml:"rateLimiter"`
 	BotType             string `yaml:"type"`
 	TelegramBotToken    string `yaml:"token"`
 	TelegramChannelName string `yaml:"channelName"`
@@ -32,6 +33,12 @@ type BotConfig struct {
 	WechatLoginType     string `yaml:"loginType"`
 	ShouldLimitPrivate  bool   `yaml:"limitPrivate"`
 	ShouldLimitGroup    bool   `yaml:"limitGroup"`
+}
+
+type RateLimiterConfig struct {
+	Capacity int64 `yaml:"capacity"`
+	Duration int64 `yaml:"duration"`
+	Enable   bool  `yaml:"enable"`
 }
 
 func NewConfig() *Config {
