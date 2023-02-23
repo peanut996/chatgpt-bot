@@ -15,11 +15,11 @@ func (c *ChatTask) String() string {
 }
 
 func (c *ChatTask) GetFormattedQuestion() string {
-	return fmt.Sprintf("❓: %s", c.Question)
+	return fmt.Sprintf("❓ %s", c.Question)
 }
 
 func (c *ChatTask) GetFormattedAnswer() string {
-	return fmt.Sprintf("🅰️: %s", c.Answer)
+	return fmt.Sprintf("🅰️ %s", c.Answer)
 }
 
 func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
