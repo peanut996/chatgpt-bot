@@ -118,13 +118,18 @@ func (t *TelegramBot) Send(task *model.ChatTask) {
 	msg.ParseMode = "markdown"
 	msg.Text = task.Answer
 	msg.ReplyToMessageID = task.MessageID
-	_, err := t.tgBot.Send(msg)
-	if err != nil {
-		log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
-		msg.Text = constant.SendBackMsgFailed
-		_, _ = t.tgBot.Send(msg)
-		return
+	msgs := utils.SplitMessageByMaxSize(task.Answer, 4000)
+	for _, m := range msgs {
+		msg.Text = m
+		_, err := t.tgBot.Send(msg)
+		if err != nil {
+			log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+			msg.Text = constant.SendBackMsgFailed
+			_, _ = t.tgBot.Send(msg)
+			return
+		}
 	}
+
 }
 
 func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
