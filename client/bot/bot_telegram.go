@@ -265,11 +265,7 @@ func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID
 
 func (t *TelegramBot) sendTyping(task *model.ChatTask) {
 	msg := tgbotapi.NewChatAction(task.Chat, tgbotapi.ChatTyping)
-	_, err := t.tgBot.Send(msg)
-	if err != nil {
-		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
-		return
-	}
+	_, _ = t.tgBot.Send(msg)
 }
 
 func shouldLimitChat(update tgbotapi.Update, shouldLimitPrivate bool, shouldLimitGroup bool) bool {
