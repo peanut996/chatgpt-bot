@@ -118,7 +118,11 @@ func (t *TelegramBot) Send(task *model.ChatTask) {
 	msg.ParseMode = "markdown"
 	msg.Text = task.Answer
 	msg.ReplyToMessageID = task.MessageID
-	_, _ = t.tgBot.Send(msg)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
@@ -130,7 +134,11 @@ func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
 		utils.ToJsonString(update.Message))
 	if update.Message.IsCommand() {
 		msg := handleCommandMsg(update)
-		_, _ = t.tgBot.Send(msg)
+		_, err := t.tgBot.Send(msg)
+		if err != nil {
+			log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+			return
+		}
 	} else {
 		t.handleUserMessage(update)
 	}
@@ -190,7 +198,11 @@ func (t *TelegramBot) sendLimitMessage(chatID int64, msgID int) {
 	text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyToMessageID = msgID
-	_, _ = t.tgBot.Send(msg)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func (t *TelegramBot) findMemberFromChat(chatName string, userID int64) bool {
@@ -236,7 +248,11 @@ func shouldIgnoreMsg(update tgbotapi.Update) bool {
 
 func (t *TelegramBot) sendRateLimitMessage(chat int64) {
 	msg := tgbotapi.NewMessage(chat, constant.OnlyOneChatAtATime)
-	_, _ = t.tgBot.Send(msg)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID int) {
@@ -249,7 +265,11 @@ func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID
 
 func (t *TelegramBot) sendTyping(task *model.ChatTask) {
 	msg := tgbotapi.NewChatAction(task.Chat, tgbotapi.ChatTyping)
-	_, _ = t.tgBot.Send(msg)
+	_, err := t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: %s, msg: 【%+v】", err, msg)
+		return
+	}
 }
 
 func shouldLimitChat(update tgbotapi.Update, shouldLimitPrivate bool, shouldLimitGroup bool) bool {
