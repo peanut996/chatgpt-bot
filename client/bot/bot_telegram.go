@@ -208,16 +208,15 @@ func (t *TelegramBot) handleUserMessage(update tgbotapi.Update) {
 	}
 
 	if shouldHandleMessage(update, t.tgBot.Self.ID) {
-		if shouldLimitChat(update, t.limitPrivate, t.limitGroup) && t.shouldLimitUser(update) {
-			text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
-			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
-			return
-		}
-
-		if t.enableLimiter && !t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) {
+		if t.enableLimiter &&
+			!t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) &&
+			t.shouldLimitUser(update) {
 			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-			text := fmt.Sprintf(constant.RateLimitMessageTemplate, t.limiter.GetCapacity(), t.limiter.GetDuration()/60,
-				t.limiter.GetDuration()/60, t.limiter.GetCapacity())
+			text := fmt.Sprintf(constant.RateLimitMessageTemplate,
+				t.limiter.GetCapacity(), t.limiter.GetDuration()/60,
+				t.channelName, t.groupName,
+				t.limiter.GetDuration()/60, t.limiter.GetCapacity(),
+				t.channelName, t.groupName)
 			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
 			return
 		}
@@ -294,13 +293,4 @@ func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID
 func (t *TelegramBot) sendTyping(task *model.ChatTask) {
 	msg := tgbotapi.NewChatAction(task.Chat, tgbotapi.ChatTyping)
 	_, _ = t.tgBot.Send(msg)
-}
-
-func shouldLimitChat(update tgbotapi.Update, shouldLimitPrivate bool, shouldLimitGroup bool) bool {
-	if update.Message.Chat.IsPrivate() && shouldLimitPrivate {
-		return true
-	} else if (update.Message.Chat.IsGroup() || update.Message.Chat.IsSuperGroup()) && shouldLimitGroup {
-		return true
-	}
-	return false
 }
