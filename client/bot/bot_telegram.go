@@ -111,7 +111,7 @@ func (t *TelegramBot) loopAndFinishChatTask() {
 func (t *TelegramBot) Finish(task *model.ChatTask) {
 	log.Printf("[Finish] start chat task %s", task.String())
 	defer t.session.Delete(task.From)
-	t.Log(task.GetFormattedQuestion())
+	go t.Log(task.GetFormattedQuestion())
 	res, err := t.engine.Chat(task.Question)
 	if err != nil {
 		log.Printf("[Finish] chat task failed, err: %s", err)
@@ -120,7 +120,7 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 		task.Answer = res
 	}
 	t.Send(task)
-	t.Log(task.GetFormattedAnswer())
+	go t.Log(task.GetFormattedAnswer())
 	log.Printf("[Finish] end chat task: %s", task.String())
 
 }
@@ -128,6 +128,7 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 func (t *TelegramBot) Log(log string) {
 	go func(s string) {
 		msg := tgbotapi.NewMessage(t.logChat, s)
+		msg.ParseMode = "markdown"
 		_, _ = t.tgBot.Send(msg)
 	}(log)
 }
