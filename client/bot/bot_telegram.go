@@ -159,7 +159,7 @@ func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
 		utils.ToJsonString(update.Message.From),
 		utils.ToJsonString(update.Message))
 	if update.Message.IsCommand() {
-		msg := handleCommandMsg(update)
+		msg := t.handleCommandMsg(update)
 		_, err := t.tgBot.Send(msg)
 		if err != nil {
 			log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
@@ -173,7 +173,7 @@ func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
 
 }
 
-func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
+func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	switch update.Message.Command() {
 	case constant.START:
@@ -181,6 +181,8 @@ func handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageConfig {
 		msg.Text = constant.BotStartTip
 	case constant.PING:
 		msg.Text = constant.BotPingTip
+	case constant.Limiter:
+		t.ChangeLimiter(update)
 	default:
 		msg.Text = constant.UnknownCmdTip
 	}
@@ -208,16 +210,7 @@ func (t *TelegramBot) handleUserMessage(update tgbotapi.Update) {
 	}
 
 	if shouldHandleMessage(update, t.tgBot.Self.ID) {
-		if t.enableLimiter &&
-			!t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) &&
-			t.shouldLimitUser(update) {
-			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-			text := fmt.Sprintf(constant.RateLimitMessageTemplate,
-				t.limiter.GetCapacity(), t.limiter.GetDuration()/60,
-				t.channelName, t.groupName,
-				t.limiter.GetDuration()/60, t.limiter.GetCapacity(),
-				t.channelName, t.groupName)
-			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
+		if !t.checkLimiters(update) {
 			return
 		}
 		if !thisUserHasMessage {
@@ -229,6 +222,7 @@ func (t *TelegramBot) handleUserMessage(update tgbotapi.Update) {
 	}
 
 }
+
 func (t *TelegramBot) sendErrorMessage(chatID int64, msgID int, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyToMessageID = msgID
@@ -293,4 +287,35 @@ func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID
 func (t *TelegramBot) sendTyping(task *model.ChatTask) {
 	msg := tgbotapi.NewChatAction(task.Chat, tgbotapi.ChatTyping)
 	_, _ = t.tgBot.Send(msg)
+}
+
+func (t *TelegramBot) checkLimiters(update tgbotapi.Update) bool {
+	if update.Message.Chat.IsPrivate() {
+		if t.shouldLimitUser(update) {
+			text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
+			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
+			return false
+		}
+	}
+	if t.enableLimiter &&
+		!t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) &&
+		t.shouldLimitUser(update) {
+		log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+		text := fmt.Sprintf(constant.RateLimitMessageTemplate,
+			t.limiter.GetCapacity(), t.limiter.GetDuration()/60,
+			t.channelName, t.groupName,
+			t.limiter.GetDuration()/60, t.limiter.GetCapacity(),
+			t.channelName, t.groupName)
+		t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
+		return false
+	}
+	return true
+}
+
+func (t *TelegramBot) ChangeLimiter(update tgbotapi.Update) {
+	t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("limiter is %t", t.enableLimiter))
+	msg.ReplyToMessageID = update.Message.MessageID
+	_, _ = t.tgBot.Send(msg)
+
 }
