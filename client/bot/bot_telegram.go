@@ -177,12 +177,14 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	switch update.Message.Command() {
 	case constant.START:
+		msg.Text = constant.BotStartTip
 	case constant.CHATGPT:
 		msg.Text = constant.BotStartTip
 	case constant.PING:
 		msg.Text = constant.BotPingTip
 	case constant.Limiter:
-		t.ChangeLimiter(update)
+		t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
+		msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
 	default:
 		msg.Text = constant.UnknownCmdTip
 	}
@@ -310,12 +312,4 @@ func (t *TelegramBot) checkLimiters(update tgbotapi.Update) bool {
 		return false
 	}
 	return true
-}
-
-func (t *TelegramBot) ChangeLimiter(update tgbotapi.Update) {
-	t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("limiter is %t", t.enableLimiter))
-	msg.ReplyToMessageID = update.Message.MessageID
-	_, _ = t.tgBot.Send(msg)
-
 }
