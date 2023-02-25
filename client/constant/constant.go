@@ -4,8 +4,8 @@ var (
 	BotPingTip    = "pong"
 	UnknownCmdTip = "Unknown command, please send /start to start a chat \n\n" +
 		"🔥未知命令，请发送 /start 来开始聊天"
-	BotStartTip = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you. You can also add me to your own group\n\n" +
-		"😊请在这条消息下回复你的问题，我会回复你的 \n🔥你也可以私聊我或者把我加到你的群组聊天"
+	BotStartTip = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you. \nYou can also add me to your own group\n\n" +
+		"😊请在这条消息下回复你的问题，我会回复你的 \n\n🔥你也可以私聊我或者把我加到你的群组聊天"
 	OnlyOneChatAtATime = "you are chatting with me, please wait for a while. \n\n" +
 		"😅你已经发送了一条信息，请耐心等待"
 	LimitUserMessageTemplate = "You should join channel %s and group %s, then you can talk to me \n\n" +
