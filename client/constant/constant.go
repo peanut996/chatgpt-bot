@@ -23,4 +23,7 @@ var (
 		"😇ChatGPT 引擎还没有准备好，请稍等一下"
 	SendBackMsgFailed = "Send back message failed, please try again later \n\n" +
 		"😇返回消息失败，请稍后再试"
+
+	NetworkError = "Network error, please try again later \n\n" +
+		"😐网络错误，请稍后再试"
 )

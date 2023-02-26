@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -82,9 +83,16 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 
 func (e *ChatGPTEngine) Chat(sentence string) (string, error) {
 	resp, err := e.chat(sentence)
+
+	isNetworkError := strings.Contains(resp, "SSLError") || strings.Contains(resp, "RemoteDisconnected")
+	if isNetworkError {
+		return "", errors.New(constant.NetworkError)
+	}
+
 	if err == nil && "" != resp {
 		return resp, nil
 	}
+
 	if err != nil {
 		log.Println("[ChatGPT] chatgpt engine error: ", err)
 		return fmt.Sprintf(constant.ChatGPTErrorTemplate, err.Error()), nil
