@@ -111,7 +111,7 @@ func (t *TelegramBot) loopAndFinishChatTask() {
 func (t *TelegramBot) Finish(task *model.ChatTask) {
 	log.Printf("[Finish] start chat task %s", task.String())
 	defer t.session.Delete(task.From)
-	go t.Log(task.GetFormattedQuestion())
+	t.Log(task.GetFormattedQuestion())
 	res, err := t.engine.Chat(task.Question)
 	if err != nil {
 		log.Printf("[Finish] chat task failed, err: %s", err)
@@ -120,7 +120,7 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 		task.Answer = res
 	}
 	t.Send(task)
-	go t.Log(task.GetFormattedAnswer())
+	t.Log(task.GetFormattedAnswer())
 	log.Printf("[Finish] end chat task: %s", task.String())
 
 }
@@ -128,28 +128,37 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 func (t *TelegramBot) Log(log string) {
 	go func(s string) {
 		msg := tgbotapi.NewMessage(t.logChat, s)
-		msg.ParseMode = "markdown"
-		_, _ = t.tgBot.Send(msg)
+		msg.ParseMode = tgbotapi.ModeMarkdownV2
+		_ = t.safeSend(msg)
 	}(log)
 }
 
 func (t *TelegramBot) Send(task *model.ChatTask) {
 	msg := tgbotapi.NewMessage(task.Chat, task.Question)
-	msg.ParseMode = "markdown"
+	msg.ParseMode = tgbotapi.ModeMarkdownV2
 	msg.Text = task.Answer
 	msg.ReplyToMessageID = task.MessageID
 	msgs := utils.SplitMessageByMaxSize(task.Answer, 4000)
 	for _, m := range msgs {
 		msg.Text = m
-		_, err := t.tgBot.Send(msg)
-		if err != nil {
-			log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
-			msg.Text = constant.SendBackMsgFailed
-			_, _ = t.tgBot.Send(msg)
-			return
-		}
+		_ = t.safeSend(msg)
 	}
+}
 
+func (t *TelegramBot) safeSend(msg tgbotapi.MessageConfig) error {
+	_, err := t.tgBot.Send(msg)
+	if err == nil {
+		return nil
+	}
+	msg.ParseMode = ""
+	_, err = t.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		msg.Text = constant.SendBackMsgFailed
+		_, _ = t.tgBot.Send(msg)
+		return err
+	}
+	return nil
 }
 
 func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
