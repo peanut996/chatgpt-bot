@@ -5,7 +5,6 @@ bot:
   groupName: @your group name
 
 engine:
+  host: engine
   port: 5000
-  account: your account
-  password: your password
-  conversationId: your conversation id
+  type: chatgpt
