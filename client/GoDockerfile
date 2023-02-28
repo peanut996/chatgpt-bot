@@ -2,7 +2,7 @@ FROM golang:latest
 
 WORKDIR /app
 
-COPY . .
+COPY client/. .
 
 RUN go mod tidy
 

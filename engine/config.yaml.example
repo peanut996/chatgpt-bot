@@ -1,0 +1,7 @@
+engine:
+  port: 5000
+  type: chatgpt
+  debug: true
+  chatgpt: 
+    tokens: 
+      - email:passwrod:conversationId

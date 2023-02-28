@@ -7,8 +7,6 @@ services:
       dockerfile: client/GoDockerfile
     container_name: BotClient
     restart: always
-    environment:
-      - ENGINE_URL=http://engine:5000
     depends_on:
       - engine
 
@@ -18,3 +16,5 @@ services:
       dockerfile: engine/PythonDockerfile
     container_name: BotEngine
     restart: always
+    ports:
+      - 5000:5000

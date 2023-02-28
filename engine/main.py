@@ -48,10 +48,10 @@ def ping():
     return "pong"
 
 
-def check_cookie():
-    if os.path.exists("cookie.json") is False:
-        logging.error("cookie.json not found")
-        exit(1)
+# def check_cookie():
+#     if os.path.exists("cookie.json") is False:
+#         logging.error("cookie.json not found")
+#         exit(1)
 
 
 # load yaml with file path
