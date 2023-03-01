@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+          python-version: 3.9
+
+    - name: Build Client
+      run: cd client && go build -v ./...
+
+    - name: Build Engine
+      run: |
+        cd engine 
+        pip install -r requirements.txt 
+        python -m compileall .
