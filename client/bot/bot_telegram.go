@@ -128,14 +128,14 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 func (t *TelegramBot) Log(log string) {
 	go func(s string) {
 		msg := tgbotapi.NewMessage(t.logChat, s)
-		msg.ParseMode = tgbotapi.ModeMarkdownV2
+		msg.ParseMode = tgbotapi.ModeMarkdown
 		_ = t.safeSend(msg)
 	}(log)
 }
 
 func (t *TelegramBot) Send(task *model.ChatTask) {
 	msg := tgbotapi.NewMessage(task.Chat, task.Question)
-	msg.ParseMode = tgbotapi.ModeMarkdownV2
+	msg.ParseMode = tgbotapi.ModeMarkdown
 	msg.Text = task.Answer
 	msg.ReplyToMessageID = task.MessageID
 	msgs := utils.SplitMessageByMaxSize(task.Answer, 4000)
