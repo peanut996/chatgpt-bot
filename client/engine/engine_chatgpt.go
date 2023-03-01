@@ -84,7 +84,9 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 func (e *ChatGPTEngine) Chat(sentence string) (string, error) {
 	resp, err := e.chat(sentence)
 
-	isNetworkError := strings.Contains(resp, "SSLError") || strings.Contains(resp, "RemoteDisconnected")
+	isNetworkError := strings.Contains(resp, "SSLError") ||
+		strings.Contains(resp, "RemoteDisconnected") ||
+		strings.Contains(resp, "ConnectionResetError")
 	if isNetworkError {
 		return "", errors.New(constant.NetworkError)
 	}
