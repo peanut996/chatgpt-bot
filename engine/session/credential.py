@@ -11,9 +11,9 @@ class Credential:
         self.lock = asyncio.Lock
         self.verbose = verbose
         self.chat_gpt_bot = ChatGPTBot(config={
-            email,
-            password,
-            verbose
+            'email': email,
+            'password': password,
+            'verbose': verbose
         }, conversation_id=conversation_id)
 
     def set_verbose(self, verbose):

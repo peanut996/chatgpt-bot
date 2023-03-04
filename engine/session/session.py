@@ -1,9 +1,8 @@
-import asyncio
 import logging
 import random
 from typing import List
 
-from credential import Credential
+from .credential import Credential
 
 
 class Session:
@@ -32,7 +31,7 @@ class Session:
         logging.info("ChatGPTBot using token: {}".format(credential.email))
         return credential
 
-    def _chat_with_chat_gpt(self, sentence: str) -> str:
+    async def _chat_with_chat_gpt(self, sentence: str) -> str:
         bot = self._generate_chat_gpt_bot()
         async with bot.lock:
             try:
@@ -49,7 +48,5 @@ class Session:
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e
 
-    async def chat_with_chatgpt(self, sentence: str) -> str:
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, self._chat_with_chat_gpt, sentence)
-        return result
+    async def chat_with_chatgpt(self, sentence: str):
+        return self._chat_with_chat_gpt(sentence)
