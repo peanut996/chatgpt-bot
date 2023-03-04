@@ -58,12 +58,13 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 		return err
 	}
 
-	t.taskChan = make(chan *model.ChatTask, 1)
+	t.taskChan = make(chan *model.ChatTask, 5)
 
 	t.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 	t.limiter = middleware.NewLimiter(cfg.BotConfig.RateLimiterConfig.Capacity,
 		cfg.BotConfig.RateLimiterConfig.Duration)
 	go t.loopAndFinishChatTask()
+	log.Printf("[Init] telegram bot init success, bot name: %s", t.tgBot.Self.UserName)
 	log.Printf("[Init] telegram bot init success, bot name: %s", t.tgBot.Self.UserName)
 	return nil
 }

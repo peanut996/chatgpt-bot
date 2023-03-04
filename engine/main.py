@@ -30,37 +30,16 @@ async def chat():
         return {"detail": str(e)}
 
 
-# @app.route('/bing')
-# async def bing_chat():
-#     sentence = request.args.get("sentence")
-#     logging.info(f"[Engine] Request: {sentence}")
-#     try:
-#         res = await chat_with_edgegpt(sentence)
-#         logging.info(f"[Engine] Response: {res}")
-#         return {"message": res}
-#     except Exception as e:
-#         logging.error(f"[Engine] Error: {e}")
-#         return {"message": "Error: " + str(e)}
-
-
 @app.route('/ping')
 def ping():
     return "pong"
 
 
-# def check_cookie():
-#     if os.path.exists("cookie.json") is False:
-#         logging.error("cookie.json not found")
-#         exit(1)
-
-
-# load yaml with file path
 def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
-# receive arg from cmd line
 def get_config_path():
     if os.getenv("BOT_ENGINE_CONFIG_PATH") is not None:
         return os.getenv("BOT_ENGINE_CONFIG_PATH")

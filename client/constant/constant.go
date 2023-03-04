@@ -26,4 +26,7 @@ var (
 
 	NetworkError = "Network error, please try again later \n\n" +
 		"😐网络错误，请稍后再试"
+
+	InternalError = "Internal error, please try again later \n\n" +
+		"😐内部错误，请稍后再试"
 )

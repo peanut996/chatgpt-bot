@@ -52,11 +52,11 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 	}
 
 	encodeSentence := url.QueryEscape(sentence)
-	e.client.Timeout = 300 * time.Second
+	e.client.Timeout = 180 * time.Second
 	resp, err := e.client.Get(e.baseUrl + "/chat?sentence=" + encodeSentence)
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return "", errors.New(constant.NetworkError)
 	}
 	if resp.StatusCode != 200 {
 		return "", errors.New(constant.ChatGPTError)
@@ -64,7 +64,7 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return "", errors.New(constant.InternalError)
 	}
 	data := make(map[string]string, 0)
 	err = json.Unmarshal(body, &data)
