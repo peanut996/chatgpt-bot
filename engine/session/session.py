@@ -14,6 +14,7 @@ class Session:
             self.chatgpt_credentials: List[Credential] = list(map(Credential.parse, config["engine"]["chatgpt"]["tokens"]))
         except OpenAIAuth.Error as e:
             logging.error("Init Credential Error: status: {}, details: {}".format(e.status_code, e.details))
+            raise e
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
         self.verbose = config['engine'].get('debug', False)
@@ -36,7 +37,7 @@ class Session:
         logging.info("ChatGPTBot using token: {}".format(credential.email))
         return credential
 
-    async def _chat_with_chat_gpt(self, sentence: str) -> str:
+    async def chat_with_chatgpt(self, sentence: str):
         bot = self._generate_chat_gpt_bot()
         async with bot.lock:
             try:
@@ -53,6 +54,3 @@ class Session:
             except Exception as e:
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e
-
-    async def chat_with_chatgpt(self, sentence: str):
-        return self._chat_with_chat_gpt(sentence)

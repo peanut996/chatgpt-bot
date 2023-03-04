@@ -1,5 +1,6 @@
 import asyncio
 import time
+import logging
 
 from revChatGPT.V1 import Chatbot as ChatGPTBot
 
@@ -9,7 +10,7 @@ class Credential:
         self.email = email
         self.password = password
         self.conversation_id = conversation_id
-        self.lock = asyncio.Lock
+        self.lock = asyncio.Lock()
         self.verbose = verbose
         self.last_update_time = time.time()
         self.chat_gpt_bot = ChatGPTBot(config={
@@ -30,6 +31,7 @@ class Credential:
                 'verbose': self.verbose
             }, conversation_id=self.conversation_id)
             self.last_update_time = time.time()
+            logging.info("ChatGPTBot token refreshed: {}".format(self.email))
 
     @staticmethod
     def parse(credential_str: str):

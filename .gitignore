@@ -11,3 +11,4 @@ cookie.json
 config.yaml
 *.code-workspace
 chatgpt-bot
+*.yaml
