@@ -2,13 +2,18 @@ import logging
 import random
 from typing import List
 
+import OpenAIAuth
+
 from .credential import Credential
 
 
 class Session:
     def __init__(self, config):
         self.used_chatgpt_credentials_indexes = []
-        self.chatgpt_credentials: List[Credential] = list(map(Credential.parse, config["engine"]["chatgpt"]["tokens"]))
+        try:
+            self.chatgpt_credentials: List[Credential] = list(map(Credential.parse, config["engine"]["chatgpt"]["tokens"]))
+        except OpenAIAuth.Error as e:
+            logging.error("Init Credential Error: status: {}, details: {}".format(e.status_code, e.details))
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
         self.verbose = config['engine'].get('debug', False)
@@ -35,6 +40,7 @@ class Session:
         bot = self._generate_chat_gpt_bot()
         async with bot.lock:
             try:
+                bot.refresh_token()
                 res = ""
                 prev_text = ""
                 for data in bot.chat_gpt_bot.ask(sentence):

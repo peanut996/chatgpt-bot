@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from revChatGPT.V1 import Chatbot as ChatGPTBot
 
@@ -10,6 +11,7 @@ class Credential:
         self.conversation_id = conversation_id
         self.lock = asyncio.Lock
         self.verbose = verbose
+        self.last_update_time = time.time()
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
@@ -19,6 +21,15 @@ class Credential:
     def set_verbose(self, verbose):
         self.verbose = verbose
         self.chat_gpt_bot.verbose = verbose
+
+    def refresh_token(self):
+        if time.time() - self.last_update_time > 60 * 30:
+            self.chat_gpt_bot = ChatGPTBot(config={
+                'email': self.email,
+                'password': self.password,
+                'verbose': self.verbose
+            }, conversation_id=self.conversation_id)
+            self.last_update_time = time.time()
 
     @staticmethod
     def parse(credential_str: str):
