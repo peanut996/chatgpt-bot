@@ -19,11 +19,12 @@ import (
 )
 
 type TelegramBot struct {
-	tgBot    *tgbotapi.BotAPI
-	engine   engine.Engine
-	session  *sync.Map
-	taskChan chan *model.ChatTask
-	limiter  *middleware.Limiter
+	tgBot        *tgbotapi.BotAPI
+	engine       engine.Engine
+	session      *sync.Map
+	taskChan     chan *model.ChatTask
+	maxQueueChan chan interface{}
+	limiter      *middleware.Limiter
 
 	groupName     string
 	channelName   string
@@ -58,7 +59,8 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 		return err
 	}
 
-	t.taskChan = make(chan *model.ChatTask, 5)
+	t.taskChan = make(chan *model.ChatTask, 1)
+	t.maxQueueChan = make(chan interface{}, 5)
 
 	t.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 	t.limiter = middleware.NewLimiter(cfg.BotConfig.RateLimiterConfig.Capacity,
@@ -102,7 +104,7 @@ func (t *TelegramBot) loopAndFinishChatTask() {
 		select {
 		case task := <-t.taskChan:
 			log.Println("[LoopAndFinishChatTask] got a task to finish")
-			t.Finish(task)
+			go t.Finish(task)
 		case <-time.After(30 * time.Second):
 		}
 
@@ -110,6 +112,10 @@ func (t *TelegramBot) loopAndFinishChatTask() {
 }
 
 func (t *TelegramBot) Finish(task *model.ChatTask) {
+	t.maxQueueChan <- struct{}{}
+	defer func() {
+		<-t.maxQueueChan
+	}()
 	log.Printf("[Finish] start chat task %s", task.String())
 	defer t.session.Delete(task.From)
 	t.Log(task.GetFormattedQuestion())

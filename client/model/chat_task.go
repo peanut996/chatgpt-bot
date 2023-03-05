@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/google/uuid"
+)
 
 type ChatTask struct {
 	Question  string
@@ -8,6 +11,7 @@ type ChatTask struct {
 	Chat      int64
 	From      int64
 	MessageID int
+	UUID      string
 }
 
 func (c *ChatTask) String() string {
@@ -15,11 +19,11 @@ func (c *ChatTask) String() string {
 }
 
 func (c *ChatTask) GetFormattedQuestion() string {
-	return fmt.Sprintf("❓ %s", c.Question)
+	return fmt.Sprintf("❓%s\n%s", c.UUID, c.Question)
 }
 
 func (c *ChatTask) GetFormattedAnswer() string {
-	return fmt.Sprintf("🅰️ %s", c.Answer)
+	return fmt.Sprintf("🅰️ %s\n%s", c.UUID, c.Answer)
 }
 
 func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
@@ -28,5 +32,6 @@ func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
 		Chat:      chat,
 		From:      from,
 		MessageID: msgID,
+		UUID:      uuid.New().String(),
 	}
 }
