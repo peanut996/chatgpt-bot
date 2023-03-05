@@ -16,5 +16,3 @@ services:
       dockerfile: engine/PythonDockerfile
     container_name: BotEngine
     restart: always
-    ports:
-      - 5000:5000
