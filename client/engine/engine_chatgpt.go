@@ -92,13 +92,13 @@ func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
 		return "", errors.New(constant.NetworkError)
 	}
 
-	if err == nil && "" != resp {
+	if err == nil && resp != "" {
 		return resp, nil
 	}
 
 	if err != nil {
 		log.Println("[ChatGPT] chatgpt engine error: ", err)
-		return fmt.Sprintf(constant.ChatGPTErrorTemplate, err.Error()), nil
+		return "", err
 	}
 	return constant.ChatGPTError, err
 }
