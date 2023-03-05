@@ -4,7 +4,8 @@ WORKDIR /app
 
 COPY client/. .
 
-COPY ../*.yaml ../*.yml .
+
+COPY *.yaml *.yml ./
 
 RUN go mod tidy
 

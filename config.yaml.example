@@ -15,6 +15,7 @@ bot:
 
 engine:
   port: 5005
+  host: engine/127.0.0.1
   debug: true
   chatgpt:
     tokens:
