@@ -157,6 +157,9 @@ func (t *TelegramBot) Send(task *model.ChatTask) {
 }
 
 func (t *TelegramBot) safeSend(msg tgbotapi.MessageConfig) error {
+	if msg.Text == "" {
+		return nil
+	}
 	_, err := t.tgBot.Send(msg)
 	if err == nil {
 		return nil
@@ -181,13 +184,7 @@ func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
 		utils.ToJsonString(update.Message))
 	if update.Message.IsCommand() {
 		msg := t.handleCommandMsg(update)
-		_, err := t.tgBot.Send(msg)
-		if err != nil {
-			log.Printf("[Send] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
-			msg.Text = constant.SendBackMsgFailed
-			_, _ = t.tgBot.Send(msg)
-			return
-		}
+		_ = t.safeSend(msg)
 	} else {
 		t.handleUserMessage(update)
 	}
@@ -207,10 +204,8 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 		t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
 		msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
 	case constant.PPROF:
-		if _, success := t.dumpProfile(update.Message.Chat.ID); success {
-			msg.Text = "Done! Please check the log file."
-		} else {
-			msg.Text = "Failed!"
+		if m, success := t.dumpProfile(update.Message.Chat.ID); !success {
+			msg.Text = m
 		}
 
 	default:
@@ -359,31 +354,39 @@ func (t *TelegramBot) getUserInfo(userID int64) (*model.User, error) {
 
 func (t *TelegramBot) dumpProfile(chat int64) (string, bool) {
 	fileName := fmt.Sprintf("%d.pprof", time.Now().Unix())
-	tmpFile, err := os.CreateTemp("", fileName)
+	filePath := os.TempDir() + string(os.PathSeparator) + fileName
+	tmpFile, err := os.Create(filePath)
 	defer func(tmpFile *os.File) {
 		_ = tmpFile.Close()
+		_ = os.Remove(filePath)
 	}(tmpFile)
 
 	if err != nil {
 		log.Printf("[DumpProfile] create temp file failed, err: 【%s】", err)
-		return "", false
+		return err.Error(), false
 	}
 
 	err = pprof.WriteHeapProfile(tmpFile)
 	if err != nil {
 		log.Printf("[DumpProfile] create temp file failed, err: 【%s】", err)
-		return "", false
+		return err.Error(), false
 	}
 
-	t.sendFile(chat, tmpFile)
+	err = t.sendFile(chat, tmpFile)
+	if err != nil {
+		log.Printf("[DumpProfile] send file failed, err: 【%s】", err)
+		return err.Error(), false
+	}
 	return tmpFile.Name(), true
 }
 
 // send file to chat
-func (t *TelegramBot) sendFile(chatID int64, file *os.File) {
-	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FileReader{Reader: file})
+func (t *TelegramBot) sendFile(chatID int64, file *os.File) error {
+	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FilePath(file.Name()))
 	_, err := t.tgBot.Send(fileMsg)
 	if err != nil {
 		log.Printf("[SendFile] send file failed, err: 【%s】", err)
+		return err
 	}
+	return nil
 }
