@@ -1,5 +1,7 @@
 package constant
 
+var ChatGPTTimeoutSeconds = 300
+
 var (
 	BotPingTip    = "pong"
 	UnknownCmdTip = "Unknown command, please send /start to start a chat \n\n" +

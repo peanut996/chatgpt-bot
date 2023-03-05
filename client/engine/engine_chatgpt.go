@@ -52,7 +52,7 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 	}
 
 	encodeSentence := url.QueryEscape(sentence)
-	e.client.Timeout = 180 * time.Second
+	e.client.Timeout = time.Duration(constant.ChatGPTTimeoutSeconds) * time.Second
 	resp, err := e.client.Get(e.baseUrl + "/chat?sentence=" + encodeSentence)
 	if err != nil {
 		log.Println(err)
