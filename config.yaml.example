@@ -1,0 +1,21 @@
+bot:
+  type: telegram
+  token: 123
+  channelName: name
+  groupName: name
+  botName: name
+  logChannel: id
+  loginType: "desktop"
+  limitGroup: false
+  limitPrivate: true
+  rateLimiter:
+    enable: true
+    capacity: 5
+    duration: 900
+
+engine:
+  port: 5005
+  debug: true
+  chatgpt:
+    tokens:
+      - "email:password:conversation_id"
