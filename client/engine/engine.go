@@ -9,7 +9,7 @@ var (
 
 type Engine interface {
 	Init(*cfg.Config) error
-	Chat(string) (string, error)
+	Chat(string, string) (string, error)
 	Alive() bool
 }
 

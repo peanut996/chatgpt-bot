@@ -120,7 +120,7 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 	defer t.session.Delete(task.From)
 	t.Log(task.GetFormattedQuestion())
 	t.sendTyping(task)
-	res, err := t.engine.Chat(task.Question)
+	res, err := t.engine.Chat(task.Question, strconv.FormatInt(task.From, 10))
 	if err != nil {
 		log.Printf("[Finish] chat task failed, err: %s", err)
 		task.Answer = err.Error()

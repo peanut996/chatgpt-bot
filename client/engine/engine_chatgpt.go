@@ -44,7 +44,7 @@ func (e *ChatGPTEngine) Alive() bool {
 }
 
 // Chat is the method to chat with ChatGPT engine
-func (e *ChatGPTEngine) chat(sentence string) (string, error) {
+func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	log.Println("[ChatGPT] send request to chatgpt, text: ", sentence)
 
 	if !e.Alive() {
@@ -53,7 +53,8 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 
 	encodeSentence := url.QueryEscape(sentence)
 	e.client.Timeout = time.Duration(constant.ChatGPTTimeoutSeconds) * time.Second
-	resp, err := e.client.Get(e.baseUrl + "/chat?sentence=" + encodeSentence)
+	queryString := fmt.Sprintf("/chat?user_id=%s&sentence=%s", userID, encodeSentence)
+	resp, err := e.client.Get(e.baseUrl + queryString)
 	if err != nil {
 		log.Println(err)
 		return "", errors.New(constant.NetworkError)
@@ -81,8 +82,8 @@ func (e *ChatGPTEngine) chat(sentence string) (string, error) {
 	return data["message"], nil
 }
 
-func (e *ChatGPTEngine) Chat(sentence string) (string, error) {
-	resp, err := e.chat(sentence)
+func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
+	resp, err := e.chat(sentence, userID)
 
 	isNetworkError := strings.Contains(resp, "SSLError") ||
 		strings.Contains(resp, "RemoteDisconnected") ||

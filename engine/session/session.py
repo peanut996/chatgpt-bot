@@ -1,5 +1,6 @@
 import logging
 import random
+import time
 from typing import List
 
 import OpenAIAuth
@@ -17,6 +18,8 @@ class Session:
             raise e
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
+        self.user_to_credential = dict()
+        self.user_to_last_chat_time = dict()
         self.verbose = config['engine'].get('debug', False)
         for c in self.chatgpt_credentials:
             c.set_verbose(self.verbose)
@@ -32,13 +35,28 @@ class Session:
         self.used_chatgpt_credentials_indexes.append(index)
         return self.chatgpt_credentials[index]
 
-    def _generate_chat_gpt_bot(self) -> Credential:
-        credential = self._get_random_chat_gpt_credential()
-        logging.info("ChatGPTBot using token: {}".format(credential.email))
-        return credential
+    def _generate_chat_gpt_bot(self, user_id=None) -> Credential:
+        if user_id is None:
+            credential = self._get_random_chat_gpt_credential()
+            return credential
+        else:
+            if user_id not in self.user_to_last_chat_time:
+                self.user_to_last_chat_time[user_id] = time.time()
+                credential = self._get_random_chat_gpt_credential()
+                self.user_to_credential[user_id] = credential
+                return credential
+            else:
+                self.user_to_last_chat_time[user_id] = time.time()
+                if time.time() - self.user_to_last_chat_time[user_id] > 60 * 5:
+                    credential = self._get_random_chat_gpt_credential()
+                    self.user_to_credential[user_id] = credential
+                    return credential
+                else:
+                    return self.user_to_credential[user_id]
 
-    async def chat_with_chatgpt(self, sentence: str):
-        bot = self._generate_chat_gpt_bot()
+    async def chat_with_chatgpt(self, sentence: str, user_id=None) -> str:
+        bot = self._generate_chat_gpt_bot(user_id=user_id)
+        logging.info("ChatGPTBot using token: {}".format(bot.email))
         async with bot.lock:
             try:
                 bot.refresh_token()

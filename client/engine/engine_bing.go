@@ -19,7 +19,7 @@ func (e *BingEngine) Init(cfg *cfg.Config) error {
 	panic("implement me")
 }
 
-func (e *BingEngine) Chat(message string) (string, error) {
+func (e *BingEngine) Chat(message string, userID string) (string, error) {
 	panic("implement me")
 }
 

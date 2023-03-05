@@ -98,7 +98,7 @@ func (w *WechatBot) handleWechatMessage(msg *openwechat.Message) {
 			return
 		}
 		var text = strings.Replace(msg.Content, atTag, "", -1)
-		res, err := w.engine.Chat(text)
+		res, err := w.engine.Chat(text, msg.FromUserName)
 
 		replyText := ""
 		if err != nil {

@@ -1,6 +1,6 @@
 package constant
 
-var ChatGPTTimeoutSeconds = 300
+var ChatGPTTimeoutSeconds = 360
 
 var (
 	BotPingTip    = "pong"

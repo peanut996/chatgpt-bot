@@ -9,16 +9,16 @@ from flask import Flask, request
 from session.session import Session
 
 app = Flask(__name__)
-session = None
+session: Session
 
 
 @app.route('/chat')
 async def chat():
     sentence = request.args.get("sentence")
+    user_id = request.args.get("user_id")
     logging.info(f"[Engine] chat gpt engine get request: {sentence}")
     try:
-        # noinspection PyUnresolvedReferences
-        res = await session.chat_with_chatgpt(sentence)
+        res = await session.chat_with_chatgpt(sentence, user_id=user_id)
         logging.info(f"[Engine] chat gpt engine get response: {res}")
         return {"message": res}
     except OpenAIError as e:
@@ -63,6 +63,9 @@ def load_config():
 def main():
     global session
     logging.basicConfig(level=logging.INFO)
+    server_log = logging.getLogger('werkzeug')
+    server_log.setLevel(logging.ERROR)
+
     config = load_config()
     session = Session(config=config)
     port = config['engine']['port']
