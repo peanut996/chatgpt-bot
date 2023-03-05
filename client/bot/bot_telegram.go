@@ -119,6 +119,7 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 	log.Printf("[Finish] start chat task %s", task.String())
 	defer t.session.Delete(task.From)
 	t.Log(task.GetFormattedQuestion())
+	t.sendTyping(task)
 	res, err := t.engine.Chat(task.Question)
 	if err != nil {
 		log.Printf("[Finish] chat task failed, err: %s", err)
@@ -126,6 +127,7 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 	} else {
 		task.Answer = res
 	}
+	t.sendTyping(task)
 	t.Send(task)
 	t.Log(task.GetFormattedAnswer())
 	log.Printf("[Finish] end chat task: %s", task.String())
@@ -299,6 +301,10 @@ func (t *TelegramBot) sendTaskToChannel(question string, chat, from int64, msgID
 	t.session.Store(from, &struct{}{})
 	log.Printf("[SendTaskToChannel] with question %s, chat id: %d, from: %d", question, chat, from)
 	chatTask := model.NewChatTask(question, chat, from, msgID)
+	user, err := t.getUserInfo(from)
+	if err == nil {
+		chatTask.User = user
+	}
 	t.taskChan <- chatTask
 	t.sendTyping(chatTask)
 }
@@ -329,4 +335,15 @@ func (t *TelegramBot) checkLimiters(update tgbotapi.Update) bool {
 		return false
 	}
 	return true
+}
+
+func (t *TelegramBot) getUserInfo(userID int64) (*model.User, error) {
+	user, err := t.tgBot.GetChat(tgbotapi.ChatInfoConfig{
+		ChatConfig: tgbotapi.ChatConfig{
+			ChatID: userID,
+		}})
+	if err != nil {
+		return nil, err
+	}
+	return model.NewUser(user.UserName, user.FirstName, user.LastName), nil
 }

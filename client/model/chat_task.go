@@ -12,6 +12,8 @@ type ChatTask struct {
 	From      int64
 	MessageID int
 	UUID      string
+
+	User *User
 }
 
 func (c *ChatTask) String() string {
@@ -19,11 +21,11 @@ func (c *ChatTask) String() string {
 }
 
 func (c *ChatTask) GetFormattedQuestion() string {
-	return fmt.Sprintf("❓%s\n%s", c.UUID, c.Question)
+	return fmt.Sprintf("❓ from %s\n%s", c.User.String(), c.Question)
 }
 
 func (c *ChatTask) GetFormattedAnswer() string {
-	return fmt.Sprintf("🅰️ %s\n%s", c.UUID, c.Answer)
+	return fmt.Sprintf("🅰️ to %s\n%s", c.User.String(), c.Answer)
 }
 
 func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
