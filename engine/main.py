@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import traceback
 
 import yaml
 from OpenAIAuth import Error as OpenAIError
@@ -16,18 +17,18 @@ session: Session
 async def chat():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
-    logging.info(f"[Engine] chat gpt engine get request: {sentence}")
+    logging.getLogger("app").info(f"[Engine] chat gpt engine get request: from {user_id}: {sentence} ")
     try:
         res = await session.chat_with_chatgpt(sentence, user_id=user_id)
-        logging.info(f"[Engine] chat gpt engine get response: {res}")
+        logging.getLogger("app").info(f"[Engine] chat gpt engine get response: to {user_id}: {res}")
         return {"message": res}
     except OpenAIError as e:
         logging.error(
             "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
         return {"detail": e.details, "code": e.status_code}
     except Exception as e:
-        logging.error(f"[Engine] chat gpt engine get error: {str(e)}")
-        return {"detail": str(e)}
+        logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
+        return {"detail": e.args}
 
 
 @app.route('/ping')
@@ -63,8 +64,8 @@ def load_config():
 def main():
     global session
     logging.basicConfig(level=logging.INFO)
-    server_log = logging.getLogger('werkzeug')
-    server_log.setLevel(logging.ERROR)
+    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    logging.getLogger("app").setLevel(logging.INFO)
 
     config = load_config()
     session = Session(config=config)

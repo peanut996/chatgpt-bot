@@ -10,6 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"sync"
@@ -204,6 +206,13 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 	case constant.Limiter:
 		t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
 		msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
+	case constant.PPROF:
+		if _, success := t.dumpProfile(update.Message.Chat.ID); success {
+			msg.Text = "Done! Please check the log file."
+		} else {
+			msg.Text = "Failed!"
+		}
+
 	default:
 		msg.Text = constant.UnknownCmdTip
 	}
@@ -346,4 +355,35 @@ func (t *TelegramBot) getUserInfo(userID int64) (*model.User, error) {
 		return nil, err
 	}
 	return model.NewUser(user.UserName, user.FirstName, user.LastName), nil
+}
+
+func (t *TelegramBot) dumpProfile(chat int64) (string, bool) {
+	fileName := fmt.Sprintf("%d.pprof", time.Now().Unix())
+	tmpFile, err := os.CreateTemp("", fileName)
+	defer func(tmpFile *os.File) {
+		_ = tmpFile.Close()
+	}(tmpFile)
+
+	if err != nil {
+		log.Printf("[DumpProfile] create temp file failed, err: 【%s】", err)
+		return "", false
+	}
+
+	err = pprof.WriteHeapProfile(tmpFile)
+	if err != nil {
+		log.Printf("[DumpProfile] create temp file failed, err: 【%s】", err)
+		return "", false
+	}
+
+	t.sendFile(chat, tmpFile)
+	return tmpFile.Name(), true
+}
+
+// send file to chat
+func (t *TelegramBot) sendFile(chatID int64, file *os.File) {
+	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FileReader{Reader: file})
+	_, err := t.tgBot.Send(fileMsg)
+	if err != nil {
+		log.Printf("[SendFile] send file failed, err: 【%s】", err)
+	}
 }

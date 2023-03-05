@@ -6,4 +6,6 @@ var (
 	CHATGPT = "chatgpt"
 
 	Limiter = "limiter"
+
+	PPROF = "pprof"
 )
