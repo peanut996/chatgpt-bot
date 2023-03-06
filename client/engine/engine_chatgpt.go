@@ -3,6 +3,7 @@ package engine
 import (
 	"chatgpt-bot/cfg"
 	"chatgpt-bot/constant"
+	"chatgpt-bot/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,7 +64,6 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	}
 	body, err := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
-	log.Println("[ChatGPT] response from chatgpt: ", string(body))
 	if err != nil {
 		log.Println(err)
 		return "", errors.New(constant.InternalError)
@@ -75,6 +75,7 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 			err, string(body))
 		return "", errors.New(constant.InternalError)
 	}
+	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJsonString(data))
 	if data["message"] == "" {
 		if data["detail"] != "" {
 			return data["detail"], nil
