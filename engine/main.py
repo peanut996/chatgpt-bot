@@ -24,7 +24,7 @@ async def chat():
     user_id = request.args.get("user_id")
     logging.getLogger("app").info(f"[Engine] chat gpt engine get request: from {user_id}: {sentence} ")
     try:
-        res = await session.chat_with_chatgpt(sentence, user_id=user_id)
+        res = await session.chat_with_chatgpt(sentence, user_id=user_id, loop=loop)
         logging.getLogger("app").info(f"[Engine] chat gpt engine get response: to {user_id}: {res}")
         return {"message": res}
     except OpenAIError as e:
@@ -79,8 +79,15 @@ def main():
     session = Session(config=config)
     port = config['engine']['port']
     debug = config['engine'].get('debug', False)
+    task = loop.create_task(app.run(host="0.0.0.0", port=port, debug=debug))
     logging.info("Starting server")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    try:
+        loop.run_until_complete(task)
+    except KeyboardInterrupt:
+        task.cancel()
+        loop.run_until_complete(task)
+    finally:
+        loop.close()
 
 
 if __name__ == "__main__":
