@@ -63,6 +63,7 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 		return "", errors.New(constant.ChatGPTError)
 	}
 	body, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	if err != nil {
 		log.Println(err)
 		return "", errors.New(constant.InternalError)
