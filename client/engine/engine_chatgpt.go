@@ -71,7 +71,9 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	data := make(map[string]string, 0)
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return "", err
+		log.Printf("[ChatGPT] unmarshal chatgpt response error: %s, resp: %s\n",
+			err, string(body))
+		return "", errors.New(constant.InternalError)
 	}
 	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJsonString(data))
 	if data["message"] == "" {
