@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import os
 import traceback
@@ -12,10 +13,12 @@ from session.session import Session
 
 app = Flask(__name__)
 session: Session
+loop = asyncio.get_event_loop()
 
 
 @app.route('/chat')
 async def chat():
+    asyncio.set_event_loop(loop)
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
     logging.getLogger("app").info(f"[Engine] chat gpt engine get request: from {user_id}: {sentence} ")

@@ -10,10 +10,10 @@ class Credential:
         self.email = email
         self.password = password
         self.conversation_id = conversation_id
-        loop = asyncio.get_event_loop()
-        self.lock = asyncio.Lock(loop=loop)
+        self.lock = asyncio.Lock()
         self.verbose = verbose
         self.last_update_time = time.time()
+        logging.info("[Credential] init: {}".format(email))
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
