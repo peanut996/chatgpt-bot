@@ -4,6 +4,9 @@ import time
 from typing import List
 
 import OpenAIAuth
+from revChatGPT.V1 import Error as ChatGPTError
+
+from revChatGPT.V1 import ErrorType
 
 from .credential import Credential
 
@@ -12,7 +15,8 @@ class Session:
     def __init__(self, config):
         self.used_chatgpt_credentials_indexes = []
         try:
-            self.chatgpt_credentials: List[Credential] = list(map(Credential.parse, config["engine"]["chatgpt"]["tokens"]))
+            self.chatgpt_credentials: List[Credential] = list(
+                map(Credential.parse, config["engine"]["chatgpt"]["tokens"]))
         except OpenAIAuth.Error as e:
             logging.error("Init Credential Error: status: {}, details: {}".format(e.status_code, e.details))
             raise e
@@ -69,6 +73,20 @@ class Session:
                 if len(res) == 0:
                     raise Exception("empty response")
                 return res
+            except ChatGPTError as e:
+                logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
+                error_code = e.code
+                if error_code >= 500:
+                    e.code = ErrorType.SERVER_ERROR
+                    e.message = "OpenAI Server Error"
+                elif error_code == ErrorType.EXPIRED_ACCESS_TOKEN_ERROR or \
+                        error_code == ErrorType.INVALID_ACCESS_TOKEN_ERROR:
+                    e.message = "OpenAI Token Invalid, please retry"
+                    bot.refresh_token()
+                else:
+                    e.code = ErrorType.UNKNOWN_ERROR
+                    e.message = "Unknown Error"
+                raise e
             except Exception as e:
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e

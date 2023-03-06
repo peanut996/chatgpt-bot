@@ -7,6 +7,7 @@ import traceback
 import yaml
 from OpenAIAuth import Error as OpenAIError
 from revChatGPT.V1 import Error as ChatGPTError
+
 from flask import Flask, request
 
 from session.session import Session
