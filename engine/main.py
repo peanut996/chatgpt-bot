@@ -5,6 +5,7 @@ import traceback
 
 import yaml
 from OpenAIAuth import Error as OpenAIError
+from revChatGPT.V1 import Error as ChatGPTError
 from flask import Flask, request
 
 from session.session import Session
@@ -26,9 +27,12 @@ async def chat():
         logging.error(
             "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
         return {"detail": e.details, "code": e.status_code}
+    except ChatGPTError as e:
+        logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
+        return {"detail": e.message, "code": e.code}
     except Exception as e:
         logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
-        return {"detail": e.args}
+        return {"detail": str(e) if len(str(e)) != 0 else "Internal Server Error", "code": 500}
 
 
 @app.route('/ping')

@@ -68,7 +68,7 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 		log.Println(err)
 		return "", errors.New(constant.InternalError)
 	}
-	data := make(map[string]string, 0)
+	data := make(map[string]interface{}, 0)
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		log.Printf("[ChatGPT] unmarshal chatgpt response error: %s, resp: %s\n",
@@ -76,13 +76,13 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 		return "", errors.New(constant.InternalError)
 	}
 	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJsonString(data))
-	if data["message"] == "" {
-		if data["detail"] != "" {
-			return data["detail"], nil
-		}
-		return "", errors.New(constant.ChatGPTError)
+	if msg, ok := data["message"].(string); ok && msg != "" {
+		return msg, nil
 	}
-	return data["message"], nil
+	if detail, ok := data["detail"].(string); ok && detail != "" {
+		return "", errors.New(fmt.Sprintf(constant.ChatGPTErrorTemplate, detail))
+	}
+	return "", errors.New(constant.ChatGPTError)
 }
 
 func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
