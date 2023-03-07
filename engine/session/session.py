@@ -40,6 +40,12 @@ class Session:
         self.used_chatgpt_credentials_indexes.append(index)
         return self.chatgpt_credentials[index]
 
+    def _clean_session(self, user_id):
+        if user_id is None:
+            return
+        self.user_to_last_chat_time[user_id] = None
+        self.user_to_credential[user_id] = None
+
     def _generate_chat_gpt_bot(self, user_id=None) -> Credential:
         if user_id is None:
             credential = self._get_random_chat_gpt_credential()
@@ -84,8 +90,9 @@ class Session:
                 elif error_code == ErrorType.EXPIRED_ACCESS_TOKEN_ERROR or \
                         error_code == ErrorType.INVALID_ACCESS_TOKEN_ERROR:
                     e.message = "OpenAI Token Invalid, please retry"
-                    bot.refresh_token()
                 else:
+                    bot.refresh_token()
+                    self._clean_session(user_id)
                     e.code = ErrorType.UNKNOWN_ERROR
                     e.message = "Unknown Error"
                 raise e
