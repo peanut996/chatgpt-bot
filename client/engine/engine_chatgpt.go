@@ -37,6 +37,7 @@ func (e *ChatGPTEngine) Init(cfg *cfg.Config) error {
 
 func (e *ChatGPTEngine) Alive() bool {
 	resp, err := http.Get(e.baseUrl + "/ping")
+	defer resp.Body.Close()
 	if err != nil || resp.StatusCode != 200 {
 		return false
 	}
