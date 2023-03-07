@@ -55,6 +55,7 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	e.client.Timeout = time.Duration(constant.ChatGPTTimeoutSeconds) * time.Second
 	queryString := fmt.Sprintf("/chat?user_id=%s&sentence=%s", userID, encodeSentence)
 	resp, err := e.client.Get(e.baseUrl + queryString)
+	defer resp.Body.Close()
 	if err != nil {
 		log.Println(err)
 		return "", errors.New(constant.NetworkError)
@@ -63,7 +64,6 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 		return "", errors.New(constant.ChatGPTError)
 	}
 	body, err := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if err != nil {
 		log.Println(err)
 		return "", errors.New(constant.InternalError)
