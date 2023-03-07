@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from revChatGPT.V1 import Chatbot as ChatGPTBot
+from revChatGPT.V1 import AsyncChatbot as ChatGPTBot
 
 
 class Credential:

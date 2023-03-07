@@ -68,7 +68,7 @@ class Session:
             try:
                 res = ""
                 prev_text = ""
-                for data in bot.chat_gpt_bot.ask(sentence):
+                async for data in bot.chat_gpt_bot.ask(sentence):
                     message = data["message"][len(prev_text):]
                     res += message
                     prev_text = data["message"]
