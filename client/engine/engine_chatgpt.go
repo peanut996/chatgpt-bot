@@ -58,15 +58,16 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	resp, err := e.client.Get(e.baseUrl + queryString)
 	defer resp.Body.Close()
 	if err != nil {
-		log.Println(err)
+		log.Println("[ChatGPT] chatgpt engine error: ", err)
 		return "", errors.New(constant.NetworkError)
 	}
 	if resp.StatusCode != 200 {
+		log.Println("[ChatGPT] chatgpt engine fail, status code: ", resp.StatusCode)
 		return "", errors.New(constant.ChatGPTError)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		log.Println("[ChatGPT] chatgpt engine error: ", err)
 		return "", errors.New(constant.InternalError)
 	}
 	data := make(map[string]interface{}, 0)
@@ -101,7 +102,6 @@ func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
 	}
 
 	if err != nil {
-		log.Println("[ChatGPT] chatgpt engine error: ", err)
 		return "", err
 	}
 	return constant.ChatGPTError, err
