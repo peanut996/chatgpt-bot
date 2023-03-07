@@ -66,7 +66,6 @@ class Session:
         logging.info("ChatGPTBot using token: {}".format(bot.email))
         async with bot.lock:
             try:
-                bot.refresh_token()
                 res = ""
                 prev_text = ""
                 for data in bot.chat_gpt_bot.ask(sentence):
