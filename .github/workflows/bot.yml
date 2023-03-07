@@ -33,17 +33,17 @@ jobs:
         python -m compileall .
 
 
-  deploy:
-    environment: prod
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: ssh deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          script: ${{ secrets.SCRIPT }}
-          command_timeout: 30s
+#  deploy:
+#    environment: prod
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: ssh deploy
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.HOST }}
+#          username: ${{ secrets.USERNAME }}
+#          password: ${{ secrets.PASSWORD }}
+#          port: ${{ secrets.PORT }}
+#          script: ${{ secrets.SCRIPT }}
+#          command_timeout: 30s
