@@ -8,4 +8,6 @@ var (
 	Limiter = "limiter"
 
 	PPROF = "pprof"
+
+	CMD = "cmd"
 )

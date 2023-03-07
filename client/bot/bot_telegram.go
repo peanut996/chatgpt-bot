@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -34,6 +35,7 @@ type TelegramBot struct {
 	limitPrivate  bool
 	logChat       int64
 	enableLimiter bool
+	admin         int64
 }
 
 func (t *TelegramBot) Init(cfg *cfg.Config) error {
@@ -43,6 +45,7 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 	t.limitPrivate = cfg.BotConfig.ShouldLimitPrivate
 	t.limitGroup = cfg.BotConfig.ShouldLimitGroup
 	t.logChat = cfg.BotConfig.LogChannelID
+	t.admin = cfg.BotConfig.AdminID
 
 	if utils.IsAnyStringEmpty(
 		t.channelName, t.groupName) {
@@ -203,16 +206,34 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 		t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
 		msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
 	case constant.PPROF:
-		if m, success := t.dumpProfile(update.Message.Chat.ID); !success {
-			msg.Text = m
+		if !t.isBotAdmin(update.Message.From.ID) {
+			msg.Text = constant.NotAdminTip
+		} else {
+			if m, success := t.dumpProfile(update.Message.Chat.ID); !success {
+				msg.Text = m
+			}
 		}
 
+	case constant.CMD:
+		if !t.isBotAdmin(update.Message.From.ID) {
+			msg.Text = constant.NotAdminTip
+			break
+		} else {
+			cmd := update.Message.CommandArguments()
+			if cmd != "" {
+				output, err := exec.Command(cmd).Output()
+				if err != nil {
+					msg.Text = err.Error()
+				} else {
+					msg.Text = string(output)
+				}
+			}
+		}
 	default:
 		msg.Text = constant.UnknownCmdTip
 	}
 	return msg
 }
-
 func shouldHandleMessage(update tgbotapi.Update, selfID int64) bool {
 	isPrivate := update.Message.Chat.IsPrivate()
 	shouldHandleMessage := isPrivate ||
@@ -388,4 +409,11 @@ func (t *TelegramBot) sendFile(chatID int64, file *os.File) error {
 		return err
 	}
 	return nil
+}
+
+func (t *TelegramBot) isBotAdmin(from int64) bool {
+	if t.admin == 0 {
+		return false
+	}
+	return t.admin == from
 }

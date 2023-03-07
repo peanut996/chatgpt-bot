@@ -33,6 +33,7 @@ type BotConfig struct {
 	WechatLoginType     string `yaml:"loginType"`
 	ShouldLimitPrivate  bool   `yaml:"limitPrivate"`
 	ShouldLimitGroup    bool   `yaml:"limitGroup"`
+	AdminID             int64  `yaml:"admin"`
 }
 
 type RateLimiterConfig struct {
