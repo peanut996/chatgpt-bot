@@ -2,7 +2,7 @@ git pull -r
 
 engine_pid=$(ps -ef | awk '/python main.py/{print $2}')
 
-client_pid=$(ps -ef | awk '/python main.py/{print $2}')
+client_pid=$(ps -ef | awk '/chatgpt-bot/{print $2}')
 
 cd engine || exit
 
