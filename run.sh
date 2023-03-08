@@ -2,7 +2,7 @@ git pull -r
 
 pids=$(ps -ef | awk '/config.yaml/{print $2}')
 
-cd engine
+cd engine || exit
 
 source venv/bin/activate
 
@@ -12,7 +12,7 @@ nohup python main.py -c ../config.yaml > engine.log &
 
 echo "run engine success"
 
-cd ../client
+cd ../client || exit
 
 ./build.sh
 
