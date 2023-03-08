@@ -1,8 +1,8 @@
 git pull -r
 
-kill $(ps -ef | awk '/config.yaml/{print $2}')
+pids=$(ps -ef | grep myprogram | grep -v grep | awk '{print $2}')
 
-echo "kill client and engine done"
+
 
 cd engine
 
@@ -21,3 +21,11 @@ cd ../client
 nohup ./chatgpt-bot -c ../config.yaml > client.log &
 
 echo "run client success."
+
+for pid in $pids; do
+  echo "Killing process $pid..."
+  kill $pid
+done
+
+echo "kill client and engine done"
+
