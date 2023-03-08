@@ -209,7 +209,6 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 			t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
 			msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
 		}
-
 	case constant.PPROF:
 		if !t.isBotAdmin(update.Message.From.ID) {
 			msg.Text = constant.NotAdminTip
@@ -226,7 +225,7 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 		} else {
 			cmd := update.Message.CommandArguments()
 			if cmd != "" {
-				output, err := exec.Command(cmd).Output()
+				output, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 				if err != nil {
 					msg.Text = err.Error()
 				} else {
