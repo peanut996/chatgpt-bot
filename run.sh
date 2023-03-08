@@ -1,8 +1,6 @@
 git pull -r
 
-pids=$(ps -ef | grep myprogram | grep -v grep | awk '{print $2}')
-
-
+pids=$(ps -ef | awk '/config.yaml/{print $2}')
 
 cd engine
 
