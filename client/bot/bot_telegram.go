@@ -203,8 +203,13 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 	case constant.PING:
 		msg.Text = constant.BotPingTip
 	case constant.Limiter:
-		t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
-		msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
+		if !t.isBotAdmin(update.Message.From.ID) {
+			msg.Text = constant.NotAdminTip
+		} else {
+			t.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
+			msg.Text = fmt.Sprintf("limiter status is %t now", t.enableLimiter)
+		}
+
 	case constant.PPROF:
 		if !t.isBotAdmin(update.Message.From.ID) {
 			msg.Text = constant.NotAdminTip
