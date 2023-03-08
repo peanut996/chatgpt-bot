@@ -5,7 +5,7 @@ from revChatGPT.V1 import AsyncChatbot as ChatGPTBot
 
 
 class Credential:
-    def __init__(self, email, password, conversation_id=None, verbose=False):
+    def __init__(self, email, password, conversation_id=None, verbose=False, loop=None):
         self.email = email
         self.password = password
         self.conversation_id = conversation_id

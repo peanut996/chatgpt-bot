@@ -82,6 +82,8 @@ class Session:
                     raise Exception("empty response")
                 return res
             except ChatGPTError as e:
+                bot.refresh_token()
+                self._clean_session(user_id)
                 logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
                 error_code = e.code
                 if error_code >= 500:
@@ -91,8 +93,6 @@ class Session:
                         error_code == ErrorType.INVALID_ACCESS_TOKEN_ERROR:
                     e.message = "OpenAI Token Invalid, please retry"
                 else:
-                    bot.refresh_token()
-                    self._clean_session(user_id)
                     e.code = ErrorType.UNKNOWN_ERROR
                     e.message = "Unknown Error"
                 raise e
