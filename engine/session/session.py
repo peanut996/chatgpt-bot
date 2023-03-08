@@ -97,5 +97,7 @@ class Session:
                     e.message = "Unknown Error"
                 raise e
             except Exception as e:
+                bot.refresh_token()
+                self._clean_session(user_id)
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e
