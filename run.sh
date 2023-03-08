@@ -1,8 +1,14 @@
 git pull -r
 
-pids=$(ps -ef | awk '/config.yaml/{print $2}')
+engine_pid=$(ps -ef | awk '/python main.py/{print $2}')
+
+client_pid=$(ps -ef | awk '/python main.py/{print $2}')
 
 cd engine || exit
+
+echo "kill engine..."
+kill $engine_pid
+echo "kill engine done"
 
 source venv/bin/activate
 
@@ -20,10 +26,11 @@ nohup ./chatgpt-bot -c ../config.yaml > client.log &
 
 echo "run client success."
 
-for pid in $pids; do
-  echo "Killing process $pid..."
-  kill $pid
-done
+echo "kill client.."
 
-echo "kill client and engine done"
+kill $client_pid
+
+echo "kill client done"
+
+echo "Reboot success."
 
