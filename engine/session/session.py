@@ -43,8 +43,8 @@ class Session:
     def _clean_session(self, user_id):
         if user_id is None:
             return
-        self.user_to_last_chat_time[user_id] = None
-        self.user_to_credential[user_id] = None
+        self.user_to_last_chat_time.pop(user_id)
+        self.user_to_credential.pop(user_id)
 
     def _generate_chat_gpt_bot(self, user_id=None) -> Credential:
         if user_id is None:
