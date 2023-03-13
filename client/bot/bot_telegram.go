@@ -3,6 +3,7 @@ package bot
 import (
 	"chatgpt-bot/cfg"
 	"chatgpt-bot/constant"
+	"chatgpt-bot/db"
 	"chatgpt-bot/engine"
 	"chatgpt-bot/middleware"
 	"chatgpt-bot/model"
@@ -19,15 +20,18 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type TelegramBot struct {
-	tgBot        *tgbotapi.BotAPI
-	engine       engine.Engine
-	session      *sync.Map
+	tgBot   *tgbotapi.BotAPI
+	engine  engine.Engine
+	session *sync.Map
+	limiter *middleware.Limiter
+	db      db.BotDB
+
 	taskChan     chan *model.ChatTask
 	maxQueueChan chan interface{}
-	limiter      *middleware.Limiter
 
 	groupName     string
 	channelName   string
@@ -39,7 +43,6 @@ type TelegramBot struct {
 }
 
 func (t *TelegramBot) Init(cfg *cfg.Config) error {
-
 	t.channelName = cfg.BotConfig.TelegramChannelName
 	t.groupName = cfg.BotConfig.TelegramGroupName
 	t.limitPrivate = cfg.BotConfig.ShouldLimitPrivate
@@ -51,6 +54,13 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 		t.channelName, t.groupName) {
 		return errors.New(constant.MissingRequiredConfig)
 	}
+
+	db := db.NewSQLiteDB()
+	err := db.Init(cfg)
+	if err != nil {
+		return err
+	}
+	t.db = db
 
 	t.session = &sync.Map{}
 	bot, err := tgbotapi.NewBotAPI(cfg.BotConfig.TelegramBotToken)
@@ -71,6 +81,7 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 	t.limiter = middleware.NewLimiter(cfg.BotConfig.RateLimiterConfig.Capacity,
 		cfg.BotConfig.RateLimiterConfig.Duration)
 	go t.loopAndFinishChatTask()
+
 	log.Printf("[Init] telegram bot init success, bot name: %s", t.tgBot.Self.UserName)
 	log.Printf("[Init] telegram bot init success, bot name: %s", t.tgBot.Self.UserName)
 	return nil
@@ -135,7 +146,6 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 	t.Send(task)
 	t.Log(task.GetFormattedAnswer())
 	log.Printf("[Finish] end chat task: %s", task.String())
-
 }
 
 func (t *TelegramBot) Log(log string) {
