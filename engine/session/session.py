@@ -73,16 +73,12 @@ class Session:
         async with bot.lock:
             try:
                 res = ""
-                prev_text = ""
-                async for data in bot.chat_gpt_bot.ask(sentence):
-                    message = data["message"][len(prev_text):]
-                    res += message
-                    prev_text = data["message"]
+                async for data in bot.chat_gpt_bot.ask_stream(sentence):
+                    res += data
                 if len(res) == 0:
                     raise Exception("empty response")
                 return res
             except ChatGPTError as e:
-                bot.refresh_token()
                 self._clean_session(user_id)
                 logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
                 error_code = e.code
@@ -97,7 +93,6 @@ class Session:
                     e.message = "Unknown Error"
                 raise e
             except Exception as e:
-                bot.refresh_token()
                 self._clean_session(user_id)
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e
