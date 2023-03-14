@@ -17,8 +17,8 @@ var (
 	OnlyOneChatAtATime = "you are chatting with me, please wait for a while. \n\n" +
 		"😅你已经发送了一条信息，请耐心等待"
 
-	LimitUserMessageTemplate = "You should join channel %s and group %s, then you can talk to me \n\n" +
-		"😢你需要加入频道 %s 和群组 %s，然后才能和我交谈"
+	LimitUserMessageTemplate = "Your chat limit has been reached. Invite new users to get 50 chat sessions per new user. your invite link: %s\n\n" +
+		"😢您的聊天次数已耗尽，邀请新用户获取聊天次数 50次/新用户. 你的邀请链接: %s"
 
 	RateLimitMessageTemplate = "You can only send %d messages in %d min, please try later. \nRate limiter will disappeared when you join both channel %s and group %s\n\n" +
 		"😅 你只能在 %d 分钟内发送 %d 条消息，请稍候再试\n" +

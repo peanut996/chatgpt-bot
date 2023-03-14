@@ -5,6 +5,14 @@ import (
 	"chatgpt-bot/model/persist"
 )
 
+var (
+	UserTableName = "user"
+
+	DefaultCount = 30
+
+	CountWhenInviteOtherUser = 30
+)
+
 type UserRepository struct {
 	db        db.BotDB
 	tableName string
@@ -13,8 +21,37 @@ type UserRepository struct {
 func NewUserRepository(db db.BotDB) *UserRepository {
 	return &UserRepository{
 		db:        db,
-		tableName: "user",
+		tableName: UserTableName,
 	}
+}
+
+func (u *UserRepository) IsAvaliable(userID string) (bool, error) {
+	exist, err := u.IsExist(userID)
+	if err != nil {
+		return false, err
+	}
+	if !exist {
+		err = u.InitUser(userID)
+		if err != nil {
+			return false, err
+		}
+	}
+	return u.IsRemainCountMoreThanZero(userID)
+}
+
+func (u *UserRepository) IsExist(userID string) (bool, error) {
+	row := u.db.QueryRow("SELECT count(*) FROM user WHERE user_id = ? LIMIT 1", userID)
+	var count int
+	err := row.Scan(&count)
+	if err == nil {
+		return true, nil
+	}
+	return false, err
+}
+
+func (u *UserRepository) InitUser(userID string) error {
+	_, err := u.db.Exec("INSERT OR IGNORE INTO user (user_id, count) VALUES (?, ?)", userID, DefaultCount)
+	return err
 }
 
 func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
@@ -29,13 +66,24 @@ func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
 	return user, nil
 }
 
-func (u *UserRepository) IncreaseCount(userID string) error {
-	_, err := u.db.Exec("UPDATE user SET count = count + 1 WHERE user_id = ?", userID)
+func (u *UserRepository) DecreaseCount(userID string) error {
+	// check user exist
+	exist, err := u.IsExist(userID)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		err = u.InitUser(userID)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = u.db.Exec("UPDATE user SET count = count - 1 WHERE user_id = ?", userID)
 	return err
 }
 
-func (u *UserRepository) DecreaseCount(userID string) error {
-	_, err := u.db.Exec("UPDATE user SET count = count - 1 WHERE user_id = ?", userID)
+func (u *UserRepository) AddCountWhenInviteOther(userID string) error {
+	_, err := u.db.Exec("UPDATE user SET count = count + ? WHERE user_id = ?", CountWhenInviteOtherUser, userID)
 	return err
 }
 
@@ -71,4 +119,15 @@ func (u *UserRepository) FindUserByInviteLink(inviteLink string) (*persist.User,
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *UserRepository) GetUserInviteLink(userId string) (string, error) {
+	// query user link from db
+	row := u.db.QueryRow("SELECT invite_link FROM user WHERE user_id = ? LIMIT 1", userId)
+	var inviteLink string
+	err := row.Scan(&inviteLink)
+	if err != nil {
+		return "", err
+	}
+	return inviteLink, nil
 }

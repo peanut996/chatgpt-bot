@@ -1,6 +1,9 @@
 package utils
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 func IsEmpty(s string) bool {
 	return s == ""
@@ -40,4 +43,8 @@ func ParseBoolString(cmd string) bool {
 		return false
 	}
 	return true
+}
+
+func ConvertUserID(userID int64) string {
+	return strconv.FormatInt(userID, 10)
 }

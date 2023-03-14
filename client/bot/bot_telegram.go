@@ -7,7 +7,10 @@ import (
 	"chatgpt-bot/engine"
 	"chatgpt-bot/middleware"
 	"chatgpt-bot/model"
+	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -24,11 +27,12 @@ import (
 )
 
 type TelegramBot struct {
-	tgBot   *tgbotapi.BotAPI
-	engine  engine.Engine
-	session *sync.Map
-	limiter *middleware.Limiter
-	db      db.BotDB
+	tgBot          *tgbotapi.BotAPI
+	engine         engine.Engine
+	session        *sync.Map
+	limiter        *middleware.Limiter
+	db             db.BotDB
+	userRepository *repository.UserRepository
 
 	taskChan     chan *model.ChatTask
 	maxQueueChan chan interface{}
@@ -61,6 +65,8 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 		return err
 	}
 	t.db = db
+
+	t.userRepository = repository.NewUserRepository(t.db)
 
 	t.session = &sync.Map{}
 	bot, err := tgbotapi.NewBotAPI(cfg.BotConfig.TelegramBotToken)
@@ -145,6 +151,8 @@ func (t *TelegramBot) Finish(task *model.ChatTask) {
 	t.sendTyping(task)
 	t.Send(task)
 	t.Log(task.GetFormattedAnswer())
+
+	go t.userRepository.DecreaseCount(strconv.FormatInt(task.From, 10))
 	log.Printf("[Finish] end chat task: %s", task.String())
 }
 
@@ -310,11 +318,13 @@ func (t *TelegramBot) findMemberFromChat(chatName string, userID int64) bool {
 }
 
 func (t *TelegramBot) shouldLimitUser(update tgbotapi.Update) bool {
-	userID := update.Message.From.ID
-	canFindInChannel := t.findMemberFromChat(t.channelName, userID)
-	canFindInGroup := t.findMemberFromChat(t.groupName, userID)
-
-	return !(canFindInChannel && canFindInGroup)
+	userID := strconv.FormatInt(update.Message.From.ID, 10)
+	avaliable, err := t.userRepository.IsAvaliable(userID)
+	if err != nil {
+		log.Printf("[LimitUser] query user is avaliable failed, err: 【%s】\n", err)
+		return false
+	}
+	return avaliable
 }
 
 func shouldIgnoreMsg(update tgbotapi.Update) bool {
@@ -352,17 +362,55 @@ func (t *TelegramBot) sendTyping(task *model.ChatTask) {
 	_, _ = t.tgBot.Send(msg)
 }
 
+func (t *TelegramBot) getUserInviteLink(userID string) (string, error) {
+	link, err := t.userRepository.GetUserInviteLink(userID)
+	if err != nil && err != sql.ErrNoRows {
+		return "", err
+	}
+	if err == sql.ErrNoRows {
+		inviteLink, err := t.generateInviteLink(t.channelName)
+		if err != nil {
+			return "", err
+		}
+		err = t.userRepository.UpdateInviteLink(userID, inviteLink)
+		if err != nil {
+			return "", err
+		}
+		return inviteLink, nil
+	}
+	return link, nil
+}
+
+func (t *TelegramBot) generateInviteLink(chatName string) (string, error) {
+	createInviteLinkConfig := tgbotapi.CreateChatInviteLinkConfig{
+		ChatConfig: tgbotapi.ChatConfig{
+			SuperGroupUsername: chatName,
+		},
+	}
+	resp, err := t.tgBot.Request(createInviteLinkConfig)
+	if err != nil {
+		return "", err
+	}
+	chatInviteLink := tgbotapi.ChatInviteLink{}
+	err = json.Unmarshal(resp.Result, &chatInviteLink)
+	if err != nil {
+		return "", err
+	}
+	return chatInviteLink.InviteLink, nil
+}
+
 func (t *TelegramBot) checkLimiters(update tgbotapi.Update) bool {
+	from := update.Message.From.ID
 	if update.Message.Chat.IsPrivate() {
 		if t.shouldLimitUser(update) {
-			text := fmt.Sprintf(constant.LimitUserMessageTemplate, t.channelName, t.groupName, t.channelName, t.groupName)
+			link, _ := t.getUserInviteLink(utils.ConvertUserID(from))
+			text := fmt.Sprintf(constant.LimitUserMessageTemplate, link, link)
 			t.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
 			return false
 		}
 	}
 	if t.enableLimiter &&
-		!t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) &&
-		t.shouldLimitUser(update) {
+		!t.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) {
 		log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
 		text := fmt.Sprintf(constant.RateLimitMessageTemplate,
 			t.limiter.GetCapacity(), t.limiter.GetDuration()/60,

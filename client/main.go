@@ -10,12 +10,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	app := app.GetApp()
+	a := app.GetApp()
 
-	err = app.Init(c)
+	err = a.Init(c)
 	if err != nil {
 		panic(err)
 	}
-	app.Run()
-	app.Block()
+	a.Run()
+	a.Block()
 }
