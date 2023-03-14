@@ -14,7 +14,7 @@ from session.session import Session
 
 app = Flask(__name__)
 session: Session
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 
 
 @app.route('/chat')

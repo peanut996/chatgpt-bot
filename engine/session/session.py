@@ -73,7 +73,7 @@ class Session:
         async with bot.lock:
             try:
                 res = ""
-                async for data in bot.chat_gpt_bot.ask_stream(sentence):
+                for data in bot.chat_gpt_bot.ask_stream(sentence):
                     res += data
                 if len(res) == 0:
                     raise Exception("empty response")
