@@ -9,14 +9,14 @@ class Credential:
         self.email = email
         self.password = password
         self.conversation_id = conversation_id
-        self.lock = asyncio.Lock()
+        self.lock = asyncio.Lock(loop=loop)
         self.verbose = verbose
         logging.info("[Credential] init: {}".format(email))
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
             'verbose': verbose,
-            'model': 'gpt-4'
+            'paid': True,
         }, conversation_id=conversation_id)
 
     def set_verbose(self, verbose):
@@ -28,17 +28,17 @@ class Credential:
             'email': self.email,
             'password': self.password,
             'verbose': self.verbose,
-            'model': 'gpt-4'
+            'paid': True,
         }, conversation_id=self.conversation_id)
         logging.info("ChatGPTBot token refreshed: {}".format(self.email))
 
     @staticmethod
-    def parse(credential_str: str):
+    def parse(credential_str: str, loop=None):
         credential = credential_str.split(":")
         length = len(credential)
         if length != 2 and length != 3:
             raise Exception("token format error")
         if length == 2:
-            return Credential(credential[0], credential[1])
+            return Credential(credential[0], credential[1], loop=loop)
         else:
-            return Credential(credential[0], credential[1], credential[2])
+            return Credential(credential[0], credential[1], credential[2], loop=loop)

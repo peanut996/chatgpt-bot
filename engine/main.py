@@ -76,7 +76,7 @@ def main():
     logging.getLogger("app").setLevel(logging.INFO)
 
     config = load_config()
-    session = Session(config=config)
+    session = Session(config=config, loop=loop)
     port = config['engine']['port']
     debug = config['engine'].get('debug', False)
     task = loop.create_task(app.run(host="0.0.0.0", port=port, debug=debug))
