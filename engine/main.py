@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 import logging
 import os
 import traceback
@@ -13,7 +12,6 @@ from session.session import Session
 
 app = Quart(__name__)
 session: Session
-loop = asyncio.new_event_loop()
 
 
 @app.route('/chat')
@@ -22,7 +20,7 @@ async def chat():
     user_id = request.args.get("user_id")
     logging.getLogger("app").info(f"[Engine] chat gpt engine get request: from {user_id}: {sentence} ")
     try:
-        res = await session.chat_with_chatgpt(sentence, user_id=user_id, loop=loop)
+        res = await session.chat_with_chatgpt(sentence, user_id=user_id)
         logging.getLogger("app").info(f"[Engine] chat gpt engine get response: to {user_id}: {res}")
         return {"message": res}
     except OpenAIError as e:
@@ -77,7 +75,7 @@ def main():
     session = Session(config=config)
     port = config['engine']['port']
     debug = config['engine'].get('debug', False)
-    app.run(host="0.0.0.0", port=port, debug=debug, loop=loop)
+    app.run(host="0.0.0.0", port=port, debug=debug)
 
 
 if __name__ == "__main__":
