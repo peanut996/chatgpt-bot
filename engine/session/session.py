@@ -13,11 +13,11 @@ from .credential import Credential
 
 
 class Session:
-    def __init__(self, config, loop=None):
+    def __init__(self, config):
         self.used_chatgpt_credentials_indexes = []
         try:
             self.chatgpt_credentials: List[Credential] = list(
-                map(lambda x: Credential.parse(x, loop=loop), config["engine"]["chatgpt"]["tokens"]))
+                map(Credential.parse, config["engine"]["chatgpt"]["tokens"]))
         except OpenAIAuth.Error as e:
             logging.error("Init Credential Error: status: {}, details: {}".format(e.status_code, e.details))
             raise e
