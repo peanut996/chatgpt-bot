@@ -15,7 +15,8 @@ class Credential:
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
-            'verbose': verbose
+            'verbose': verbose,
+            'model': 'gpt-4'
         }, conversation_id=conversation_id)
 
     def set_verbose(self, verbose):
