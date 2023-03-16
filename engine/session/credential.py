@@ -27,7 +27,8 @@ class Credential:
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': self.email,
             'password': self.password,
-            'verbose': self.verbose
+            'verbose': self.verbose,
+            'model': 'gpt-4'
         }, conversation_id=self.conversation_id)
         logging.info("ChatGPTBot token refreshed: {}".format(self.email))
 
