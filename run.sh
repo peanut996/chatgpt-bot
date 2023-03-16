@@ -1,3 +1,6 @@
+#export ACCESS_TOKEN=""
+#export PUID=""
+export CHATGPT_BASE_URL="http://127.0.0.1:8080/"
 git pull -r
 
 engine_pid=$(ps -ef | awk '/python main.py/{print $2}')
