@@ -69,7 +69,7 @@ def main():
     global session
     logging.basicConfig(level=logging.INFO)
     app.logger.setLevel(logging.WARNING)
-    logging.getLogger("app").setLevel(logging.INFO)
+
 
     config = load_config()
     session = Session(config=config)
