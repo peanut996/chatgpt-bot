@@ -68,13 +68,14 @@ def load_config():
 def main():
     global session
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    app.logger.setLevel(logging.WARNING)
     logging.getLogger("app").setLevel(logging.INFO)
 
     config = load_config()
     session = Session(config=config)
     port = config['engine']['port']
     debug = config['engine'].get('debug', False)
+
     app.run(host="0.0.0.0", port=port, debug=debug)
 
 
