@@ -58,6 +58,7 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 		return err
 	}
 	t.tgBot = bot
+	t.tgBot.Debug = true
 	t.engine = engine.GetEngine(cfg.EngineConfig.EngineType)
 	err = t.engine.Init(cfg)
 	if err != nil {
