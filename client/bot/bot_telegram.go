@@ -65,7 +65,7 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 	}
 
 	t.taskChan = make(chan *model.ChatTask, 1)
-	t.maxQueueChan = make(chan interface{}, 1)
+	t.maxQueueChan = make(chan interface{}, 3)
 
 	t.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 	t.limiter = middleware.NewLimiter(cfg.BotConfig.RateLimiterConfig.Capacity,

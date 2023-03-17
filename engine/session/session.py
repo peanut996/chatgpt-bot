@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import random
 import time
@@ -67,6 +68,10 @@ class Session:
     async def chat_with_chatgpt(self, sentence: str, user_id=None) -> str:
         bot = self._generate_chat_gpt_bot(user_id=user_id)
         logging.info("ChatGPTBot using token: {}".format(bot.email))
+
+        if bot.lock is None:
+            bot.lock = asyncio.Lock()
+
         async with bot.lock:
             try:
                 res = ""

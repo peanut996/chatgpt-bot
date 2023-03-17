@@ -9,14 +9,13 @@ class Credential:
         self.email = email
         self.password = password
         self.conversation_id = conversation_id
-        self.lock = asyncio.Lock()
+        self.lock = None
         self.verbose = verbose
         logging.info("[Credential] init: {}".format(email))
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
             'verbose': verbose,
-            'paid': True,
         }, conversation_id=conversation_id)
 
     def set_verbose(self, verbose):
@@ -28,7 +27,6 @@ class Credential:
             'email': self.email,
             'password': self.password,
             'verbose': self.verbose,
-            'paid': True,
         }, conversation_id=self.conversation_id)
         logging.info("ChatGPTBot token refreshed: {}".format(self.email))
 
