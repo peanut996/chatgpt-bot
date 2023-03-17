@@ -178,6 +178,9 @@ func (t *TelegramBot) safeSend(msg tgbotapi.MessageConfig) error {
 }
 
 func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
+	if update.ChatMember != nil {
+		log.Printf("[ChatMember] got : %s", utils.ToJsonString(update.ChatMember))
+	}
 	if update.Message == nil {
 		return
 	}
