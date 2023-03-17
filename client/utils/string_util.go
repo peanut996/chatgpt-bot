@@ -1,6 +1,10 @@
 package utils
 
-import "strings"
+import (
+	"crypto/rand"
+	"math/big"
+	"strings"
+)
 
 func IsEmpty(s string) bool {
 	return s == ""
@@ -40,4 +44,17 @@ func ParseBoolString(cmd string) bool {
 		return false
 	}
 	return true
+}
+
+func GenerateInvitationCode(size int) (string, error) {
+	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	result := make([]byte, size)
+	for i := range result {
+		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			return "", err
+		}
+		result[i] = chars[index.Int64()]
+	}
+	return string(result), nil
 }
