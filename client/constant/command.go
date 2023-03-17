@@ -5,7 +5,7 @@ var (
 	PING    = "ping"
 	CHATGPT = "chatgpt"
 
-	Limiter = "limiter"
+	LIMITER = "limiter"
 
 	PPROF = "pprof"
 
