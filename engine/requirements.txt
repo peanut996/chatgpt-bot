@@ -1,5 +1,4 @@
-OpenAIAuth>=0.3.2
+OpenAIAuth==0.3.2
 PyYAML==6.0
-Flask[async]==2.2.3
-python-dotenv==0.21.1
-revChatGPT>=2.3.5
+quart==0.18.3
+revChatGPT>=4.0.2

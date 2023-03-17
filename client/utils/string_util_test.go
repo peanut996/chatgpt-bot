@@ -26,3 +26,30 @@ func TestSplitMessageByMaxSize(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateInvitationCode(t *testing.T) {
+	type args struct {
+		size int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{args: args{size: 10}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GenerateInvitationCode(tt.args.size)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GenerateInvitationCode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) != tt.args.size {
+				t.Errorf("GenerateInvitationCode() got = %v, want %v", got, tt.want)
+			}
+			println(got)
+		})
+	}
+}

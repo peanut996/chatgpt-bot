@@ -74,6 +74,7 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 		return err
 	}
 	t.tgBot = bot
+	t.tgBot.Debug = true
 	t.engine = engine.GetEngine(cfg.EngineConfig.EngineType)
 	err = t.engine.Init(cfg)
 	if err != nil {
@@ -81,7 +82,7 @@ func (t *TelegramBot) Init(cfg *cfg.Config) error {
 	}
 
 	t.taskChan = make(chan *model.ChatTask, 1)
-	t.maxQueueChan = make(chan interface{}, 5)
+	t.maxQueueChan = make(chan interface{}, 3)
 
 	t.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 	t.limiter = middleware.NewLimiter(cfg.BotConfig.RateLimiterConfig.Capacity,
@@ -105,6 +106,7 @@ func (t *TelegramBot) Run() {
 func (t *TelegramBot) fetchUpdates() {
 	config := tgbotapi.NewUpdate(0)
 	config.Timeout = 60
+	config.AllowedUpdates = []string{"message", "edited_message", "channel_post", "edited_channel_post", "chat_member"}
 
 	botChannel := t.tgBot.GetUpdatesChan(config)
 	for {
@@ -196,6 +198,9 @@ func (t *TelegramBot) safeSend(msg tgbotapi.MessageConfig) error {
 }
 
 func (t *TelegramBot) handleUpdate(update tgbotapi.Update) {
+	if update.ChatMember != nil {
+		log.Printf("[ChatMember] got : %s", utils.ToJsonString(update.ChatMember))
+	}
 	if update.Message == nil {
 		return
 	}
@@ -215,6 +220,7 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	switch update.Message.Command() {
 	case constant.START:
+		log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
 		msg.Text = constant.BotStartTip
 	case constant.CHATGPT:
 		msg.Text = constant.BotStartTip

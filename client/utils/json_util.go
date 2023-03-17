@@ -3,7 +3,7 @@ package utils
 import "encoding/json"
 
 func ToJsonString(v interface{}) string {
-	b, err := json.Marshal(v)
+	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return ""
 	}

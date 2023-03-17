@@ -5,17 +5,17 @@ from revChatGPT.V1 import AsyncChatbot as ChatGPTBot
 
 
 class Credential:
-    def __init__(self, email, password, conversation_id=None, verbose=False, loop=None):
+    def __init__(self, email, password, conversation_id=None, verbose=False):
         self.email = email
         self.password = password
         self.conversation_id = conversation_id
-        self.lock = asyncio.Lock()
+        self.lock = None
         self.verbose = verbose
         logging.info("[Credential] init: {}".format(email))
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
-            'verbose': verbose
+            'verbose': verbose,
         }, conversation_id=conversation_id)
 
     def set_verbose(self, verbose):
@@ -26,7 +26,7 @@ class Credential:
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': self.email,
             'password': self.password,
-            'verbose': self.verbose
+            'verbose': self.verbose,
         }, conversation_id=self.conversation_id)
         logging.info("ChatGPTBot token refreshed: {}".format(self.email))
 
