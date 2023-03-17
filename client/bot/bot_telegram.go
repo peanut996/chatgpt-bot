@@ -202,6 +202,7 @@ func (t *TelegramBot) handleCommandMsg(update tgbotapi.Update) tgbotapi.MessageC
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	switch update.Message.Command() {
 	case constant.START:
+		log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
 		msg.Text = constant.BotStartTip
 	case constant.CHATGPT:
 		msg.Text = constant.BotStartTip
