@@ -88,6 +88,7 @@ func (t *TelegramBot) Run() {
 func (t *TelegramBot) fetchUpdates() {
 	config := tgbotapi.NewUpdate(0)
 	config.Timeout = 60
+	config.AllowedUpdates = []string{"message", "edited_message", "channel_post", "edited_channel_post", "chat_member"}
 
 	botChannel := t.tgBot.GetUpdatesChan(config)
 	for {
