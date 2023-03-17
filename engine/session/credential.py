@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from revChatGPT.V1 import AsyncChatbot as ChatGPTBot
@@ -16,6 +15,7 @@ class Credential:
             'email': email,
             'password': password,
             'verbose': verbose,
+            'model': 'gpt-4'
         }, conversation_id=conversation_id)
 
     def set_verbose(self, verbose):
@@ -27,6 +27,7 @@ class Credential:
             'email': self.email,
             'password': self.password,
             'verbose': self.verbose,
+            'model': 'gpt-4'
         }, conversation_id=self.conversation_id)
         logging.info("ChatGPTBot token refreshed: {}".format(self.email))
 
