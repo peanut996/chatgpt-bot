@@ -6,7 +6,8 @@ cd "$dir_path/../client" || exit
 
 echo "Building bot..."
 start=$(date +%s)
-go build -ldflags '-w -s' -o chatgpt-bot .
+go build -ldflags '-w -s' -o chatgpt-bot $dir_path
+chmod +x $dir_path/chatgpt-bot
 end=$(date +%s)
 take=$(( end - start ))
 echo "Done in ${take} seconds."

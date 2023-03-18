@@ -12,8 +12,8 @@ echo "##################################"
 
 
 cd "$dir_path/../proxy"
-go build -ldflags '-w -s' -o proxy .
-chmod +x ./proxy
+go build -ldflags '-w -s' -o proxy $dir_path
+chmod +x $dir_path/proxy
 
 proxy_pid=$(ps -ef | awk '/.\/proxy/{print $2}')
 
