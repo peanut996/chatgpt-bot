@@ -1,6 +1,12 @@
 package constant
 
-var ChatGPTTimeoutSeconds = 360
+var (
+	ChatGPTTimeoutSeconds = 360
+
+	DefaultCount = 10
+
+	CountWhenInviteOtherUser = 30
+)
 
 var (
 	BotPingTip    = "pong"
@@ -11,18 +17,26 @@ var (
 
 	NotAdminTip = "You are not admin, can not use this command \n\n" +
 		"😢你不是管理员，无法执行此操作"
+
+	InviteSuccessTip = "Invite success, you can use /invite to get your invite link \n\n" +
+		"😊邀请成功，你可以使用 /invite 来获取你的邀请链接"
+
+	InviteTipTemplate = "You can invite new users to get 30 chat sessions per new user. your invite link: %s\n\n" +
+		"😊你可以邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
 )
 
 var (
 	OnlyOneChatAtATime = "you are chatting with me, please wait for a while. \n\n" +
 		"😅你已经发送了一条信息，请耐心等待"
 
-	LimitUserMessageTemplate = "You should join channel %s and group %s, then you can talk to me \n\n" +
-		"😢你需要加入频道 %s 和群组 %s，然后才能和我交谈"
+	LimitUserCountTemplate = "Your chat limit has been reached. Invite new users to get 50 chat sessions per new user. your invite link: %s\n\n" +
+		"😢您的聊天次数已耗尽，邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
 
-	RateLimitMessageTemplate = "You can only send %d messages in %d min, please try later. \nRate limiter will disappeared when you join both channel %s and group %s\n\n" +
-		"😅 你只能在 %d 分钟内发送 %d 条消息，请稍候再试\n" +
-		"当你同时加入频道 %s 和群组 %s 后，将不再限速"
+	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, please wait. \n\n" +
+		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，请耐心等待\n"
+
+	LimitUserGroupAndChannelTemplate = "Before you join the channel %s and group %s, you can not send private message to me. \n\n" +
+		"😅 你必须先加入频道 %s 和群组 %s 才能和我私聊"
 
 	ChatGPTError = "ChatGPT return error, try later again \n\n" +
 		"😇出错了, 稍后重试下吧"
@@ -30,7 +44,7 @@ var (
 		"😇出错了, 稍后重试下吧 \n\n %s"
 	ChatGPTEngineNotOnline = "Chatgpt engine is not ready, please wait a moment. \n\n" +
 		"😇ChatGPT 引擎还没有准备好，请稍等一下"
-	SendBackMsgFailed = "Send back message failed, please try again later \n\n" +
+	SendBackMsgFailed = "sendFromChatTask back message failed, please try again later \n\n" +
 		"😇返回消息失败，请稍后再试"
 
 	NetworkError = "Network error, please try again later \n\n" +
@@ -38,4 +52,7 @@ var (
 
 	InternalError = "Internal error, please try again later \n\n" +
 		"😐内部错误，请稍后再试"
+
+	ExceedMaxGenerateInviteCodeTimes = "You have exceeded the maximum number of times to generate invite code, please try again later \n\n" +
+		"😐你已经超过了生成邀请码的最大次数，请稍后再试"
 )

@@ -1,13 +1,17 @@
-package constant
+package cmd
 
 var (
 	START   = "start"
 	PING    = "ping"
 	CHATGPT = "chatgpt"
 
-	Limiter = "limiter"
+	LIMITER = "limiter"
 
 	PPROF = "pprof"
 
-	CMD = "cmd"
+	INVITE = "invite"
+
+	COUNT = "count"
+
+	_ = "cmd"
 )

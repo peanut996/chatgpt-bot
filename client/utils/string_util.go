@@ -3,11 +3,17 @@ package utils
 import (
 	"crypto/rand"
 	"math/big"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
 func IsEmpty(s string) bool {
 	return s == ""
+}
+
+func IsNotEmpty(s string) bool {
+	return !IsEmpty(s)
 }
 
 func IsAnyStringEmpty(ss ...string) bool {
@@ -57,4 +63,17 @@ func GenerateInvitationCode(size int) (string, error) {
 		result[i] = chars[index.Int64()]
 	}
 	return string(result), nil
+}
+
+func Int64ToString(num int64) string {
+	return strconv.FormatInt(num, 10)
+}
+
+func IsMatchString(pattern, str string) bool {
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(str)
+}
+
+func StringToInt64(str string) (int64, error) {
+	return strconv.ParseInt(str, 10, 64)
 }

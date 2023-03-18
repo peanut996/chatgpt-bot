@@ -9,8 +9,13 @@ import (
 )
 
 type Config struct {
-	EngineConfig `yaml:"engine"`
-	BotConfig    `yaml:"bot"`
+	EngineConfig   `yaml:"engine"`
+	BotConfig      `yaml:"bot"`
+	DatabaseConfig `yaml:"database"`
+}
+
+type DatabaseConfig struct {
+	Path string `yaml:"path"`
 }
 
 type EngineConfig struct {

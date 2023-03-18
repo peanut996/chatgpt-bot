@@ -1,6 +1,9 @@
 package bot
 
-import "chatgpt-bot/cfg"
+import (
+	"chatgpt-bot/bot/telegram"
+	"chatgpt-bot/cfg"
+)
 
 var (
 	Telegram = "telegram"
@@ -17,8 +20,8 @@ func GetBot(botType string) Bot {
 	case Wechat:
 		return NewWechatBot()
 	case Telegram:
-		return NewTelegramBot()
+		return telegram.NewTelegramBot()
 	default:
-		return NewTelegramBot()
+		return telegram.NewTelegramBot()
 	}
 }
