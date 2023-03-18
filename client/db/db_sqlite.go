@@ -44,14 +44,10 @@ func (s *SQLiteDB) Close() {
 }
 
 func (s *SQLiteDB) Query(query string, args ...any) (*sql.Rows, error) {
-	s.Lock()
-	defer s.Unlock()
 	return s.db.Query(query, args...)
 }
 
 func (s *SQLiteDB) QueryRow(query string, args ...any) *sql.Row {
-	s.Lock()
-	defer s.Unlock()
 	return s.db.QueryRow(query, args...)
 }
 
