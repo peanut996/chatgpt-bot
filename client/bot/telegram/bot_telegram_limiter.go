@@ -6,11 +6,12 @@ import (
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type MessageLimiter interface {
@@ -116,6 +117,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 		}
 		err = l.userRepository.InitUser(userIDString, userName)
 		if err != nil {
+			log.Println("PrivateMessageLimiter] init user error", err)
 			return false, constant.InternalError
 		}
 		return true, ""

@@ -8,12 +8,13 @@ import (
 	"chatgpt-bot/utils"
 	"errors"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
 	"runtime/pprof"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type BotCmd = string
@@ -212,7 +213,7 @@ func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 			log.Printf("[InviteCommandHandler] init user failed, err: 【%s】", err)
 			return err
 		}
-		user, err := i.userRepository.GetByUserID(userID)
+		user, _ := i.userRepository.GetByUserID(userID)
 		link := b.getBotInviteLink(user.InviteCode)
 		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
 	}

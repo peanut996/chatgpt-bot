@@ -135,7 +135,7 @@ func (u *UserRepository) GetUserByInviteCode(inviteCode string) (*persist.User, 
 		return nil, err
 	}
 	if utils.IsEmptyRow(err) {
-		return nil, err
+		return nil, nil
 	}
 
 	return user, nil

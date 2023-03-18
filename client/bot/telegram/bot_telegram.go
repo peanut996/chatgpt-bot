@@ -10,6 +10,7 @@ import (
 	"chatgpt-bot/utils"
 	"errors"
 	"log"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -63,7 +64,6 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		return err
 	}
 	b.tgBot = bot
-	b.tgBot.Debug = true
 	b.engine = engine.GetEngine(cfg.EngineConfig.EngineType)
 	err = b.engine.Init(cfg)
 	if err != nil {
@@ -72,6 +72,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 
 	b.chatTaskChannel = make(chan model.ChatTask, 1)
 	b.maxQueueChannel = make(chan interface{}, 3)
+	b.handlers = make(map[BotCmd]CommandHandler)
 
 	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 
@@ -173,6 +174,7 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	ok := b.checkLimiters(*message)
 	if !ok {
+		b.runLimitersCallBack(*message)
 		return
 	}
 	b.publishChatTask(*message)
@@ -217,7 +219,7 @@ func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 		ok, err := limiter.Allow(b, m)
 		if !ok {
 			if utils.IsNotEmpty(err) {
-				log.Println("[CheckLimiter] limiter encounter error: " + err)
+				log.Printf("[CheckLimiter] limiter encounter type: %s error: %s", reflect.TypeOf(limiter).String(), err)
 				b.sendErrorMessage(m.Chat.ID, m.MessageID, err)
 			}
 			return false

@@ -58,6 +58,10 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	e.client.Timeout = time.Duration(constant.ChatGPTTimeoutSeconds) * time.Second
 	queryString := fmt.Sprintf("/chat?user_id=%s&sentence=%s", userID, encodeSentence)
 	resp, err := e.client.Get(e.baseUrl + queryString)
+	if resp == nil {
+		return "", errors.New(constant.NetworkError)
+	}
+
 	defer resp.Body.Close()
 	if err != nil {
 		log.Println("[ChatGPT] chatgpt engine error: ", err)
@@ -84,7 +88,7 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 		return msg, nil
 	}
 	if detail, ok := data["detail"].(string); ok && detail != "" {
-		return "", errors.New(fmt.Sprintf(constant.ChatGPTErrorTemplate, detail))
+		return "", fmt.Errorf(constant.ChatGPTErrorTemplate, detail)
 	}
 	return "", errors.New(constant.ChatGPTError)
 }
