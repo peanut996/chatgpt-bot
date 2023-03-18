@@ -33,3 +33,6 @@ create index idx_invite_record_user_id
 create index idx_invite_record_invite_time
     on user_invite_record (invite_time);
 
+create index idx_invite_record_invite_user_id
+    on user_invite_record (invite_user_id);
+

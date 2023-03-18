@@ -8,15 +8,15 @@ import (
 type UserInviteRecord struct {
 	UserID string
 
-	UserInviteID string
+	InviteUserID string
 
 	InviteTime string
 }
 
-func NewUserInviteRecord(userID string, userInviteID string) *UserInviteRecord {
+func NewUserInviteRecord(userID string, inviteUserID string) *UserInviteRecord {
 	return &UserInviteRecord{
 		UserID:       userID,
-		UserInviteID: userInviteID,
+		InviteUserID: inviteUserID,
 		InviteTime:   utils.ConvertInt64ToString(time.Now().UnixMilli()),
 	}
 }
