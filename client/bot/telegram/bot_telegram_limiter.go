@@ -90,29 +90,46 @@ func NewPrivateMessageLimiter(userRepository *repository.UserRepository) *Privat
 
 func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	userID := message.From.ID
-	ok, err := l.userRepository.IsAvaliable(utils.ConvertUserID(userID))
-	if err != nil {
-		return false, err.Error()
-	}
-	// 限制用户使用次数
-	if !ok {
-		link, err := l.userRepository.GetUserInviteLink(utils.ConvertUserID(userID))
-		if err != nil {
-			return false, constant.InternalError
-		}
-		return false, fmt.Sprintf(constant.LimitUserCountTemplate, link, link)
-	}
-
+	userIDString := utils.ConvertUserID(userID)
 	// 限制用户加群
 	if bot.limitPrivate {
-		ok = findMemberFromChat(bot, bot.groupName, userID)
+		ok := findMemberFromChat(bot, bot.groupName, userID)
 		if !ok {
 			return false, fmt.Sprintf(constant.LimitUserGroupAndChannelTemplate,
 				bot.channelName, bot.groupName, bot.channelName, bot.groupName)
 		}
 	}
 
+	// 查看用户是否存在 不存在就初始化
+	user, err := l.userRepository.GetByUserID(userIDString)
+	if err != nil {
+		return false, constant.InternalError
+	}
+	if user == nil {
+		// 初始化用户
+		err = l.userRepository.InitUser(userIDString)
+		if err != nil {
+			return false, constant.InternalError
+		}
+		return true, ""
+	}
+
+	ok := user.RemainCount > 0
+	// 限制用户使用次数
+	if !ok {
+		code, err := l.userRepository.GetUserInviteCode(utils.ConvertUserID(userID))
+		link := getBotInviteLink(bot.tgBot.Self.UserName, code)
+		if err != nil {
+			return false, constant.InternalError
+		}
+		return false, fmt.Sprintf(constant.LimitUserCountTemplate, link, link)
+	}
+
 	return true, ""
+}
+
+func getBotInviteLink(name string, code string) interface{} {
+	return fmt.Sprintf("https://t.me/%s?start=%s", name, code)
 }
 
 func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
@@ -130,7 +147,12 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 	return true
 }
 
-func (l *PrivateMessageLimiter) CallBack(*Bot, tgbotapi.Message) {
+func (l *PrivateMessageLimiter) CallBack(b *Bot, m tgbotapi.Message) {
+	err := l.userRepository.DecreaseCount(utils.ConvertUserID(m.From.ID))
+	if err != nil {
+		log.Println("[CallBack] decrease user count error")
+		return
+	}
 }
 
 type RateLimiter struct {

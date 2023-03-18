@@ -3,7 +3,7 @@ package persist
 type User struct {
 	UserID string
 
-	Count int64
+	RemainCount int64
 
-	InviteLink string
+	InviteCode string
 }

@@ -41,4 +41,7 @@ var (
 
 	InternalError = "Internal error, please try again later \n\n" +
 		"😐内部错误，请稍后再试"
+
+	ExceedMaxGenerateInviteCodeTimes = "You have exceeded the maximum number of times to generate invite code, please try again later \n\n" +
+		"😐你已经超过了生成邀请码的最大次数，请稍后再试"
 )

@@ -1,14 +1,17 @@
 package repository
 
 import (
+	"chatgpt-bot/constant"
 	"chatgpt-bot/db"
 	"chatgpt-bot/model/persist"
+	"chatgpt-bot/utils"
+	"errors"
 )
 
 var (
 	UserTableName = "user"
 
-	DefaultCount = 30
+	DefaultCount = 10
 
 	CountWhenInviteOtherUser = 30
 )
@@ -26,42 +29,64 @@ func NewUserRepository(db db.BotDB) *UserRepository {
 }
 
 func (u *UserRepository) IsAvaliable(userID string) (bool, error) {
-	exist, err := u.IsExist(userID)
-	if err != nil {
+	user, err := u.GetByUserID(userID)
+	if err != nil || user == nil {
 		return false, err
 	}
-	if !exist {
-		err = u.InitUser(userID)
-		if err != nil {
-			return false, err
-		}
-	}
-	return u.IsRemainCountMoreThanZero(userID)
+	return user.RemainCount > 0, nil
 }
 
 func (u *UserRepository) IsExist(userID string) (bool, error) {
-	row := u.db.QueryRow("SELECT count(*) FROM user WHERE user_id = ? LIMIT 1", userID)
+	row := u.db.QueryRow("SELECT remain_count FROM user WHERE user_id = ? LIMIT 1", userID)
 	var count int
 	err := row.Scan(&count)
-	if err == nil {
-		return true, nil
+	if err == nil && utils.IsNotEmptyRow(err) {
+		return false, err
 	}
-	return false, err
+	if utils.IsEmptyRow(err) {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (u *UserRepository) generateUniqueInviteCode() (string, error) {
+	inviteCode, _ := utils.GenerateInvitationCode(10)
+	for i := 0; i < 0xff; i++ {
+		user, err := u.FindUserByInviteCode(inviteCode)
+		if err != nil {
+			return "", err
+		}
+		if user == nil {
+			return inviteCode, nil
+		}
+
+		inviteCode, _ = utils.GenerateInvitationCode(10)
+	}
+	return "", errors.New(constant.ExceedMaxGenerateInviteCodeTimes)
 }
 
 func (u *UserRepository) InitUser(userID string) error {
-	_, err := u.db.Exec("INSERT OR IGNORE INTO user (user_id, count) VALUES (?, ?)", userID, DefaultCount)
+	inviteCode, err := u.generateUniqueInviteCode()
+	if err != nil {
+		return err
+	}
+
+	_, err = u.db.Exec("INSERT OR IGNORE INTO user (user_id, remain_count, invite_code) VALUES (?, ?, ?)",
+		userID, DefaultCount, inviteCode)
 	return err
 }
 
 func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
 	user := &persist.User{}
 	user.UserID = userID
-	row := u.db.QueryRow("SELECT count, invite_link FROM user WHERE user_id = ? LIMIT 1", userID)
+	row := u.db.QueryRow("SELECT remain_count, invite_code FROM user WHERE user_id = ? LIMIT 1", userID)
 
-	err := row.Scan(&user.Count, &user.InviteLink)
-	if err != nil {
+	err := row.Scan(&user.RemainCount, &user.InviteCode)
+	if err != nil && utils.IsNotEmptyRow(err) {
 		return nil, err
+	}
+	if utils.IsEmptyRow(err) {
+		return nil, nil
 	}
 	return user, nil
 }
@@ -78,12 +103,12 @@ func (u *UserRepository) DecreaseCount(userID string) error {
 			return err
 		}
 	}
-	_, err = u.db.Exec("UPDATE user SET count = count - 1 WHERE user_id = ?", userID)
+	_, err = u.db.Exec("UPDATE user SET remain_count = remain_count - 1 WHERE user_id = ?", userID)
 	return err
 }
 
 func (u *UserRepository) AddCountWhenInviteOther(userID string) error {
-	_, err := u.db.Exec("UPDATE user SET count = count + ? WHERE user_id = ?", CountWhenInviteOtherUser, userID)
+	_, err := u.db.Exec("UPDATE user SET remain_count = remain_count + ? WHERE user_id = ?", CountWhenInviteOtherUser, userID)
 	return err
 }
 
@@ -93,7 +118,7 @@ func (u *UserRepository) GetCount(userID string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return user.Count, nil
+	return user.RemainCount, nil
 }
 
 func (u *UserRepository) IsRemainCountMoreThanZero(userID string) (bool, error) {
@@ -106,27 +131,32 @@ func (u *UserRepository) IsRemainCountMoreThanZero(userID string) (bool, error) 
 }
 
 func (u *UserRepository) UpdateInviteLink(userID, inviteLink string) error {
-	_, err := u.db.Exec("UPDATE user SET invite_link = ? WHERE user_id = ?", inviteLink, userID)
+	_, err := u.db.Exec("UPDATE user SET invite_code = ? WHERE user_id = ?", inviteLink, userID)
 	return err
 }
 
-func (u *UserRepository) FindUserByInviteLink(inviteLink string) (*persist.User, error) {
+func (u *UserRepository) FindUserByInviteCode(inviteCode string) (*persist.User, error) {
 	user := &persist.User{}
-	row := u.db.QueryRow("SELECT user_id, count FROM user WHERE invite_link = ? LIMIT 1", inviteLink)
+	user.InviteCode = inviteCode
+	row := u.db.QueryRow("SELECT user_id, remain_count FROM user WHERE invite_code = ? LIMIT 1", inviteCode)
 
-	err := row.Scan(&user.UserID, &user.Count)
-	if err != nil {
+	err := row.Scan(&user.UserID, &user.RemainCount)
+	if err != nil && utils.IsNotEmptyRow(err) {
 		return nil, err
 	}
+	if utils.IsEmptyRow(err) {
+		return nil, err
+	}
+
 	return user, nil
 }
 
-func (u *UserRepository) GetUserInviteLink(userId string) (string, error) {
+func (u *UserRepository) GetUserInviteCode(userId string) (string, error) {
 	// query user link from db
 	user, err := u.GetByUserID(userId)
 	if err != nil {
 		return "", err
 	}
-	return user.InviteLink, nil
+	return user.InviteCode, nil
 
 }
