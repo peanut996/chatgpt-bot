@@ -1,5 +1,12 @@
 dir_path=$(cd "$(dirname "$0")" && pwd)
 
+
+export ACCESS_TOKEN=""
+export PUID=""
+
+export GIN_MODE=release
+
+
 export CHATGPT_BASE_URL="http://127.0.0.1:8080/api/"
 
 echo "##################################"
@@ -22,7 +29,7 @@ kill $proxy_pid
 
 kill $client_pid
 
-kill %engine_pid
+kill $engine_pid
 
 
 echo "##################################"
