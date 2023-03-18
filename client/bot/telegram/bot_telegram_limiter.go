@@ -16,7 +16,7 @@ import (
 
 type MessageLimiter interface {
 	Allow(bot *Bot, message tgbotapi.Message) (bool, string)
-	CallBack(bot *Bot, message tgbotapi.Message)
+	CallBack(bot *Bot, message tgbotapi.Message, success bool)
 }
 
 type CommonMessageLimiter struct {
@@ -52,7 +52,7 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 	return ok, ""
 }
 
-func (l *CommonMessageLimiter) CallBack(*Bot, tgbotapi.Message) {
+func (l *CommonMessageLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
 }
 
 type SingletonMessageLimiter struct {
@@ -74,7 +74,7 @@ func (l *SingletonMessageLimiter) Allow(_ *Bot, message tgbotapi.Message) (bool,
 	return true, ""
 }
 
-func (l *SingletonMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message) {
+func (l *SingletonMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, _ bool) {
 	l.session.Delete(message.From.ID)
 }
 
@@ -153,12 +153,15 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 	return true
 }
 
-func (l *PrivateMessageLimiter) CallBack(_ *Bot, m tgbotapi.Message) {
-	err := l.userRepository.DecreaseCount(utils.ConvertInt64ToString(m.From.ID))
-	if err != nil {
-		log.Println("[CallBack] decrease user count error")
-		return
+func (l *PrivateMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, success bool) {
+	if success {
+		err := l.userRepository.DecreaseCount(utils.ConvertInt64ToString(message.From.ID))
+		if err != nil {
+			log.Println("[CallBack] decrease user count error")
+			return
+		}
 	}
+
 }
 
 type RateLimiter struct {
@@ -187,5 +190,5 @@ func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	return true, ""
 }
 
-func (r *RateLimiter) CallBack(*Bot, tgbotapi.Message) {
+func (r *RateLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
 }

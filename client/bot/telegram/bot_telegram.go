@@ -150,7 +150,7 @@ func (b *Bot) finishChatTask(task model.ChatTask) {
 	b.sendTyping(task.Chat)
 	b.sendFromChatTask(task)
 	b.logToChannel(task.GetFormattedAnswer())
-	b.runLimitersCallBack(task.GetRawMessage())
+	b.runLimitersCallBack(task.GetRawMessage(), true)
 	log.Printf("[finishChatTask] end chat task: %s", task.String())
 }
 
@@ -173,7 +173,7 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	ok := b.checkLimiters(*message)
 	if !ok {
-		b.runLimitersCallBack(*message)
+		b.runLimitersCallBack(*message, false)
 		return
 	}
 	b.publishChatTask(*message)
@@ -228,8 +228,8 @@ func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 	return true
 }
 
-func (b *Bot) runLimitersCallBack(m tgbotapi.Message) {
+func (b *Bot) runLimitersCallBack(m tgbotapi.Message, success bool) {
 	for _, limiter := range b.limiters {
-		limiter.CallBack(b, m)
+		limiter.CallBack(b, m, success)
 	}
 }
