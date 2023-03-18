@@ -13,3 +13,4 @@ config.yaml
 chatgpt-bot
 *.yaml
 *.db
+run.sh
