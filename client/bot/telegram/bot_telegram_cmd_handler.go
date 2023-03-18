@@ -3,7 +3,10 @@ package telegram
 import (
 	"chatgpt-bot/constant"
 	"chatgpt-bot/constant/cmd"
+	"chatgpt-bot/model/persist"
+	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
+	"errors"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	_ "github.com/mattn/go-sqlite3"
@@ -20,53 +23,90 @@ type CommandHandler interface {
 	Run(b *Bot, update tgbotapi.Update) error
 }
 
-type StartCommand struct {
+type StartCommandHandler struct {
+	userRepository             *repository.UserRepository
+	userInviteRecordRepository *repository.UserInviteRecordRepository
 }
 
-func (c *StartCommand) Cmd() BotCmd {
+func (c *StartCommandHandler) Cmd() BotCmd {
 	return cmd.START
 }
 
-func (c *StartCommand) Run(b *Bot, update tgbotapi.Update) error {
+func matchInviteCode(code string) bool {
+	return utils.IsNotEmpty(code) && len(code) == 10 && utils.IsMatchString(`^[a-zA-Z]{10}$`, code)
+}
+
+func (c *StartCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
+	args := update.Message.CommandArguments()
+	if matchInviteCode(args) {
+		err := c.handleInvitation(args, utils.ConvertInt64ToString(update.Message.From.ID), b)
+		if err != nil {
+			log.Printf("[StartCommandHandler] handle invitation failed, err: 【%s】", err)
+		}
+	}
 	b.safeSendMsg(update.Message.Chat.ID, constant.BotStartTip)
 	return nil
 }
 
-type ChatCommand struct {
+func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID string, b *Bot) error {
+	user, err := c.userRepository.FindUserByInviteCode(inviteCode)
+	if err != nil {
+		log.Printf("[handleInvitation] find user by invite code failed, err: 【%s】", err)
+		return err
+	}
+	if user == nil {
+		log.Printf("[handleInvitation] find user by invite code failed, user is nil")
+		return errors.New("no such user by invite code: " + inviteCode)
+	}
+	inviteRecord := persist.NewUserInviteRecord(user.UserID, inviteUserID)
+	err = c.userInviteRecordRepository.Insert(inviteRecord)
+	if err != nil {
+		return err
+	}
+	err = c.userRepository.AddCountWhenInviteOther(user.UserID)
+	if err != nil {
+		return err
+	}
+	originUserID, _ := utils.StringToInt64(user.UserID)
+	b.safeSendMsg(originUserID, constant.InviteSuccessTip)
+	return nil
 }
 
-func (c *ChatCommand) Cmd() BotCmd {
+type ChatCommandHandler struct {
+}
+
+func (c *ChatCommandHandler) Cmd() BotCmd {
 	return cmd.CHATGPT
 }
 
-func (c *ChatCommand) Run(b *Bot, update tgbotapi.Update) error {
+func (c *ChatCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
 	// todo: 处理邀请码
 	b.safeSendMsg(update.Message.Chat.ID, constant.BotStartTip)
 	return nil
 }
 
-type PingCommand struct {
+type PingCommandHandler struct {
 }
 
-func (c *PingCommand) Cmd() BotCmd {
+func (c *PingCommandHandler) Cmd() BotCmd {
 	return cmd.PING
 }
 
-func (c *PingCommand) Run(b *Bot, update tgbotapi.Update) error {
+func (c *PingCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	b.safeSendMsg(update.Message.Chat.ID, constant.BotPingTip)
 	return nil
 }
 
-type LimiterCommand struct {
+type LimiterCommandHandler struct {
 }
 
-func (c *LimiterCommand) Cmd() BotCmd {
+func (c *LimiterCommandHandler) Cmd() BotCmd {
 	return cmd.LIMITER
 }
 
-func (c *LimiterCommand) Run(b *Bot, update tgbotapi.Update) error {
+func (c *LimiterCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	if !b.isBotAdmin(update.Message.From.ID) {
 		msg.Text = constant.NotAdminTip
@@ -78,14 +118,14 @@ func (c *LimiterCommand) Run(b *Bot, update tgbotapi.Update) error {
 	return nil
 }
 
-type PprofCommand struct {
+type PprofCommandHandler struct {
 }
 
-func (c *PprofCommand) Cmd() BotCmd {
+func (c *PprofCommandHandler) Cmd() BotCmd {
 	return cmd.PPROF
 }
 
-func (c *PprofCommand) Run(b *Bot, update tgbotapi.Update) error {
+func (c *PprofCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	if !b.isBotAdmin(update.Message.From.ID) {
 		msg.Text = constant.NotAdminTip
@@ -138,18 +178,20 @@ func sendFile(b *Bot, chatID int64, filePath string) error {
 	return nil
 }
 
-func NewStartCommand() *StartCommand {
-	return &StartCommand{}
+func NewStartCommandHandler(userRepository *repository.UserRepository, userInviteRecordRepository *repository.UserInviteRecordRepository) *StartCommandHandler {
+	return &StartCommandHandler{
+		userRepository:             userRepository,
+		userInviteRecordRepository: userInviteRecordRepository,
+	}
+}
+func NewPingCommandHandler() *PingCommandHandler {
+	return &PingCommandHandler{}
 }
 
-func NewPingCommand() *PingCommand {
-	return &PingCommand{}
+func NewLimiterCommandHandler() *LimiterCommandHandler {
+	return &LimiterCommandHandler{}
 }
 
-func NewLimiterCommand() *LimiterCommand {
-	return &LimiterCommand{}
-}
-
-func NewPprofCommand() *PprofCommand {
-	return &PprofCommand{}
+func NewPprofCommandHandler() *PprofCommandHandler {
+	return &PprofCommandHandler{}
 }

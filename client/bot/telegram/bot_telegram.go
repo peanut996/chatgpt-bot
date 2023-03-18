@@ -56,6 +56,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	}
 
 	userRepository := repository.NewUserRepository(d)
+	userInviteRecordRepository := repository.NewUserInviteRecordRepository(d)
 
 	bot, err := tgbotapi.NewBotAPI(cfg.BotConfig.TelegramBotToken)
 	if err != nil {
@@ -74,7 +75,8 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 
 	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 
-	b.registerCommandHandler(NewStartCommand(), NewPingCommand(), NewPprofCommand(), NewLimiterCommand())
+	b.registerCommandHandler(NewStartCommandHandler(userRepository, userInviteRecordRepository),
+		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler())
 	b.registerLimiter(NewCommonMessageLimiter(),
 		NewSingleMessageLimiter(),
 		NewPrivateMessageLimiter(userRepository),

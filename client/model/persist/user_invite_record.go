@@ -13,7 +13,7 @@ type UserInviteRecord struct {
 	InviteTime string
 }
 
-func NewUserInviteRecord(userID string, userInviteID string, inviteTime string) *UserInviteRecord {
+func NewUserInviteRecord(userID string, userInviteID string) *UserInviteRecord {
 	return &UserInviteRecord{
 		UserID:       userID,
 		UserInviteID: userInviteID,

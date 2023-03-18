@@ -145,7 +145,7 @@ func (u *UserRepository) FindUserByInviteCode(inviteCode string) (*persist.User,
 	return user, nil
 }
 
-func (u *UserRepository) GetUserInviteCode(userId string) (string, error) {
+func (u *UserRepository) GetInviteCodeByUserID(userId string) (string, error) {
 	// query user link from db
 	user, err := u.GetByUserID(userId)
 	if err != nil {

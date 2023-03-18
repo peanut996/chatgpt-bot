@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/rand"
 	"math/big"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -66,4 +67,13 @@ func GenerateInvitationCode(size int) (string, error) {
 
 func ConvertInt64ToString(num int64) string {
 	return strconv.FormatInt(num, 10)
+}
+
+func IsMatchString(pattern, str string) bool {
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(str)
+}
+
+func StringToInt64(str string) (int64, error) {
+	return strconv.ParseInt(str, 10, 64)
 }

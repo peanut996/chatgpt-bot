@@ -11,6 +11,9 @@ var (
 
 	NotAdminTip = "You are not admin, can not use this command \n\n" +
 		"😢你不是管理员，无法执行此操作"
+
+	InviteSuccessTip = "Invite success, you can use /invite to get your invite link \n\n" +
+		"😊邀请成功，你可以使用 /invite 来获取你的邀请链接"
 )
 
 var (

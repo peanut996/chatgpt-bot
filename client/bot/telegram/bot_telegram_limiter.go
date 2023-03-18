@@ -116,7 +116,8 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	ok := user.RemainCount > 0
 	// 限制用户使用次数
 	if !ok {
-		code, err := l.userRepository.GetUserInviteCode(utils.ConvertInt64ToString(userID))
+		user, err := l.userRepository.GetByUserID(utils.ConvertInt64ToString(userID))
+		code := user.InviteCode
 		link := getBotInviteLink(bot.tgBot.Self.UserName, code)
 		if err != nil {
 			return false, constant.InternalError
@@ -146,7 +147,7 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 	return true
 }
 
-func (l *PrivateMessageLimiter) CallBack(b *Bot, m tgbotapi.Message) {
+func (l *PrivateMessageLimiter) CallBack(_ *Bot, m tgbotapi.Message) {
 	err := l.userRepository.DecreaseCount(utils.ConvertInt64ToString(m.From.ID))
 	if err != nil {
 		log.Println("[CallBack] decrease user count error")

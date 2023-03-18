@@ -9,5 +9,7 @@ var (
 
 	PPROF = "pprof"
 
+	INVITE = "invite"
+
 	_ = "cmd"
 )
