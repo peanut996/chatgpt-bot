@@ -5,6 +5,12 @@ export PUID=""
 export GIN_MODE=release
 export CHATGPT_BASE_URL="http://127.0.0.1:8080/api/"
 
+echo "##################################"
+echo "###### UPDATE CODE ###############"
+echo "##################################"
+
+git pull -r
+
 
 echo "##################################"
 echo "###### RUN proxy server ##########"
@@ -27,7 +33,7 @@ echo "##################################"
 echo "###### RUN engine server #########"
 echo "##################################"
 
-git pull -r
+
 
 engine_pid=$(ps -ef | awk '/python main.py/{print $2}')
 
