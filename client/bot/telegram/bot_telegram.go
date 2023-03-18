@@ -162,12 +162,11 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 		utils.ToJson(update.Message.From),
 		utils.ToJson(update.Message))
 	if update.Message.IsCommand() {
-		b.execCommand(update.Message.Command(), update)
+		b.execCommand(*update.Message)
+		return
 	}
 
-	if update.Message != nil {
-		b.handleMessage(update.Message)
-	}
+	b.handleMessage(update.Message)
 
 }
 
@@ -197,16 +196,17 @@ func (b *Bot) registerCommandHandler(handlers ...CommandHandler) {
 	}
 }
 
-func (b *Bot) execCommand(cmd string, update tgbotapi.Update) {
+func (b *Bot) execCommand(message tgbotapi.Message) {
+	cmd := message.Command()
 	handler, ok := b.handlers[cmd]
 	if !ok {
-		b.safeSend(tgbotapi.NewMessage(update.Message.Chat.ID, constant.UnknownCmdTip))
+		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, constant.UnknownCmdTip))
 	}
 
-	err := handler.Run(b, update)
+	err := handler.Run(b, message)
 	if err != nil {
 		log.Println("exec handler encounter error: " + err.Error())
-		b.safeSend(tgbotapi.NewMessage(update.Message.Chat.ID, constant.InternalError))
+		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, constant.InternalError))
 	}
 }
 

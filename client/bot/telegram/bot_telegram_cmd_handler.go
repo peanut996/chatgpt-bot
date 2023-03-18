@@ -21,7 +21,7 @@ type BotCmd = string
 
 type CommandHandler interface {
 	Cmd() BotCmd
-	Run(b *Bot, update tgbotapi.Update) error
+	Run(b *Bot, message tgbotapi.Message) error
 }
 
 type StartCommandHandler struct {
@@ -37,16 +37,16 @@ func matchInviteCode(code string) bool {
 	return utils.IsNotEmpty(code) && len(code) == 10 && utils.IsMatchString(`^[a-zA-Z]{10}$`, code)
 }
 
-func (c *StartCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
-	log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
-	args := update.Message.CommandArguments()
+func (c *StartCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	log.Println(fmt.Printf("get args: [%s]", message.CommandArguments()))
+	args := message.CommandArguments()
 	if matchInviteCode(args) {
-		err := c.handleInvitation(args, utils.ConvertInt64ToString(update.Message.From.ID), b)
+		err := c.handleInvitation(args, utils.ConvertInt64ToString(message.From.ID), b)
 		if err != nil {
 			log.Printf("[StartCommandHandler] handle invitation failed, err: 【%s】", err)
 		}
 	}
-	b.safeSendMsg(update.Message.Chat.ID, constant.BotStartTip)
+	b.safeSendMsg(message.Chat.ID, constant.BotStartTip)
 	return nil
 }
 
@@ -90,9 +90,9 @@ func (c *ChatCommandHandler) Cmd() BotCmd {
 	return cmd.CHATGPT
 }
 
-func (c *ChatCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
-	log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
-	b.safeSendMsg(update.Message.Chat.ID, constant.BotStartTip)
+func (c *ChatCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	log.Println(fmt.Printf("get args: [%s]", message.CommandArguments()))
+	b.safeSendMsg(message.Chat.ID, constant.BotStartTip)
 	return nil
 }
 
@@ -103,8 +103,8 @@ func (c *PingCommandHandler) Cmd() BotCmd {
 	return cmd.PING
 }
 
-func (c *PingCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
-	b.safeSendMsg(update.Message.Chat.ID, constant.BotPingTip)
+func (c *PingCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	b.safeSendMsg(message.Chat.ID, constant.BotPingTip)
 	return nil
 }
 
@@ -115,12 +115,12 @@ func (c *LimiterCommandHandler) Cmd() BotCmd {
 	return cmd.LIMITER
 }
 
-func (c *LimiterCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-	if !b.isBotAdmin(update.Message.From.ID) {
+func (c *LimiterCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	msg := tgbotapi.NewMessage(message.Chat.ID, "")
+	if !b.isBotAdmin(message.From.ID) {
 		msg.Text = constant.NotAdminTip
 	} else {
-		b.enableLimiter = utils.ParseBoolString(update.Message.CommandArguments())
+		b.enableLimiter = utils.ParseBoolString(message.CommandArguments())
 		msg.Text = fmt.Sprintf("limiter status is %v now", b.enableLimiter)
 	}
 	b.safeSend(msg)
@@ -134,16 +134,16 @@ func (c *PprofCommandHandler) Cmd() BotCmd {
 	return cmd.PPROF
 }
 
-func (c *PprofCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-	if !b.isBotAdmin(update.Message.From.ID) {
+func (c *PprofCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	msg := tgbotapi.NewMessage(message.Chat.ID, "")
+	if !b.isBotAdmin(message.From.ID) {
 		msg.Text = constant.NotAdminTip
 		b.safeSend(msg)
 		return nil
 	}
 
 	if filePath, success := dumpProfile(); success {
-		err := sendFile(b, update.Message.Chat.ID, filePath)
+		err := sendFile(b, message.Chat.ID, filePath)
 		if err == nil {
 			return nil
 		}
@@ -195,8 +195,8 @@ func (i *InviteCommandHandler) Cmd() BotCmd {
 	return cmd.INVITE
 }
 
-func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
-	userID := utils.ConvertInt64ToString(update.Message.From.ID)
+func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	userID := utils.ConvertInt64ToString(message.From.ID)
 	user, err := i.userRepository.GetByUserID(userID)
 	if err != nil {
 		log.Printf("[InviteCommandHandler] find user by user id failed, err: 【%s】", err)
@@ -204,11 +204,11 @@ func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	}
 	if user != nil {
 		link := b.getBotInviteLink(user.InviteCode)
-		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
+		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
 		return nil
 	} else {
 		userName := ""
-		tgUser, err := b.getUserInfo(update.Message.From.ID)
+		tgUser, err := b.getUserInfo(message.From.ID)
 		if err == nil {
 			userName = tgUser.String()
 		}
@@ -219,7 +219,7 @@ func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 		}
 		user, _ := i.userRepository.GetByUserID(userID)
 		link := b.getBotInviteLink(user.InviteCode)
-		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
+		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
 	}
 	return nil
 }
