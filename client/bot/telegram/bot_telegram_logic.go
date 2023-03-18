@@ -5,8 +5,9 @@ import (
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func (b *Bot) isBotAdmin(from int64) bool {
@@ -41,7 +42,7 @@ func (b *Bot) sendErrorMessage(chatID int64, msgID int, text string) {
 	msg.ReplyToMessageID = msgID
 	_, err := b.tgBot.Send(msg)
 	if err != nil {
-		log.Printf("[sendFromChatTask] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		log.Printf("[SendErrorMessage] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
 		msg.Text = constant.SendBackMsgFailed
 		_, _ = b.tgBot.Send(msg)
 		return
@@ -59,7 +60,7 @@ func (b *Bot) safeSend(msg tgbotapi.MessageConfig) {
 	msg.ParseMode = ""
 	_, err = b.tgBot.Send(msg)
 	if err != nil {
-		log.Printf("[sendFromChatTask] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		log.Printf("[SafeSend] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
 		return
 	}
 }
