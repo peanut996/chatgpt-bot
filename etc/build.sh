@@ -2,7 +2,7 @@
 
 dir_path=$(cd "$(dirname "$0")" && pwd)
 
-cd "$dir_path/client" || exit
+cd "$dir_path/../client" || exit
 
 echo "Building bot..."
 start=$(date +%s)
