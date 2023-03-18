@@ -202,7 +202,11 @@ func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 		log.Printf("[InviteCommandHandler] find user by user id failed, err: 【%s】", err)
 		return err
 	}
-	if user == nil {
+	if user != nil {
+		link := b.getBotInviteLink(user.InviteCode)
+		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
+		return nil
+	} else {
 		userName := ""
 		tgUser, err := b.getUserInfo(update.Message.From.ID)
 		if err == nil {
