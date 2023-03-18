@@ -76,7 +76,9 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 
 	b.registerCommandHandler(NewStartCommandHandler(userRepository, userInviteRecordRepository),
-		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler())
+		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler(),
+		NewInviteCommandHandler(userRepository),
+	)
 	b.registerLimiter(NewCommonMessageLimiter(),
 		NewSingleMessageLimiter(),
 		NewPrivateMessageLimiter(userRepository),

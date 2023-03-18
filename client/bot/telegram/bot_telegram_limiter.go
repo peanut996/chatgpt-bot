@@ -88,6 +88,9 @@ func NewPrivateMessageLimiter(userRepository *repository.UserRepository) *Privat
 }
 
 func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+	if !message.Chat.IsPrivate() {
+		return true, ""
+	}
 	userID := message.From.ID
 	userIDString := utils.ConvertInt64ToString(userID)
 	// 限制用户加群
@@ -118,7 +121,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	if !ok {
 		user, err := l.userRepository.GetByUserID(utils.ConvertInt64ToString(userID))
 		code := user.InviteCode
-		link := getBotInviteLink(bot.tgBot.Self.UserName, code)
+		link := bot.getBotInviteLink(code)
 		if err != nil {
 			return false, constant.InternalError
 		}
@@ -126,10 +129,6 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	}
 
 	return true, ""
-}
-
-func getBotInviteLink(name string, code string) interface{} {
-	return fmt.Sprintf("https://t.me/%s?start=%s", name, code)
 }
 
 func findMemberFromChat(b *Bot, chatName string, userID int64) bool {

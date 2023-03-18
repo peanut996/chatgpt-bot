@@ -4,6 +4,7 @@ import (
 	"chatgpt-bot/constant"
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
@@ -13,6 +14,10 @@ func (b *Bot) isBotAdmin(from int64) bool {
 		return false
 	}
 	return b.admin == from
+}
+
+func (b *Bot) getBotInviteLink(code string) string {
+	return fmt.Sprintf("https://t.me/%s?start=%s", b.tgBot.Self.UserName, code)
 }
 
 func (b *Bot) getUserInfo(userID int64) (*model.User, error) {

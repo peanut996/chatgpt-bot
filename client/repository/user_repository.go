@@ -10,10 +10,6 @@ import (
 
 var (
 	UserTableName = "user"
-
-	DefaultCount = 10
-
-	CountWhenInviteOtherUser = 30
 )
 
 type UserRepository struct {
@@ -52,7 +48,7 @@ func (u *UserRepository) IsExist(userID string) (bool, error) {
 func (u *UserRepository) generateUniqueInviteCode() (string, error) {
 	inviteCode, _ := utils.GenerateInvitationCode(10)
 	for i := 0; i < 0xff; i++ {
-		user, err := u.FindUserByInviteCode(inviteCode)
+		user, err := u.GetUserByInviteCode(inviteCode)
 		if err != nil {
 			return "", err
 		}
@@ -72,7 +68,7 @@ func (u *UserRepository) InitUser(userID string) error {
 	}
 
 	_, err = u.db.Exec("INSERT OR IGNORE INTO user (user_id, remain_count, invite_code) VALUES (?, ?, ?)",
-		userID, DefaultCount, inviteCode)
+		userID, constant.DefaultCount, inviteCode)
 	return err
 }
 
@@ -102,7 +98,7 @@ func (u *UserRepository) DecreaseCount(userID string) error {
 }
 
 func (u *UserRepository) AddCountWhenInviteOther(userID string) error {
-	_, err := u.db.Exec("UPDATE user SET remain_count = remain_count + ? WHERE user_id = ?", CountWhenInviteOtherUser, userID)
+	_, err := u.db.Exec("UPDATE user SET remain_count = remain_count + ? WHERE user_id = ?", constant.CountWhenInviteOtherUser, userID)
 	return err
 }
 
@@ -129,7 +125,7 @@ func (u *UserRepository) UpdateInviteLink(userID, inviteLink string) error {
 	return err
 }
 
-func (u *UserRepository) FindUserByInviteCode(inviteCode string) (*persist.User, error) {
+func (u *UserRepository) GetUserByInviteCode(inviteCode string) (*persist.User, error) {
 	user := &persist.User{}
 	user.InviteCode = inviteCode
 	row := u.db.QueryRow("SELECT user_id, remain_count FROM user WHERE invite_code = ? LIMIT 1", inviteCode)

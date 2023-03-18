@@ -1,6 +1,12 @@
 package constant
 
-var ChatGPTTimeoutSeconds = 360
+var (
+	ChatGPTTimeoutSeconds = 360
+
+	DefaultCount = 10
+
+	CountWhenInviteOtherUser = 30
+)
 
 var (
 	BotPingTip    = "pong"
@@ -14,6 +20,9 @@ var (
 
 	InviteSuccessTip = "Invite success, you can use /invite to get your invite link \n\n" +
 		"😊邀请成功，你可以使用 /invite 来获取你的邀请链接"
+
+	InviteTipTemplate = "You can invite new users to get 50 chat sessions per new user. your invite link: %s\n\n" +
+		"😊你可以邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
 )
 
 var (
@@ -21,7 +30,7 @@ var (
 		"😅你已经发送了一条信息，请耐心等待"
 
 	LimitUserCountTemplate = "Your chat limit has been reached. Invite new users to get 50 chat sessions per new user. your invite link: %s\n\n" +
-		"😢您的聊天次数已耗尽，邀请新用户获取聊天次数 50次/新用户. 你的邀请链接: %s"
+		"😢您的聊天次数已耗尽，邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
 
 	RateLimitMessageTemplate = "You can only send %d messages in %d min, please try later. \nRate limiter will disappeared when you join both channel %s and group %s\n\n" +
 		"😅 你只能在 %d 分钟内发送 %d 条消息，请稍候再试\n" +

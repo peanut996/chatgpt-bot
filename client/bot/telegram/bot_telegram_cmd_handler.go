@@ -50,7 +50,7 @@ func (c *StartCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 }
 
 func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID string, b *Bot) error {
-	user, err := c.userRepository.FindUserByInviteCode(inviteCode)
+	user, err := c.userRepository.GetUserByInviteCode(inviteCode)
 	if err != nil {
 		log.Printf("[handleInvitation] find user by invite code failed, err: 【%s】", err)
 		return err
@@ -82,7 +82,6 @@ func (c *ChatCommandHandler) Cmd() BotCmd {
 
 func (c *ChatCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 	log.Println(fmt.Printf("get args: [%s]", update.Message.CommandArguments()))
-	// todo: 处理邀请码
 	b.safeSendMsg(update.Message.Chat.ID, constant.BotStartTip)
 	return nil
 }
@@ -178,12 +177,41 @@ func sendFile(b *Bot, chatID int64, filePath string) error {
 	return nil
 }
 
+type InviteCommandHandler struct {
+	userRepository *repository.UserRepository
+}
+
+func (i *InviteCommandHandler) Cmd() BotCmd {
+	return cmd.INVITE
+}
+
+func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
+	userID := utils.ConvertInt64ToString(update.Message.From.ID)
+	user, err := i.userRepository.GetByUserID(userID)
+	if err != nil {
+		log.Printf("[InviteCommandHandler] find user by user id failed, err: 【%s】", err)
+		return err
+	}
+	if user == nil {
+		err := i.userRepository.InitUser(userID)
+		if err != nil {
+			log.Printf("[InviteCommandHandler] init user failed, err: 【%s】", err)
+			return err
+		}
+		user, err := i.userRepository.GetByUserID(userID)
+		link := b.getBotInviteLink(user.InviteCode)
+		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
+	}
+	return nil
+}
+
 func NewStartCommandHandler(userRepository *repository.UserRepository, userInviteRecordRepository *repository.UserInviteRecordRepository) *StartCommandHandler {
 	return &StartCommandHandler{
 		userRepository:             userRepository,
 		userInviteRecordRepository: userInviteRecordRepository,
 	}
 }
+
 func NewPingCommandHandler() *PingCommandHandler {
 	return &PingCommandHandler{}
 }
@@ -194,4 +222,10 @@ func NewLimiterCommandHandler() *LimiterCommandHandler {
 
 func NewPprofCommandHandler() *PprofCommandHandler {
 	return &PprofCommandHandler{}
+}
+
+func NewInviteCommandHandler(userRepository *repository.UserRepository) *InviteCommandHandler {
+	return &InviteCommandHandler{
+		userRepository: userRepository,
+	}
 }
