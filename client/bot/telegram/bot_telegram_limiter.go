@@ -96,7 +96,8 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	userIDString := utils.ConvertInt64ToString(userID)
 	// 限制用户加群
 	if bot.limitPrivate {
-		ok := findMemberFromChat(bot, bot.groupName, userID)
+		ok := findMemberFromChat(bot, bot.groupName, userID) &&
+			findMemberFromChat(bot, bot.channelName, userID)
 		if !ok {
 			return false, fmt.Sprintf(constant.LimitUserGroupAndChannelTemplate,
 				bot.channelName, bot.groupName, bot.channelName, bot.groupName)
