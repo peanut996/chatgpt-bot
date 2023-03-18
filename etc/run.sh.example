@@ -25,7 +25,7 @@ proxy_pid=$(ps -ef | awk '/.\/proxy/{print $2}')
 
 kill $proxy_pid
 
-nohup ./proxy > /tmp/proxy.log &
+nohup $dir_path/proxy > /tmp/proxy.log &
 
 echo "start proxy on port 8080 done"
 
@@ -63,7 +63,7 @@ cd "$dir_path/../client" || exit
 
 $dir_path/build.sh
 
-nohup ./chatgpt-bot -c ../etc/config.yaml > /tmp/client.log &
+nohup $dir_path/proxy -c ../etc/config.yaml > /tmp/client.log &
 
 echo "run client success."
 
