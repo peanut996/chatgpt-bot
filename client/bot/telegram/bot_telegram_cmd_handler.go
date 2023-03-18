@@ -161,7 +161,6 @@ func dumpProfile() (string, bool) {
 	tmpFile, err := os.Create(filePath)
 	defer func(tmpFile *os.File) {
 		_ = tmpFile.Close()
-		_ = os.Remove(filePath)
 	}(tmpFile)
 
 	if err != nil {
@@ -179,12 +178,14 @@ func dumpProfile() (string, bool) {
 }
 
 func sendFile(b *Bot, chatID int64, filePath string) error {
+	defer os.Remove(filePath)
 	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FilePath(filePath))
 	_, err := b.tgBot.Send(fileMsg)
 	if err != nil {
 		log.Printf("[SendFile] send file failed, err: 【%s】", err)
 		return err
 	}
+
 	return nil
 }
 
