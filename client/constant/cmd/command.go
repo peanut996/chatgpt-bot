@@ -1,4 +1,4 @@
-package constant
+package cmd
 
 var (
 	START   = "start"
@@ -9,5 +9,5 @@ var (
 
 	PPROF = "pprof"
 
-	CMD = "cmd"
+	_ = "cmd"
 )

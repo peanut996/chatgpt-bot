@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"chatgpt-bot/constant"
+	"chatgpt-bot/constant/cmd"
 	"chatgpt-bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -23,7 +24,7 @@ type StartCommand struct {
 }
 
 func (c *StartCommand) Cmd() BotCmd {
-	return constant.START
+	return cmd.START
 }
 
 func (c *StartCommand) Run(b *Bot, update tgbotapi.Update) error {
@@ -36,7 +37,7 @@ type ChatCommand struct {
 }
 
 func (c *ChatCommand) Cmd() BotCmd {
-	return constant.CHATGPT
+	return cmd.CHATGPT
 }
 
 func (c *ChatCommand) Run(b *Bot, update tgbotapi.Update) error {
@@ -50,7 +51,7 @@ type PingCommand struct {
 }
 
 func (c *PingCommand) Cmd() BotCmd {
-	return constant.PING
+	return cmd.PING
 }
 
 func (c *PingCommand) Run(b *Bot, update tgbotapi.Update) error {
@@ -62,7 +63,7 @@ type LimiterCommand struct {
 }
 
 func (c *LimiterCommand) Cmd() BotCmd {
-	return constant.LIMITER
+	return cmd.LIMITER
 }
 
 func (c *LimiterCommand) Run(b *Bot, update tgbotapi.Update) error {
@@ -81,7 +82,7 @@ type PprofCommand struct {
 }
 
 func (c *PprofCommand) Cmd() BotCmd {
-	return constant.PPROF
+	return cmd.PPROF
 }
 
 func (c *PprofCommand) Run(b *Bot, update tgbotapi.Update) error {

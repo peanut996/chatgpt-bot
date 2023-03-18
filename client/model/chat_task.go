@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 )
 
@@ -13,7 +14,8 @@ type ChatTask struct {
 	MessageID int
 	UUID      string
 
-	User *User
+	User       *User
+	rawMessage tgbotapi.Message
 }
 
 func (c *ChatTask) String() string {
@@ -28,12 +30,17 @@ func (c *ChatTask) GetFormattedAnswer() string {
 	return fmt.Sprintf("🅰️ to %s\n%s", c.User.String(), c.Answer)
 }
 
-func NewChatTask(question string, chat, from int64, msgID int) *ChatTask {
+func NewChatTask(message tgbotapi.Message) *ChatTask {
 	return &ChatTask{
-		Question:  question,
-		Chat:      chat,
-		From:      from,
-		MessageID: msgID,
-		UUID:      uuid.New().String(),
+		Question:   message.Text,
+		Chat:       message.Chat.ID,
+		From:       message.From.ID,
+		MessageID:  message.MessageID,
+		UUID:       uuid.New().String(),
+		rawMessage: message,
 	}
+}
+
+func (c *ChatTask) GetRawMessage() tgbotapi.Message {
+	return c.rawMessage
 }

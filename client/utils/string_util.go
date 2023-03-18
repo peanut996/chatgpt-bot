@@ -11,6 +11,10 @@ func IsEmpty(s string) bool {
 	return s == ""
 }
 
+func IsNotEmpty(s string) bool {
+	return !IsEmpty(s)
+}
+
 func IsAnyStringEmpty(ss ...string) bool {
 	for _, s := range ss {
 		if IsEmpty(s) {

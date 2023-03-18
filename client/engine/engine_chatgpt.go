@@ -79,7 +79,7 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 			err, string(body))
 		return "", errors.New(constant.InternalError)
 	}
-	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJsonString(data))
+	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJson(data))
 	if msg, ok := data["message"].(string); ok && msg != "" {
 		return msg, nil
 	}
