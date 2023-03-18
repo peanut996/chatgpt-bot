@@ -55,7 +55,7 @@ echo "##################################"
 
 cd "$dir_path/../client" || exit
 
-./build.sh
+$dir_path/build.sh
 
 nohup ./chatgpt-bot -c ../etc/config.yaml > /tmp/client.log &
 
