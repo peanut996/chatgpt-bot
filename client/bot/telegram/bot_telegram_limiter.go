@@ -54,7 +54,6 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 func (l *CommonMessageLimiter) CallBack(*Bot, tgbotapi.Message) {
 }
 
-// SingletonMessageLimiter allows only one message at a time
 type SingletonMessageLimiter struct {
 	session *sync.Map
 }
@@ -90,7 +89,7 @@ func NewPrivateMessageLimiter(userRepository *repository.UserRepository) *Privat
 
 func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	userID := message.From.ID
-	userIDString := utils.ConvertUserID(userID)
+	userIDString := utils.ConvertInt64ToString(userID)
 	// 限制用户加群
 	if bot.limitPrivate {
 		ok := findMemberFromChat(bot, bot.groupName, userID)
@@ -117,7 +116,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	ok := user.RemainCount > 0
 	// 限制用户使用次数
 	if !ok {
-		code, err := l.userRepository.GetUserInviteCode(utils.ConvertUserID(userID))
+		code, err := l.userRepository.GetUserInviteCode(utils.ConvertInt64ToString(userID))
 		link := getBotInviteLink(bot.tgBot.Self.UserName, code)
 		if err != nil {
 			return false, constant.InternalError
@@ -148,7 +147,7 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 }
 
 func (l *PrivateMessageLimiter) CallBack(b *Bot, m tgbotapi.Message) {
-	err := l.userRepository.DecreaseCount(utils.ConvertUserID(m.From.ID))
+	err := l.userRepository.DecreaseCount(utils.ConvertInt64ToString(m.From.ID))
 	if err != nil {
 		log.Println("[CallBack] decrease user count error")
 		return

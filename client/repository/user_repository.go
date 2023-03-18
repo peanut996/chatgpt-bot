@@ -94,14 +94,8 @@ func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
 func (u *UserRepository) DecreaseCount(userID string) error {
 	// check user exist
 	exist, err := u.IsExist(userID)
-	if err != nil {
+	if err != nil || !exist {
 		return err
-	}
-	if !exist {
-		err = u.InitUser(userID)
-		if err != nil {
-			return err
-		}
 	}
 	_, err = u.db.Exec("UPDATE user SET remain_count = remain_count - 1 WHERE user_id = ?", userID)
 	return err
