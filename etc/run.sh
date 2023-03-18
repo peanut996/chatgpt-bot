@@ -57,7 +57,7 @@ cd "$dir_path/../client" || exit
 
 ./build.sh
 
-nohup ./chatgpt-bot -c ../etc/config.yaml > client.log &
+nohup ./chatgpt-bot -c ../etc/config.yaml > /tmp/client.log &
 
 echo "run client success."
 
