@@ -11,5 +11,7 @@ var (
 
 	INVITE = "invite"
 
+	COUNT = "count"
+
 	_ = "cmd"
 )

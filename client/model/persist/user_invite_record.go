@@ -17,6 +17,6 @@ func NewUserInviteRecord(userID string, inviteUserID string) *UserInviteRecord {
 	return &UserInviteRecord{
 		UserID:       userID,
 		InviteUserID: inviteUserID,
-		InviteTime:   utils.ConvertInt64ToString(time.Now().UnixMilli()),
+		InviteTime:   utils.Int64ToString(time.Now().UnixMilli()),
 	}
 }

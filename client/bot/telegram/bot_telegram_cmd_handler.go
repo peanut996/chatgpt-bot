@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -41,7 +42,7 @@ func (c *StartCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	log.Println(fmt.Printf("get args: [%s]", message.CommandArguments()))
 	args := message.CommandArguments()
 	if matchInviteCode(args) {
-		err := c.handleInvitation(args, utils.ConvertInt64ToString(message.From.ID), b)
+		err := c.handleInvitation(args, utils.Int64ToString(message.From.ID), b)
 		if err != nil {
 			log.Printf("[StartCommandHandler] handle invitation failed, err: 【%s】", err)
 		}
@@ -198,7 +199,7 @@ func (i *InviteCommandHandler) Cmd() BotCmd {
 }
 
 func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	userID := utils.ConvertInt64ToString(message.From.ID)
+	userID := utils.Int64ToString(message.From.ID)
 	user, err := i.userRepository.GetByUserID(userID)
 	if err != nil {
 		log.Printf("[InviteCommandHandler] find user by user id failed, err: 【%s】", err)
@@ -226,6 +227,37 @@ func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	return nil
 }
 
+type CountCommandHandler struct {
+	userRepository *repository.UserRepository
+}
+
+func (c *CountCommandHandler) Cmd() BotCmd {
+	return cmd.COUNT
+}
+
+func (c *CountCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	if !b.isBotAdmin(message.From.ID) {
+		b.safeSendMsg(message.Chat.ID, constant.NotAdminTip)
+		return nil
+	}
+	args := message.CommandArguments()
+	if args == "" {
+		return fmt.Errorf("invalid args")
+	}
+	params := strings.Split(args, ":")
+	if len(params) != 2 {
+		return fmt.Errorf("invalid args")
+	}
+	err := c.userRepository.UpdateCountByUserID(params[0], params[1])
+	if err != nil {
+		log.Printf("failed to set count. params: %s, err: %s", args, err.Error())
+		b.safeSendMsg(message.Chat.ID, fmt.Sprintf("failed to set count. params: %s, err: %s", args, err.Error()))
+		return nil
+	}
+	b.safeSendMsg(message.Chat.ID, "success")
+	return nil
+}
+
 func NewStartCommandHandler(userRepository *repository.UserRepository, userInviteRecordRepository *repository.UserInviteRecordRepository) *StartCommandHandler {
 	return &StartCommandHandler{
 		userRepository:             userRepository,
@@ -247,6 +279,12 @@ func NewPprofCommandHandler() *PprofCommandHandler {
 
 func NewInviteCommandHandler(userRepository *repository.UserRepository) *InviteCommandHandler {
 	return &InviteCommandHandler{
+		userRepository: userRepository,
+	}
+}
+
+func NewCountCommandHandler(userRepository *repository.UserRepository) *CountCommandHandler {
+	return &CountCommandHandler{
 		userRepository: userRepository,
 	}
 }

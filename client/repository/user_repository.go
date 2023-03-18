@@ -150,3 +150,10 @@ func (u *UserRepository) GetInviteCodeByUserID(userId string) (string, error) {
 	return user.InviteCode, nil
 
 }
+
+func (u *UserRepository) UpdateCountByUserID(userID string, count string) error {
+	num, _ := utils.StringToInt64(count)
+	_, err := u.db.Exec("UPDATE user SET remain_count = ? WHERE user_id = ?", num, userID)
+	return err
+
+}

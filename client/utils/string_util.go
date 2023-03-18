@@ -65,7 +65,7 @@ func GenerateInvitationCode(size int) (string, error) {
 	return string(result), nil
 }
 
-func ConvertInt64ToString(num int64) string {
+func Int64ToString(num int64) string {
 	return strconv.FormatInt(num, 10)
 }
 

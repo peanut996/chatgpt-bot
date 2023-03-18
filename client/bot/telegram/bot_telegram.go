@@ -79,6 +79,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	b.registerCommandHandler(NewStartCommandHandler(userRepository, userInviteRecordRepository),
 		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler(),
 		NewInviteCommandHandler(userRepository),
+		NewCountCommandHandler(userRepository),
 	)
 	b.registerLimiter(NewCommonMessageLimiter(),
 		NewSingleMessageLimiter(),
