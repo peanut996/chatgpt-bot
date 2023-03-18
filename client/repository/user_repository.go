@@ -57,7 +57,7 @@ func (u *UserRepository) InitUser(userID string) error {
 func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
 	user := &persist.User{}
 	user.UserID = userID
-	row := u.db.QueryRow("SELECT count, invite_link FROM users WHERE user_id = ? LIMIT 1", userID)
+	row := u.db.QueryRow("SELECT count, invite_link FROM user WHERE user_id = ? LIMIT 1", userID)
 
 	err := row.Scan(&user.Count, &user.InviteLink)
 	if err != nil {
@@ -123,11 +123,10 @@ func (u *UserRepository) FindUserByInviteLink(inviteLink string) (*persist.User,
 
 func (u *UserRepository) GetUserInviteLink(userId string) (string, error) {
 	// query user link from db
-	row := u.db.QueryRow("SELECT invite_link FROM user WHERE user_id = ? LIMIT 1", userId)
-	var inviteLink string
-	err := row.Scan(&inviteLink)
+	user, err := u.GetByUserID(userId)
 	if err != nil {
 		return "", err
 	}
-	return inviteLink, nil
+	return user.InviteLink, nil
+
 }
