@@ -61,7 +61,10 @@ func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID s
 		log.Printf("[handleInvitation] find user by invite code failed, user is nil")
 		return errors.New("no such user by invite code: " + inviteCode)
 	}
-
+	if user.UserID == inviteUserID {
+		log.Printf("[handleInvitation] user can not invite himself")
+		return fmt.Errorf("[handleInvitation] user can not invite himself, user id: [%s]", inviteUserID)
+	}
 	record, err := c.userInviteRecordRepository.GetByInviteUserID(inviteUserID)
 	if err != nil {
 		log.Printf("[handleInvitation] find user by invite user id failed, err: 【%s】", err)
