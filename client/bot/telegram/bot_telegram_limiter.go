@@ -183,9 +183,7 @@ func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 		log.Printf("[RateLimiter] user %d is chatting with me, ignore message %s", message.From.ID, message.Text)
 		text := fmt.Sprintf(constant.RateLimitMessageTemplate,
 			r.limiter.GetCapacity(), r.limiter.GetDuration()/60,
-			bot.channelName, bot.groupName,
-			r.limiter.GetDuration()/60, r.limiter.GetCapacity(),
-			bot.channelName, bot.groupName)
+			r.limiter.GetDuration()/60, r.limiter.GetCapacity())
 		return false, text
 	}
 	return true, ""

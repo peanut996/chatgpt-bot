@@ -21,7 +21,7 @@ var (
 	InviteSuccessTip = "Invite success, you can use /invite to get your invite link \n\n" +
 		"😊邀请成功，你可以使用 /invite 来获取你的邀请链接"
 
-	InviteTipTemplate = "You can invite new users to get 50 chat sessions per new user. your invite link: %s\n\n" +
+	InviteTipTemplate = "You can invite new users to get 30 chat sessions per new user. your invite link: %s\n\n" +
 		"😊你可以邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
 )
 
@@ -32,9 +32,8 @@ var (
 	LimitUserCountTemplate = "Your chat limit has been reached. Invite new users to get 50 chat sessions per new user. your invite link: %s\n\n" +
 		"😢您的聊天次数已耗尽，邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
 
-	RateLimitMessageTemplate = "You can only send %d messages in %d min, please try later. \nRate limiter will disappeared when you join both channel %s and group %s\n\n" +
-		"😅 你只能在 %d 分钟内发送 %d 条消息，请稍候再试\n" +
-		"当你同时加入频道 %s 和群组 %s 后，将不再限速"
+	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, please wait. \n\n" +
+		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，请耐心等待\n"
 
 	LimitUserGroupAndChannelTemplate = "Before you join the channel %s and group %s, you can not send private message to me. \n\n" +
 		"😅 你必须先加入频道 %s 和群组 %s 才能和我私聊"
