@@ -109,7 +109,12 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	}
 	if user == nil {
 		// 初始化用户
-		err = l.userRepository.InitUser(userIDString)
+		userName := ""
+		tgUser, err := bot.getUserInfo(message.From.ID)
+		if err == nil {
+			userName = tgUser.String()
+		}
+		err = l.userRepository.InitUser(userIDString, userName)
 		if err != nil {
 			return false, constant.InternalError
 		}

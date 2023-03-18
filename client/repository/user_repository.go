@@ -61,23 +61,23 @@ func (u *UserRepository) generateUniqueInviteCode() (string, error) {
 	return "", errors.New(constant.ExceedMaxGenerateInviteCodeTimes)
 }
 
-func (u *UserRepository) InitUser(userID string) error {
+func (u *UserRepository) InitUser(userID string, userName string) error {
 	inviteCode, err := u.generateUniqueInviteCode()
 	if err != nil {
 		return err
 	}
 
-	_, err = u.db.Exec("INSERT OR IGNORE INTO user (user_id, remain_count, invite_code) VALUES (?, ?, ?)",
-		userID, constant.DefaultCount, inviteCode)
+	_, err = u.db.Exec("INSERT OR IGNORE INTO user (user_id, remain_count, invite_code, user_name) VALUES (?, ?, ?, ?)",
+		userID, constant.DefaultCount, inviteCode, userName)
 	return err
 }
 
 func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
 	user := &persist.User{}
 	user.UserID = userID
-	row := u.db.QueryRow("SELECT remain_count, invite_code FROM user WHERE user_id = ? LIMIT 1", userID)
+	row := u.db.QueryRow("SELECT remain_count, invite_code, user_name FROM user WHERE user_id = ? LIMIT 1", userID)
 
-	err := row.Scan(&user.RemainCount, &user.InviteCode)
+	err := row.Scan(&user.RemainCount, &user.InviteCode, &user.UserName)
 	if err != nil && utils.IsNotEmptyRow(err) {
 		return nil, err
 	}
@@ -128,9 +128,9 @@ func (u *UserRepository) UpdateInviteLink(userID, inviteLink string) error {
 func (u *UserRepository) GetUserByInviteCode(inviteCode string) (*persist.User, error) {
 	user := &persist.User{}
 	user.InviteCode = inviteCode
-	row := u.db.QueryRow("SELECT user_id, remain_count FROM user WHERE invite_code = ? LIMIT 1", inviteCode)
+	row := u.db.QueryRow("SELECT user_id, remain_count, user_name FROM user WHERE invite_code = ? LIMIT 1", inviteCode)
 
-	err := row.Scan(&user.UserID, &user.RemainCount)
+	err := row.Scan(&user.UserID, &user.RemainCount, &user.UserName)
 	if err != nil && utils.IsNotEmptyRow(err) {
 		return nil, err
 	}

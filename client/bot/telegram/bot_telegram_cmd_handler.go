@@ -202,7 +202,12 @@ func (i *InviteCommandHandler) Run(b *Bot, update tgbotapi.Update) error {
 		return err
 	}
 	if user == nil {
-		err := i.userRepository.InitUser(userID)
+		userName := ""
+		tgUser, err := b.getUserInfo(update.Message.From.ID)
+		if err == nil {
+			userName = tgUser.String()
+		}
+		err = i.userRepository.InitUser(userID, userName)
 		if err != nil {
 			log.Printf("[InviteCommandHandler] init user failed, err: 【%s】", err)
 			return err

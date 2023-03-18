@@ -6,4 +6,6 @@ type User struct {
 	RemainCount int64
 
 	InviteCode string
+
+	UserName string
 }
