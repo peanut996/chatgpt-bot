@@ -36,7 +36,7 @@ func (u *UserRepository) IsExist(userID string) (bool, error) {
 	row := u.db.QueryRow("SELECT remain_count FROM user WHERE user_id = ? LIMIT 1", userID)
 	var count int
 	err := row.Scan(&count)
-	if err == nil && utils.IsNotEmptyRow(err) {
+	if err != nil && utils.IsNotEmptyRow(err) {
 		return false, err
 	}
 	if utils.IsEmptyRow(err) {
