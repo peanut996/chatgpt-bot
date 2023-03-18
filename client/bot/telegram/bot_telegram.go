@@ -9,8 +9,6 @@ import (
 	"chatgpt-bot/model"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
-	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -43,6 +41,7 @@ type Bot struct {
 	admin         int64
 
 	handlers map[BotCmd]CommandHandler
+	limiters []MessageLimiter
 }
 
 func (b *Bot) Init(cfg *cfg.Config) error {
@@ -88,6 +87,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		cfg.BotConfig.RateLimiterConfig.Duration)
 
 	b.registerCommandHandler(NewStartCommand(), NewPingCommand(), NewPprofCommand(), NewLimiterCommand())
+	b.registerLimiter(NewCommonMessageLimiter())
 
 	go b.loopAndFinishChatTask()
 
@@ -201,9 +201,6 @@ func (b *Bot) safeSend(msg tgbotapi.MessageConfig) {
 }
 
 func (b *Bot) handleUpdate(update tgbotapi.Update) {
-	if update.ChatMember != nil {
-		log.Printf("[ChatMember] got : %s", utils.ToJsonString(update.ChatMember))
-	}
 	if update.Message == nil {
 		return
 	}
@@ -213,42 +210,36 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 	if update.Message.IsCommand() {
 		b.execCommand(update.Message.Command(), update)
 	} else {
-		b.handleUserMessage(update)
+		b.handleMessage(update)
 	}
 
 }
 
-func shouldHandleMessage(update tgbotapi.Update, selfID int64) bool {
-	isPrivate := update.Message.Chat.IsPrivate()
-	shouldHandleMessage := isPrivate ||
-		(update.Message.ReplyToMessage != nil &&
-			update.Message.ReplyToMessage.From.ID == selfID)
-	return shouldHandleMessage
-}
-
-func (b *Bot) handleUserMessage(update tgbotapi.Update) {
+func (b *Bot) handleMessage(update tgbotapi.Update) {
 	log.Printf("[HandleMessage] [%s] update id[%d], from id[%d], from name[%s], msg[%s], chat id[%d], chat name[%s]",
 		update.Message.Chat.Type, update.UpdateID,
 		update.Message.From.ID, fmt.Sprintf("%s %s %s", update.Message.From.FirstName, update.Message.From.LastName, update.Message.From.UserName),
 		update.Message.Text, update.Message.Chat.ID, update.Message.Chat.Title)
 
-	_, thisUserHasMessage := b.session.Load(update.Message.From.ID)
+	_, _ = b.session.Load(update.Message.From.ID)
 
 	if shouldIgnoreMsg(update) {
 		return
 	}
-
-	if shouldHandleMessage(update, b.tgBot.Self.ID) {
-		if !b.checkLimiters(update) {
-			return
-		}
-		if !thisUserHasMessage {
-			b.sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
-		} else {
-			log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-			b.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, constant.OnlyOneChatAtATime)
-		}
+	ok := b.checkLimitersV1(*update.Message)
+	if !ok {
+		return
 	}
+	b.sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
+
+	//if shouldHandleMessage(update, b.tgBot.Self.ID) {
+	//
+	//		b.sendTaskToChannel(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID, update.Message.MessageID)
+	//	} else {
+	//		log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+	//		b.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, constant.OnlyOneChatAtATime)
+	//	}
+	//}
 
 }
 
@@ -324,66 +315,27 @@ func (b *Bot) sendTyping(task *model.ChatTask) {
 	_, _ = b.tgBot.Send(msg)
 }
 
-func (b *Bot) getUserInviteLink(userID string) (string, error) {
-	link, err := b.userRepository.GetUserInviteLink(userID)
-	if err != nil && err != sql.ErrNoRows {
-		return "", err
-	}
-	if err == sql.ErrNoRows {
-		inviteLink, err := b.generateInviteLink(b.channelName)
-		if err != nil {
-			return "", err
-		}
-		err = b.userRepository.UpdateInviteLink(userID, inviteLink)
-		if err != nil {
-			return "", err
-		}
-		return inviteLink, nil
-	}
-	return link, nil
-}
-
-func (b *Bot) generateInviteLink(chatName string) (string, error) {
-	createInviteLinkConfig := tgbotapi.CreateChatInviteLinkConfig{
-		ChatConfig: tgbotapi.ChatConfig{
-			SuperGroupUsername: chatName,
-		},
-	}
-	resp, err := b.tgBot.Request(createInviteLinkConfig)
-	if err != nil {
-		return "", err
-	}
-	chatInviteLink := tgbotapi.ChatInviteLink{}
-	err = json.Unmarshal(resp.Result, &chatInviteLink)
-	if err != nil {
-		return "", err
-	}
-	return chatInviteLink.InviteLink, nil
-}
-
-func (b *Bot) checkLimiters(update tgbotapi.Update) bool {
-	from := update.Message.From.ID
-	if update.Message.Chat.IsPrivate() {
-		if b.shouldLimitUser(update) {
-			link, _ := b.getUserInviteLink(utils.ConvertUserID(from))
-			text := fmt.Sprintf(constant.LimitUserMessageTemplate, link, link)
-			b.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
-			return false
-		}
-	}
-	if b.enableLimiter &&
-		!b.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) {
-		log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
-		text := fmt.Sprintf(constant.RateLimitMessageTemplate,
-			b.limiter.GetCapacity(), b.limiter.GetDuration()/60,
-			b.channelName, b.groupName,
-			b.limiter.GetDuration()/60, b.limiter.GetCapacity(),
-			b.channelName, b.groupName)
-		b.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
-		return false
-	}
-	return true
-}
+//func (b *Bot) checkLimiters(update tgbotapi.Update) bool {
+//	from := update.Message.From.ID
+//	if update.Message.Chat.IsPrivate() {
+//		if b.shouldLimitUser(update) {
+//			b.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
+//			return false
+//		}
+//	}
+//	if b.enableLimiter &&
+//		!b.limiter.Allow(strconv.FormatInt(update.Message.From.ID, 10)) {
+//		log.Printf("[RateLimit] user %d is chatting with me, ignore message %s", update.Message.From.ID, update.Message.Text)
+//		text := fmt.Sprintf(constant.RateLimitMessageTemplate,
+//			b.limiter.GetCapacity(), b.limiter.GetDuration()/60,
+//			b.channelName, b.groupName,
+//			b.limiter.GetDuration()/60, b.limiter.GetCapacity(),
+//			b.channelName, b.groupName)
+//		b.sendErrorMessage(update.Message.Chat.ID, update.Message.MessageID, text)
+//		return false
+//	}
+//	return true
+//}
 
 func (b *Bot) getUserInfo(userID int64) (*model.User, error) {
 	user, err := b.tgBot.GetChat(tgbotapi.ChatInfoConfig{
@@ -420,4 +372,20 @@ func (b *Bot) execCommand(cmd string, update tgbotapi.Update) {
 		log.Println("exec handler encounter error: " + err.Error())
 		b.safeSend(tgbotapi.NewMessage(update.Message.Chat.ID, constant.InternalError))
 	}
+}
+
+func (b *Bot) registerLimiter(limiters ...MessageLimiter) {
+	b.limiters = append(b.limiters, limiters...)
+}
+func (b *Bot) checkLimitersV1(m tgbotapi.Message) bool {
+	for _, limiter := range b.limiters {
+		ok, err := limiter.Allow(b, m)
+		if !ok {
+			if !utils.IsEmpty(err) {
+				b.sendErrorMessage(m.Chat.ID, m.MessageID, err)
+			}
+			return false
+		}
+	}
+	return true
 }
