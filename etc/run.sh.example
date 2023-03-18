@@ -63,7 +63,7 @@ cd "$dir_path/../client" || exit
 
 $dir_path/build.sh
 
-nohup $dir_path/proxy -c ../etc/config.yaml > /tmp/client.log &
+nohup $dir_path/chatgpt-bot -c ../etc/config.yaml > /tmp/client.log &
 
 echo "run client success."
 
