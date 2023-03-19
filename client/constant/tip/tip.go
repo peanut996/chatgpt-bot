@@ -5,10 +5,10 @@ var (
 	UnknownCmdTip = "Unknown command, please send /start to start a chat \n\n" +
 		"🔥未知命令，请发送 /start 来开始聊天"
 	BotStartTip = "Hi, I'm ChatGPT bot. I can chat with you. Just send me a sentence and I will reply you. \n" +
-		"You can also add me to your own group\n\n" +
+		"You can also add me to your own group\n" +
 		"Start gpt-4 chat with /gpt4 command, like [/gpt4 hi] \n\n" +
-		"😊请在这条消息下回复你的问题，我会回复你的 \n\n" +
-		"🔥你也可以私聊我或者把我加到你的群组聊天 \n\n" +
+		"😊请在这条消息下回复你的问题，我会回复你的 \n" +
+		"🔥你也可以私聊我或者把我加到你的群组聊天 \n" +
 		"🤖开启gpt-4模型对话请使用`/gpt4`命令，如【/gpt4 hi】"
 
 	NotAdminTip = "You are not admin, can not use this command \n\n" +
