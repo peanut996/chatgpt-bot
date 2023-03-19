@@ -39,7 +39,7 @@ echo "###### RUN proxy server ##########"
 echo "##################################"
 
 
-cd "$dir_path/../proxy"
+cd "$dir_path/../proxy" || exit
 go build -ldflags '-w -s' -o $dir_path/proxy $dir_path/../proxy
 chmod +x $dir_path/proxy
 
@@ -78,4 +78,4 @@ echo "start client done"
 
 end=$(date +%s)
 take=$(( end - start ))
-echo "Done in ${take} seconds."
+echo "Bot started in ${take} seconds."
