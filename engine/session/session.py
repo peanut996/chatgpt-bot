@@ -25,6 +25,7 @@ class Session:
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
         self.user_to_session: Dict[str, UserSession] = dict()
+        self.user_to_gpt4_session: Dict[str, UserSession] = dict()
         self.verbose = config['engine'].get('debug', False)
         for c in self.chatgpt_credentials:
             c.set_verbose(self.verbose)
@@ -54,14 +55,23 @@ class Session:
             self.user_to_session[user_id] = session
             return session
 
+    def _get_user_gpt4_session(self, user_id) -> UserSession:
+        if user_id in self.user_to_gpt4_session:
+            return self.user_to_gpt4_session[user_id]
+        else:
+            credential = self._get_random_chat_gpt_credential()
+            session = UserSession(user_id=user_id, credential=credential)
+            self.user_to_gpt4_session[user_id] = session
+            return session
+
     def _get_credential_from_session(self, session: UserSession):
         if time.time() - session.last_time > 60 * 5:
             credential = self._get_random_chat_gpt_credential()
             session.credential = credential
         return session.credential
 
-    async def chat_with_chatgpt(self, sentence: str, user_id=None) -> str:
-        session = self._get_user_session(user_id)
+    async def chat_with_chatgpt(self, sentence: str, user_id=None, model=None) -> str:
+        session = self._get_user_session(user_id) if model is None else self._get_user_gpt4_session(user_id)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
         logging.info("ChatGPTBot using token: {}".format(credential.email))
@@ -71,11 +81,16 @@ class Session:
 
         async with credential.lock:
             try:
+                if model is not None:
+                    credential.chat_gpt_bot.config['model'] = model
+                else:
+                    credential.chat_gpt_bot.config['model'] = None
                 res = ""
                 prev_text = ""
                 conversation_id = session.conversation_id
                 parent_id = session.parent_id
-                logging.info(f"[Session] ask open ai user {user_id}, conversation_id: {conversation_id}, parent_id: {parent_id} ")
+                logging.info(
+                    f"[Session] ask open ai user {user_id}, conversation_id: {conversation_id}, parent_id: {parent_id} ")
                 async for data in credential.chat_gpt_bot.ask(sentence,
                                                               conversation_id=conversation_id,
                                                               parent_id=parent_id):

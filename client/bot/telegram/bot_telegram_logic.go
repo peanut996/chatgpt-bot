@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"chatgpt-bot/constant/cmd"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
@@ -10,6 +11,18 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var (
+	NeedHandleMessageCmd = []BotCmd{cmd.GPT4, cmd.CHATGPT}
+)
+
+func isNeedHandleMessageCmd(cmd BotCmd) bool {
+	for _, c := range NeedHandleMessageCmd {
+		if c == cmd {
+			return true
+		}
+	}
+	return false
+}
 func (b *Bot) isBotAdmin(from int64) bool {
 	if b.admin == 0 {
 		return false

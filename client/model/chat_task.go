@@ -14,8 +14,9 @@ type ChatTask struct {
 	MessageID int
 	UUID      string
 
-	User       *User
-	rawMessage tgbotapi.Message
+	User          *User
+	rawMessage    tgbotapi.Message
+	IsGPT4Message bool
 }
 
 func (c *ChatTask) String() string {

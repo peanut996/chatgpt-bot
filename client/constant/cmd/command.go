@@ -15,5 +15,7 @@ var (
 
 	QUERY = "query"
 
+	GPT4 = "gpt-4"
+
 	_ = "cmd"
 )

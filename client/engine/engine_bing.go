@@ -2,6 +2,7 @@ package engine
 
 import (
 	"chatgpt-bot/cfg"
+	"chatgpt-bot/model"
 	"net/http"
 )
 
@@ -19,7 +20,7 @@ func (e *BingEngine) Init(cfg *cfg.Config) error {
 	panic("implement me")
 }
 
-func (e *BingEngine) Chat(message string, userID string) (string, error) {
+func (e *BingEngine) Chat(ctx model.ChatContext) (string, error) {
 	panic("implement me")
 }
 

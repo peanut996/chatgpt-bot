@@ -333,3 +333,7 @@ func NewCountCommandHandler(userRepository *repository.UserRepository) *CountCom
 func NewChatCommandHandler() *ChatCommandHandler {
 	return &ChatCommandHandler{}
 }
+
+func IsGPT4Message(message tgbotapi.Message) bool {
+	return message.IsCommand() && message.Command() == cmd.GPT4
+}

@@ -12,7 +12,6 @@ import (
 	"errors"
 	"log"
 	"reflect"
-	"strconv"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -144,10 +143,16 @@ func (b *Bot) finishChatTask(task model.ChatTask) {
 	defer func() {
 		<-b.maxQueueChannel
 	}()
+
 	log.Printf("[finishChatTask] start chat task %s", task.String())
 	b.logToChannel(task.GetFormattedQuestion())
 	b.sendTyping(task.Chat)
-	res, err := b.engine.Chat(task.Question, strconv.FormatInt(task.From, 10))
+
+	chatCtx := model.NewChatContext(task.Question, utils.Int64ToString(task.From), "")
+	if task.IsGPT4Message {
+		chatCtx.Model = "gpt-4"
+	}
+	res, err := b.engine.Chat(chatCtx)
 	if err != nil {
 		task.Answer = err.Error()
 	} else {
@@ -156,7 +161,10 @@ func (b *Bot) finishChatTask(task model.ChatTask) {
 	b.sendTyping(task.Chat)
 	b.sendFromChatTask(task)
 	b.logToChannel(task.GetFormattedAnswer())
-	b.runLimitersCallBack(task.GetRawMessage(), true)
+
+	if task.IsGPT4Message {
+		b.runLimitersCallBack(task.GetRawMessage(), true)
+	}
 	log.Printf("[finishChatTask] end chat task: %s", task.String())
 }
 
@@ -167,22 +175,27 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 	log.Printf("[Update] 【chat】:%s, 【from】:%s, 【msg】:%s", utils.ToJson(update.Message.Chat),
 		utils.ToJson(update.Message.From),
 		utils.ToJson(update.Message))
-	if update.Message.IsCommand() {
+	if update.Message.IsCommand() && !IsGPT4Message(*update.Message) {
 		b.execCommand(*update.Message)
 		return
 	}
 
-	b.handleMessage(update.Message)
+	b.handleMessage(*update.Message)
 
 }
 
-func (b *Bot) handleMessage(message *tgbotapi.Message) {
-	ok := b.checkLimiters(*message)
-	if !ok {
-		b.runLimitersCallBack(*message, false)
+func (b *Bot) handleMessage(message tgbotapi.Message) {
+	if !IsGPT4Message(message) {
+		b.publishChatTask(message)
 		return
 	}
-	b.publishChatTask(*message)
+	ok := b.checkLimiters(message)
+	if !ok {
+		b.runLimitersCallBack(message, false)
+		return
+	}
+	b.publishChatTask(message)
+
 }
 
 func (b *Bot) publishChatTask(message tgbotapi.Message) {

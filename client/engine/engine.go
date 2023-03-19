@@ -1,6 +1,9 @@
 package engine
 
-import "chatgpt-bot/cfg"
+import (
+	"chatgpt-bot/cfg"
+	"chatgpt-bot/model"
+)
 
 var (
 	CHATGPT = "chatgpt"
@@ -9,7 +12,7 @@ var (
 
 type Engine interface {
 	Init(*cfg.Config) error
-	Chat(string, string) (string, error)
+	Chat(ctx model.ChatContext) (string, error)
 	Alive() bool
 }
 
