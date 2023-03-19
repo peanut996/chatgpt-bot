@@ -80,6 +80,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler(),
 		NewInviteCommandHandler(userRepository),
 		NewCountCommandHandler(userRepository),
+		NewChatCommandHandler(),
 	)
 	b.registerLimiter(NewCommonMessageLimiter(),
 		NewSingleMessageLimiter(),
@@ -202,6 +203,7 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	handler, ok := b.handlers[cmd]
 	if !ok {
 		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, constant.UnknownCmdTip))
+		return
 	}
 
 	err := handler.Run(b, message)

@@ -291,3 +291,7 @@ func NewCountCommandHandler(userRepository *repository.UserRepository) *CountCom
 		userRepository: userRepository,
 	}
 }
+
+func NewChatCommandHandler() *ChatCommandHandler {
+	return &ChatCommandHandler{}
+}
