@@ -162,9 +162,8 @@ func (b *Bot) finishChatTask(task model.ChatTask) {
 	b.sendFromChatTask(task)
 	b.logToChannel(task.GetFormattedAnswer())
 
-	if task.IsGPT4Message {
-		b.runLimitersCallBack(task.GetRawMessage(), true)
-	}
+	b.runLimitersCallBack(task.GetRawMessage(), true)
+
 	log.Printf("[finishChatTask] end chat task: %s", task.String())
 }
 
