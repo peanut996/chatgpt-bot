@@ -5,9 +5,9 @@ import time
 from typing import List
 
 import OpenAIAuth
-from revChatGPT.V1 import Error as ChatGPTError
+from revChatGPT.typing import Error as ChatGPTError
 
-from revChatGPT.V1 import ErrorType
+from revChatGPT.typing import ErrorType as ChatGPTErrorType
 
 from .credential import Credential
 
@@ -89,13 +89,13 @@ class Session:
                 logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
                 error_code = e.code
                 if error_code >= 500:
-                    e.code = ErrorType.SERVER_ERROR
+                    e.code = ChatGPTErrorType.SERVER_ERROR
                     e.message = "OpenAI Server Error"
-                elif error_code == ErrorType.EXPIRED_ACCESS_TOKEN_ERROR or \
-                        error_code == ErrorType.INVALID_ACCESS_TOKEN_ERROR:
+                elif error_code == ChatGPTErrorType.EXPIRED_ACCESS_TOKEN_ERROR or \
+                        error_code == ChatGPTErrorType.INVALID_ACCESS_TOKEN_ERROR:
                     e.message = "OpenAI Token Invalid, please retry"
                 else:
-                    e.code = ErrorType.UNKNOWN_ERROR
+                    e.code = ChatGPTErrorType.UNKNOWN_ERROR
                     e.message = "Unknown Error"
                 raise e
             except Exception as e:

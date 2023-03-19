@@ -5,7 +5,7 @@ import traceback
 
 import yaml
 from OpenAIAuth import Error as OpenAIError
-from revChatGPT.V1 import Error as ChatGPTError
+from revChatGPT.typing import Error as ChatGPTError
 from quart import Quart, request
 
 from session.session import Session
