@@ -5,6 +5,7 @@ import time
 from typing import List, Dict
 
 import OpenAIAuth
+from httpx import HTTPStatusError
 from revChatGPT.typing import Error as ChatGPTError
 
 from revChatGPT.typing import ErrorType as ChatGPTErrorType
@@ -53,7 +54,6 @@ class Session:
             del self.user_to_session[user_id]
         except Exception as _:
             pass
-
 
     def _get_user_session(self, user_id) -> UserSession:
         if user_id in self.user_to_session:
@@ -130,6 +130,11 @@ class Session:
                     e.code = ChatGPTErrorType.UNKNOWN_ERROR
                     e.message = "Unknown Error"
                 raise e
+            except HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    raise ChatGPTError(source="chat_with_chatgpt", message="Too many requests, please retry later")
+                elif e.response.status_code >= 500:
+                    raise ChatGPTError(source="chat_with_chatgpt", message="OpenAI Server Error")
             except Exception as e:
                 credential.refresh_token()
                 self._clean_session(user_id)

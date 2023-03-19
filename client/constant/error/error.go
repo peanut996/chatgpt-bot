@@ -18,7 +18,7 @@ var (
 	ChatGPTError = "ChatGPT return error, try later again \n\n" +
 		"😇出错了, 稍后重试下吧"
 	ChatGPTErrorTemplate = "ChatGPT return error, try later again \n\n" +
-		"😇出错了, 稍后重试下吧 \n\n %s"
+		"😇出错了, 稍后重试下吧 \n\n%s"
 	ChatGPTEngineNotOnline = "Chatgpt engine is not ready, please wait a moment. \n\n" +
 		"😇ChatGPT 引擎还没有准备好，请稍等一下"
 	SendBackMsgFailed = "sendFromChatTask back message failed, please try again later \n\n" +
