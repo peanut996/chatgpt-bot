@@ -186,7 +186,7 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 
 func (b *Bot) handleMessage(message tgbotapi.Message) {
 	if !IsGPT4Message(message) {
-		b.publishChatTask(message)
+		b.publishChatTask(message, false)
 		return
 	}
 	ok := b.checkLimiters(message)
@@ -194,13 +194,18 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 		b.runLimitersCallBack(message, false)
 		return
 	}
-	b.publishChatTask(message)
+	b.publishChatTask(message, true)
 
 }
 
-func (b *Bot) publishChatTask(message tgbotapi.Message) {
+func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
 	log.Printf("[publishChatTask] with message %s", utils.ToJson(message))
-	chatTask := model.NewChatTask(message)
+	chatTask := &model.ChatTask{}
+	if isGPT4Task {
+		chatTask = model.NewGPT4ChatTask(message)
+	} else {
+		chatTask = model.NewChatTask(message)
+	}
 	user, err := b.getUserInfo(message.From.ID)
 	if err == nil {
 		chatTask.User = user

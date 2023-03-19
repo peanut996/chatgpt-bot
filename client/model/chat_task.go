@@ -42,6 +42,13 @@ func NewChatTask(message tgbotapi.Message) *ChatTask {
 	}
 }
 
+func NewGPT4ChatTask(message tgbotapi.Message) *ChatTask {
+	chatTask := NewChatTask(message)
+	chatTask.Question = message.CommandArguments()
+	chatTask.IsGPT4Message = true
+	return chatTask
+}
+
 func (c *ChatTask) GetRawMessage() tgbotapi.Message {
 	return c.rawMessage
 }
