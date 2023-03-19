@@ -3,6 +3,7 @@ package bot
 import (
 	"chatgpt-bot/cfg"
 	"chatgpt-bot/engine"
+	"chatgpt-bot/model"
 	"fmt"
 	"log"
 	"strings"
@@ -98,7 +99,8 @@ func (w *WechatBot) handleWechatMessage(msg *openwechat.Message) {
 			return
 		}
 		var text = strings.Replace(msg.Content, atTag, "", -1)
-		res, err := w.engine.Chat(text, msg.FromUserName)
+		ctx := model.NewChatContext(text, msg.FromUserName, "")
+		res, err := w.engine.Chat(ctx)
 
 		replyText := ""
 		if err != nil {
