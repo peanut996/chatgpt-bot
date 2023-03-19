@@ -81,6 +81,12 @@ func (b *Bot) safeSendMsg(chatID int64, text string) {
 	b.safeSend(tgbotapi.NewMessage(chatID, text))
 }
 
+func (b *Bot) safeReplyMsg(chatID int64, messageID int, text string) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ReplyToMessageID = messageID
+	b.safeSend(msg)
+}
+
 func (b *Bot) logToChannel(log string) {
 	go func(s string) {
 		msg := tgbotapi.NewMessage(b.logChannelID, s)

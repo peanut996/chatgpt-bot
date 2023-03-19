@@ -23,6 +23,12 @@ var (
 
 	InviteTipTemplate = "You can invite new users to get 30 chat sessions per new user. your invite link: %s\n\n" +
 		"😊你可以邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
+
+	QueryUserInfoTemplate = "💁账号(Account): %s\n\n" +
+		"🏆剩余次数(RemainCount): %d\n" +
+		"🎭邀请人数(InviteUsers): %d\n" +
+		"🔗邀请链接(InviteLink): %s\n\n" +
+		"🔮小提示：邀请1人获得30次聊天次数(Invite 1 user to get 30 chat count)"
 )
 
 var (

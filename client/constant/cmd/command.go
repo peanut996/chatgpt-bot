@@ -13,5 +13,7 @@ var (
 
 	COUNT = "count"
 
+	QUERY = "query"
+
 	_ = "cmd"
 )

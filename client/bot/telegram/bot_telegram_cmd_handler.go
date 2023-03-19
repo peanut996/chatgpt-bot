@@ -25,6 +25,41 @@ type CommandHandler interface {
 	Run(b *Bot, message tgbotapi.Message) error
 }
 
+type QueryCommandHandler struct {
+	userRepository             *repository.UserRepository
+	userInviteRecordRepository *repository.UserInviteRecordRepository
+}
+
+func (q *QueryCommandHandler) Cmd() BotCmd {
+	return cmd.QUERY
+}
+
+func (q *QueryCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	userID := utils.Int64ToString(message.From.ID)
+	user, err := q.userRepository.GetByUserID(userID)
+	if err != nil {
+		log.Printf("[QueryCommandHandler] get user by user id failed, err: 【%s】\n", err)
+		return err
+	}
+	inviteCount, err := q.userInviteRecordRepository.CountByUserID(userID)
+	if err != nil {
+		log.Printf("[QueryCommandHandler] get user invite count by user id failed, err: 【%s】\n", err)
+		return err
+	}
+
+	text := fmt.Sprintf(constant.QueryUserInfoTemplate,
+		userID, user.RemainCount, inviteCount, b.getBotInviteLink(user.InviteCode))
+	b.safeReplyMsg(message.Chat.ID, message.MessageID, text)
+	return nil
+}
+
+func NewQueryCommandHandler(userRepository *repository.UserRepository, userInviteRecordRepository *repository.UserInviteRecordRepository) *QueryCommandHandler {
+	return &QueryCommandHandler{
+		userRepository,
+		userInviteRecordRepository,
+	}
+}
+
 type StartCommandHandler struct {
 	userRepository             *repository.UserRepository
 	userInviteRecordRepository *repository.UserInviteRecordRepository

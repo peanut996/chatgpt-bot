@@ -76,13 +76,16 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 
 	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 
-	b.registerCommandHandler(NewStartCommandHandler(userRepository, userInviteRecordRepository),
+	b.registerCommandHandler(
+		NewStartCommandHandler(userRepository, userInviteRecordRepository),
 		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler(),
 		NewInviteCommandHandler(userRepository),
 		NewCountCommandHandler(userRepository),
 		NewChatCommandHandler(),
+		NewQueryCommandHandler(userRepository, userInviteRecordRepository),
 	)
-	b.registerLimiter(NewCommonMessageLimiter(),
+	b.registerLimiter(
+		NewCommonMessageLimiter(),
 		NewSingleMessageLimiter(),
 		NewPrivateMessageLimiter(userRepository),
 		NewRateLimiter(cfg.BotConfig.RateLimiterConfig.Capacity, cfg.BotConfig.RateLimiterConfig.Duration),
@@ -209,7 +212,7 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	err := handler.Run(b, message)
 	if err != nil {
 		log.Println("exec handler encounter error: " + err.Error())
-		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, constant.InternalError))
+		b.safeReplyMsg(message.Chat.ID, message.MessageID, constant.InternalError)
 	}
 }
 
