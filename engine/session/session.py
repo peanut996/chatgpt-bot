@@ -44,8 +44,16 @@ class Session:
     def _clean_session(self, user_id):
         if user_id is None:
             return
-        del self.user_to_gpt4_session[user_id]
-        del self.user_to_session[user_id]
+        try:
+            del self.user_to_gpt4_session[user_id]
+        except Exception as _:
+            pass
+
+        try:
+            del self.user_to_session[user_id]
+        except Exception as _:
+            pass
+
 
     def _get_user_session(self, user_id) -> UserSession:
         if user_id in self.user_to_session:

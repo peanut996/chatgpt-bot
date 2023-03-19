@@ -32,8 +32,8 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 		// 新成员加入或者成员离开不用处理
 		return false, botError.EmptyMessage
 	}
-	if strings.Trim(message.Text, " ") == "" ||
-		strings.Trim(message.CommandArguments(), " ") == "" {
+	if strings.Trim(message.Text, " ") == "" || (message.IsCommand() &&
+		strings.Trim(message.CommandArguments(), " ") == "") {
 		// 空消息不用处理
 		return false, botError.EmptyMessage
 	}
