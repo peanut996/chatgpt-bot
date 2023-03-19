@@ -2,7 +2,7 @@ import asyncio
 import logging
 import random
 import time
-from typing import List
+from typing import List, Dict
 
 import OpenAIAuth
 from revChatGPT.typing import Error as ChatGPTError
@@ -10,6 +10,7 @@ from revChatGPT.typing import Error as ChatGPTError
 from revChatGPT.typing import ErrorType as ChatGPTErrorType
 
 from .credential import Credential
+from .user_session import UserSession
 
 
 class Session:
@@ -23,8 +24,7 @@ class Session:
             raise e
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
-        self.user_to_credential = dict()
-        self.user_to_last_chat_time = dict()
+        self.user_to_session: Dict[str, UserSession] = dict()
         self.verbose = config['engine'].get('debug', False)
         for c in self.chatgpt_credentials:
             c.set_verbose(self.verbose)
@@ -43,48 +43,53 @@ class Session:
     def _clean_session(self, user_id):
         if user_id is None:
             return
-        self.user_to_last_chat_time.pop(user_id)
-        self.user_to_credential.pop(user_id)
+        self.user_to_session.pop(user_id)
 
-    def _generate_chat_gpt_bot(self, user_id=None) -> Credential:
-        if user_id is None:
-            credential = self._get_random_chat_gpt_credential()
-            return credential
+    def _get_user_session(self, user_id) -> UserSession:
+        if user_id in self.user_to_session:
+            return self.user_to_session[user_id]
         else:
-            if user_id not in self.user_to_last_chat_time:
-                self.user_to_last_chat_time[user_id] = time.time()
-                credential = self._get_random_chat_gpt_credential()
-                self.user_to_credential[user_id] = credential
-                return credential
-            else:
-                self.user_to_last_chat_time[user_id] = time.time()
-                if time.time() - self.user_to_last_chat_time[user_id] > 60 * 5:
-                    credential = self._get_random_chat_gpt_credential()
-                    self.user_to_credential[user_id] = credential
-                    return credential
-                else:
-                    return self.user_to_credential[user_id]
+            credential = self._get_random_chat_gpt_credential()
+            session = UserSession(user_id=user_id, credential=credential)
+            self.user_to_session[user_id] = session
+            return session
+
+    def _get_credential_from_session(self, session: UserSession):
+        if time.time() - session.last_time > 60 * 5:
+            credential = self._get_random_chat_gpt_credential()
+            session.credential = credential
+        return session.credential
 
     async def chat_with_chatgpt(self, sentence: str, user_id=None) -> str:
-        bot = self._generate_chat_gpt_bot(user_id=user_id)
-        logging.info("ChatGPTBot using token: {}".format(bot.email))
+        session = self._get_user_session(user_id)
+        credential = self._get_credential_from_session(session)
+        credential.chat_gpt_bot.conversation_id = None
+        logging.info("ChatGPTBot using token: {}".format(credential.email))
 
-        if bot.lock is None:
-            bot.lock = asyncio.Lock()
+        if credential.lock is None:
+            credential.lock = asyncio.Lock()
 
-        async with bot.lock:
+        async with credential.lock:
             try:
                 res = ""
                 prev_text = ""
-                async for data in bot.chat_gpt_bot.ask(sentence):
+                conversation_id = session.conversation_id
+                parent_id = session.parent_id
+                logging.info(f"[Session] ask open ai user {user_id}, conversation_id: {conversation_id}, parent_id: {parent_id} ")
+                async for data in credential.chat_gpt_bot.ask(sentence,
+                                                              conversation_id=conversation_id,
+                                                              parent_id=parent_id):
                     message = data["message"][len(prev_text):]
                     res += message
                     prev_text = data["message"]
+                    conversation_id = data["conversation_id"]
+                    parent_id = data["parent_id"]
                 if len(res) == 0:
                     raise Exception("empty response")
+                session.update(conversation_id=conversation_id, parent_id=parent_id)
                 return res
             except ChatGPTError as e:
-                bot.refresh_token()
+                credential.refresh_token()
                 self._clean_session(user_id)
                 logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
                 error_code = e.code
@@ -99,7 +104,7 @@ class Session:
                     e.message = "Unknown Error"
                 raise e
             except Exception as e:
-                bot.refresh_token()
+                credential.refresh_token()
                 self._clean_session(user_id)
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e
