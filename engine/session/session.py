@@ -71,7 +71,7 @@ class Session:
         return session.credential
 
     async def chat_with_chatgpt(self, sentence: str, user_id=None, model=None) -> str:
-        session = self._get_user_session(user_id) if model is None else self._get_user_gpt4_session(user_id)
+        session = self._get_user_session(user_id) if not model else self._get_user_gpt4_session(user_id)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
         logging.info("ChatGPTBot using token: {}".format(credential.email))
