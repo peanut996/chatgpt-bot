@@ -1,3 +1,5 @@
+#!/bin/bash
+start=$(date +%s)
 dir_path=$(cd "$(dirname "$0")" && pwd)
 
 
@@ -72,6 +74,8 @@ $dir_path/build.sh
 
 nohup $dir_path/chatgpt-bot -c ../etc/config.yaml > /tmp/client.log &
 
-echo "kill client done"
+echo "start client done"
 
-echo "Reboot success."
+end=$(date +%s)
+take=$(( end - start ))
+echo "Done in ${take} seconds."
