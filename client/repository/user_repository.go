@@ -25,7 +25,7 @@ func NewUserRepository(db db.BotDB) *UserRepository {
 	}
 }
 
-func (u *UserRepository) IsAvaliable(userID string) (bool, error) {
+func (u *UserRepository) IsAvailable(userID string) (bool, error) {
 	user, err := u.GetByUserID(userID)
 	if err != nil || user == nil {
 		return false, err
