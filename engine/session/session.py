@@ -44,7 +44,8 @@ class Session:
     def _clean_session(self, user_id):
         if user_id is None:
             return
-        self.user_to_session.pop(user_id)
+        del self.user_to_gpt4_session[user_id]
+        del self.user_to_session[user_id]
 
     def _get_user_session(self, user_id) -> UserSession:
         if user_id in self.user_to_session:
@@ -111,6 +112,9 @@ class Session:
                 if error_code >= 500:
                     e.code = ChatGPTErrorType.SERVER_ERROR
                     e.message = "OpenAI Server Error"
+                elif error_code == 429:
+                    e.code = ChatGPTErrorType.RATE_LIMIT_ERROR
+                    e.message = "Too many requests, please retry later"
                 elif error_code == ChatGPTErrorType.EXPIRED_ACCESS_TOKEN_ERROR or \
                         error_code == ChatGPTErrorType.INVALID_ACCESS_TOKEN_ERROR:
                     e.message = "OpenAI Token Invalid, please retry"
