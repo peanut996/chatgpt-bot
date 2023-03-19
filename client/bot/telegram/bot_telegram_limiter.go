@@ -32,7 +32,8 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 		// 新成员加入或者成员离开不用处理
 		return false, botError.EmptyMessage
 	}
-	if strings.Trim(message.Text, " ") == "" {
+	if strings.Trim(message.Text, " ") == "" ||
+		strings.Trim(message.CommandArguments(), " ") == "" {
 		// 空消息不用处理
 		return false, botError.EmptyMessage
 	}
@@ -182,7 +183,7 @@ func NewRateLimiter(capacity int64, duration int64) *RateLimiter {
 }
 
 func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
-	if IsGPT4Message(message) || !bot.enableLimiter {
+	if !IsGPT4Message(message) || !bot.enableLimiter {
 		return true, ""
 	}
 	if !r.limiter.Allow(strconv.FormatInt(message.From.ID, 10)) {

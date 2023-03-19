@@ -25,4 +25,7 @@ var (
 		"🎭邀请人数(InviteUsers): %d\n" +
 		"🔗邀请链接(InviteLink): %s\n\n" +
 		"🔮小提示：邀请1人获得30次聊天次数(Invite 1 user to get 30 chat count)"
+
+	GPT4LackTextTip = "Please add your question after `/gpt4` \n\n" +
+		"😊请在 `/gpt4`命令后面加上你的问题"
 )

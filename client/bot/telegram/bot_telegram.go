@@ -12,6 +12,7 @@ import (
 	"errors"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -174,8 +175,14 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 	log.Printf("[Update] 【chat】:%s, 【from】:%s, 【msg】:%s", utils.ToJson(update.Message.Chat),
 		utils.ToJson(update.Message.From),
 		utils.ToJson(update.Message))
+
 	if update.Message.IsCommand() && !IsGPT4Message(*update.Message) {
 		b.execCommand(*update.Message)
+		return
+	}
+
+	if IsGPT4Message(*update.Message) && strings.Trim(update.Message.CommandArguments(), " ") == "" {
+		b.safeSendMsg(update.Message.Chat.ID, tip.GPT4LackTextTip)
 		return
 	}
 
