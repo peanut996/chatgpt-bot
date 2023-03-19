@@ -185,13 +185,15 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 }
 
 func (b *Bot) handleMessage(message tgbotapi.Message) {
-	if !IsGPT4Message(message) {
-		b.publishChatTask(message, false)
-		return
-	}
+
 	ok := b.checkLimiters(message)
 	if !ok {
 		b.runLimitersCallBack(message, false)
+		return
+	}
+
+	if !IsGPT4Message(message) {
+		b.publishChatTask(message, false)
 		return
 	}
 	b.publishChatTask(message, true)
