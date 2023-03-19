@@ -15,5 +15,4 @@ chatgpt-bot
 *.db
 run.sh/
 proxy
-run.sh
 env.sh
