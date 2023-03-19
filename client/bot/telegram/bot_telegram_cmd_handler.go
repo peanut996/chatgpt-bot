@@ -148,6 +148,9 @@ func (c *PprofCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	}
 
 	if filePath, success := dumpProfile(); success {
+		defer func() {
+			_ = os.Remove(filePath)
+		}()
 		err := sendFile(b, message.Chat.ID, filePath)
 		if err == nil {
 			return nil
@@ -182,7 +185,6 @@ func dumpProfile() (string, bool) {
 }
 
 func sendFile(b *Bot, chatID int64, filePath string) error {
-	defer os.Remove(filePath)
 	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FilePath(filePath))
 	_, err := b.tgBot.Send(fileMsg)
 	if err != nil {
