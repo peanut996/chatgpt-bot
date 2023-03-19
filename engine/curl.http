@@ -1,2 +1,6 @@
-GET http://localhost:5005/chat?sentence=ping
+GET http://localhost:5000/chat?sentence=ping
+Content-Type: text/plain; charset=utf-8
+
+###
+GET http://localhost:5000/chat?sentence=ping&user_id=2
 Content-Type: text/plain; charset=utf-8
