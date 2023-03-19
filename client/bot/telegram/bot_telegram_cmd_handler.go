@@ -1,8 +1,9 @@
 package telegram
 
 import (
-	"chatgpt-bot/constant"
 	"chatgpt-bot/constant/cmd"
+	botError "chatgpt-bot/constant/error"
+	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/model/persist"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -47,7 +48,7 @@ func (q *QueryCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 		return err
 	}
 
-	text := fmt.Sprintf(constant.QueryUserInfoTemplate,
+	text := fmt.Sprintf(tip.QueryUserInfoTemplate,
 		userID, user.RemainCount, inviteCount, b.getBotInviteLink(user.InviteCode))
 	b.safeReplyMsg(message.Chat.ID, message.MessageID, text)
 	return nil
@@ -82,7 +83,7 @@ func (c *StartCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 			log.Printf("[StartCommandHandler] handle invitation failed, err: 【%s】", err)
 		}
 	}
-	b.safeSendMsg(message.Chat.ID, constant.BotStartTip)
+	b.safeSendMsg(message.Chat.ID, tip.BotStartTip)
 	return nil
 }
 
@@ -119,7 +120,7 @@ func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID s
 		return err
 	}
 	originUserID, _ := utils.StringToInt64(user.UserID)
-	b.safeSendMsg(originUserID, constant.InviteSuccessTip)
+	b.safeSendMsg(originUserID, tip.InviteSuccessTip)
 	return nil
 }
 
@@ -132,7 +133,7 @@ func (c *ChatCommandHandler) Cmd() BotCmd {
 
 func (c *ChatCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	log.Println(fmt.Printf("get args: [%s]", message.CommandArguments()))
-	b.safeSendMsg(message.Chat.ID, constant.BotStartTip)
+	b.safeSendMsg(message.Chat.ID, tip.BotStartTip)
 	return nil
 }
 
@@ -144,7 +145,7 @@ func (c *PingCommandHandler) Cmd() BotCmd {
 }
 
 func (c *PingCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	b.safeSendMsg(message.Chat.ID, constant.BotPingTip)
+	b.safeSendMsg(message.Chat.ID, tip.BotPingTip)
 	return nil
 }
 
@@ -158,7 +159,7 @@ func (c *LimiterCommandHandler) Cmd() BotCmd {
 func (c *LimiterCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "")
 	if !b.isBotAdmin(message.From.ID) {
-		msg.Text = constant.NotAdminTip
+		msg.Text = tip.NotAdminTip
 	} else {
 		b.enableLimiter = utils.ParseBoolString(message.CommandArguments())
 		msg.Text = fmt.Sprintf("limiter status is %v now", b.enableLimiter)
@@ -177,7 +178,7 @@ func (c *PprofCommandHandler) Cmd() BotCmd {
 func (c *PprofCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "")
 	if !b.isBotAdmin(message.From.ID) {
-		msg.Text = constant.NotAdminTip
+		msg.Text = tip.NotAdminTip
 		b.safeSend(msg)
 		return nil
 	}
@@ -192,7 +193,7 @@ func (c *PprofCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 		}
 	}
 
-	msg.Text = constant.InternalError
+	msg.Text = botError.InternalError
 	b.safeSend(msg)
 	return nil
 }
@@ -247,7 +248,7 @@ func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	}
 	if user != nil {
 		link := b.getBotInviteLink(user.InviteCode)
-		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
+		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
 		return nil
 	} else {
 		userName := ""
@@ -262,7 +263,7 @@ func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 		}
 		user, _ := i.userRepository.GetByUserID(userID)
 		link := b.getBotInviteLink(user.InviteCode)
-		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(constant.InviteTipTemplate, link, link))
+		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
 	}
 	return nil
 }
@@ -277,7 +278,7 @@ func (c *CountCommandHandler) Cmd() BotCmd {
 
 func (c *CountCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	if !b.isBotAdmin(message.From.ID) {
-		b.safeSendMsg(message.Chat.ID, constant.NotAdminTip)
+		b.safeSendMsg(message.Chat.ID, tip.NotAdminTip)
 		return nil
 	}
 	args := message.CommandArguments()

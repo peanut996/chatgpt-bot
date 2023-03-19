@@ -1,7 +1,7 @@
 package telegram
 
 import (
-	"chatgpt-bot/constant"
+	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
 	"fmt"
@@ -43,7 +43,7 @@ func (b *Bot) sendErrorMessage(chatID int64, msgID int, text string) {
 	_, err := b.tgBot.Send(msg)
 	if err != nil {
 		log.Printf("[SendErrorMessage] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
-		msg.Text = constant.SendBackMsgFailed
+		msg.Text = botError.SendBackMsgFailed
 		_, _ = b.tgBot.Send(msg)
 		return
 	}

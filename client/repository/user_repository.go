@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"chatgpt-bot/constant"
+	"chatgpt-bot/constant/config"
+	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/db"
 	"chatgpt-bot/model/persist"
 	"chatgpt-bot/utils"
@@ -58,7 +59,7 @@ func (u *UserRepository) generateUniqueInviteCode() (string, error) {
 
 		inviteCode, _ = utils.GenerateInvitationCode(10)
 	}
-	return "", errors.New(constant.ExceedMaxGenerateInviteCodeTimes)
+	return "", errors.New(botError.ExceedMaxGenerateInviteCodeTimes)
 }
 
 func (u *UserRepository) InitUser(userID string, userName string) error {
@@ -68,7 +69,7 @@ func (u *UserRepository) InitUser(userID string, userName string) error {
 	}
 
 	_, err = u.db.Exec("INSERT OR IGNORE INTO user (user_id, remain_count, invite_code, user_name) VALUES (?, ?, ?, ?)",
-		userID, constant.DefaultCount, inviteCode, userName)
+		userID, config.DefaultCount, inviteCode, userName)
 	return err
 }
 
@@ -98,7 +99,7 @@ func (u *UserRepository) DecreaseCount(userID string) error {
 }
 
 func (u *UserRepository) AddCountWhenInviteOther(userID string) error {
-	_, err := u.db.Exec("UPDATE user SET remain_count = remain_count + ? WHERE user_id = ?", constant.CountWhenInviteOtherUser, userID)
+	_, err := u.db.Exec("UPDATE user SET remain_count = remain_count + ? WHERE user_id = ?", config.CountWhenInviteOtherUser, userID)
 	return err
 }
 

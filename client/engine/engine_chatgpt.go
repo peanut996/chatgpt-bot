@@ -2,7 +2,8 @@ package engine
 
 import (
 	"chatgpt-bot/cfg"
-	"chatgpt-bot/constant"
+	"chatgpt-bot/constant/config"
+	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/utils"
 	"encoding/json"
 	"errors"
@@ -51,46 +52,46 @@ func (e *ChatGPTEngine) chat(sentence string, userID string) (string, error) {
 	log.Println("[ChatGPT] send request to chatgpt, text: ", sentence)
 
 	if !e.Alive() {
-		return constant.ChatGPTEngineNotOnline, nil
+		return botError.ChatGPTEngineNotOnline, nil
 	}
 
 	encodeSentence := url.QueryEscape(sentence)
-	e.client.Timeout = time.Duration(constant.ChatGPTTimeoutSeconds) * time.Second
+	e.client.Timeout = time.Duration(config.ChatGPTTimeoutSeconds) * time.Second
 	queryString := fmt.Sprintf("/chat?user_id=%s&sentence=%s", userID, encodeSentence)
 	resp, err := e.client.Get(e.baseUrl + queryString)
 	if resp == nil {
-		return "", errors.New(constant.NetworkError)
+		return "", errors.New(botError.NetworkError)
 	}
 
 	defer resp.Body.Close()
 	if err != nil {
 		log.Println("[ChatGPT] chatgpt engine error: ", err)
-		return "", errors.New(constant.NetworkError)
+		return "", errors.New(botError.NetworkError)
 	}
 	if resp.StatusCode != 200 {
 		log.Println("[ChatGPT] chatgpt engine fail, status code: ", resp.StatusCode)
-		return "", errors.New(constant.ChatGPTError)
+		return "", errors.New(botError.ChatGPTError)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ChatGPT] chatgpt engine error: ", err)
-		return "", errors.New(constant.InternalError)
+		return "", errors.New(botError.InternalError)
 	}
 	data := make(map[string]interface{}, 0)
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		log.Printf("[ChatGPT] unmarshal chatgpt response error: %s, resp: %s\n",
 			err, string(body))
-		return "", errors.New(constant.InternalError)
+		return "", errors.New(botError.InternalError)
 	}
 	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJson(data))
 	if msg, ok := data["message"].(string); ok && msg != "" {
 		return msg, nil
 	}
 	if detail, ok := data["detail"].(string); ok && detail != "" {
-		return "", fmt.Errorf(constant.ChatGPTErrorTemplate, detail)
+		return "", fmt.Errorf(botError.ChatGPTErrorTemplate, detail)
 	}
-	return "", errors.New(constant.ChatGPTError)
+	return "", errors.New(botError.ChatGPTError)
 }
 
 func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
@@ -100,7 +101,7 @@ func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
 		strings.Contains(resp, "RemoteDisconnected") ||
 		strings.Contains(resp, "ConnectionResetError")
 	if isNetworkError {
-		return "", errors.New(constant.NetworkError)
+		return "", errors.New(botError.NetworkError)
 	}
 
 	if err == nil && resp != "" {
@@ -110,7 +111,7 @@ func (e *ChatGPTEngine) Chat(sentence string, userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return constant.ChatGPTError, err
+	return botError.ChatGPTError, err
 }
 
 func (e *ChatGPTEngine) checkChatGPTEngine() {

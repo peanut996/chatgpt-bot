@@ -1,7 +1,7 @@
 package telegram
 
 import (
-	"chatgpt-bot/constant"
+	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/middleware"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -30,17 +30,17 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 	if message.NewChatMembers != nil ||
 		message.LeftChatMember != nil {
 		// 新成员加入或者成员离开不用处理
-		return false, constant.EmptyMessage
+		return false, botError.EmptyMessage
 	}
 	if strings.Trim(message.Text, " ") == "" {
 		// 空消息不用处理
-		return false, constant.EmptyMessage
+		return false, botError.EmptyMessage
 	}
 
 	if message.ReplyToMessage != nil &&
 		!(message.ReplyToMessage.From.ID == bot.tgBot.Self.ID) {
 		// 不是回复机器人的不用处理
-		return false, constant.EmptyMessage
+		return false, botError.EmptyMessage
 	}
 
 	isPrivate := message.Chat.IsPrivate()
@@ -68,7 +68,7 @@ func NewSingleMessageLimiter() *SingletonMessageLimiter {
 func (l *SingletonMessageLimiter) Allow(_ *Bot, message tgbotapi.Message) (bool, string) {
 	_, ok := l.session.Load(message.From.ID)
 	if ok {
-		return false, constant.OnlyOneChatAtATime
+		return false, botError.OnlyOneChatAtATime
 	}
 	defer l.session.Store(message.From.ID, true)
 	return true, ""
@@ -99,7 +99,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 		ok := findMemberFromChat(bot, bot.groupName, userID) &&
 			findMemberFromChat(bot, bot.channelName, userID)
 		if !ok {
-			return false, fmt.Sprintf(constant.LimitUserGroupAndChannelTemplate,
+			return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
 				bot.channelName, bot.groupName, bot.channelName, bot.groupName)
 		}
 	}
@@ -107,7 +107,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	// 查看用户是否存在 不存在就初始化
 	user, err := l.userRepository.GetByUserID(userIDString)
 	if err != nil {
-		return false, constant.InternalError
+		return false, botError.InternalError
 	}
 	if user == nil {
 		// 初始化用户
@@ -119,7 +119,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 		err = l.userRepository.InitUser(userIDString, userName)
 		if err != nil {
 			log.Println("PrivateMessageLimiter] init user error", err)
-			return false, constant.InternalError
+			return false, botError.InternalError
 		}
 		return true, ""
 	}
@@ -131,9 +131,9 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 		code := user.InviteCode
 		link := bot.getBotInviteLink(code)
 		if err != nil {
-			return false, constant.InternalError
+			return false, botError.InternalError
 		}
-		return false, fmt.Sprintf(constant.LimitUserCountTemplate, link, link)
+		return false, fmt.Sprintf(botError.LimitUserCountTemplate, link, link)
 	}
 
 	return true, ""
@@ -181,7 +181,7 @@ func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	}
 	if !r.limiter.Allow(strconv.FormatInt(message.From.ID, 10)) {
 		log.Printf("[RateLimiter] user %d is chatting with me, ignore message %s", message.From.ID, message.Text)
-		text := fmt.Sprintf(constant.RateLimitMessageTemplate,
+		text := fmt.Sprintf(botError.RateLimitMessageTemplate,
 			r.limiter.GetCapacity(), r.limiter.GetDuration()/60,
 			r.limiter.GetDuration()/60, r.limiter.GetCapacity())
 		return false, text

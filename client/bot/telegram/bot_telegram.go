@@ -2,7 +2,8 @@ package telegram
 
 import (
 	"chatgpt-bot/cfg"
-	"chatgpt-bot/constant"
+	botError "chatgpt-bot/constant/error"
+	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/db"
 	"chatgpt-bot/engine"
 	"chatgpt-bot/model"
@@ -47,7 +48,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 
 	if utils.IsAnyStringEmpty(
 		b.channelName, b.groupName) {
-		return errors.New(constant.MissingRequiredConfig)
+		return errors.New(botError.MissingRequiredConfig)
 	}
 
 	d := db.NewSQLiteDB()
@@ -205,14 +206,14 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	cmd := message.Command()
 	handler, ok := b.handlers[cmd]
 	if !ok {
-		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, constant.UnknownCmdTip))
+		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, tip.UnknownCmdTip))
 		return
 	}
 
 	err := handler.Run(b, message)
 	if err != nil {
 		log.Println("exec handler encounter error: " + err.Error())
-		b.safeReplyMsg(message.Chat.ID, message.MessageID, constant.InternalError)
+		b.safeReplyMsg(message.Chat.ID, message.MessageID, botError.InternalError)
 	}
 }
 
