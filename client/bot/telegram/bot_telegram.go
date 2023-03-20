@@ -94,18 +94,20 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	return nil
 }
 
-func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserRepository) {
+func initLimiters(_ *cfg.Config, b *Bot, userRepository *repository.UserRepository) {
 	common := NewCommonMessageLimiter()
 	singleton := NewSingletonMessageLimiter()
 	join := NewJoinMessageLimiter()
 	user := NewUserLimiter(userRepository)
 
-	b.registerGPT3Limiter(common, singleton, user)
+	b.registerGPT3Limiter(common, singleton, user,
+		NewRateLimiter(1, 60),
+	)
 
 	b.registerGPT4Limiter(
 		common, singleton, join, user,
 		NewRemainCountMessageLimiter(userRepository),
-		NewRateLimiter(cfg.BotConfig.RateLimiterConfig.Capacity, cfg.BotConfig.RateLimiterConfig.Duration),
+		NewRateLimiter(1, 300),
 	)
 }
 
