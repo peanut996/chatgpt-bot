@@ -178,3 +178,13 @@ func (u *UserRepository) GetAllUserID() ([]string, error) {
 	return userIDs, nil
 
 }
+
+func (u *UserRepository) Count() (int, error) {
+	row := u.db.QueryRow("SELECT count(*) FROM user")
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

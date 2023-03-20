@@ -55,3 +55,14 @@ func (r *UserInviteRecordRepository) GetByInviteUserID(inviteUserID string) (*pe
 	}
 	return record, nil
 }
+
+func (r *UserInviteRecordRepository) Count() (int, error) {
+	raw := "SELECT COUNT(*) FROM user_invite_record"
+	var count int
+	err := r.db.QueryRow(raw).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+
+}

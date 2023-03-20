@@ -26,6 +26,38 @@ type CommandHandler interface {
 	Run(b *Bot, message tgbotapi.Message) error
 }
 
+type StatusCommandHandler struct {
+	userRepository             *repository.UserRepository
+	userInviteRecordRepository *repository.UserInviteRecordRepository
+}
+
+func (s *StatusCommandHandler) Cmd() BotCmd {
+	return cmd.STATUS
+}
+
+func (s *StatusCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	userCount, err := s.userRepository.Count()
+	if err != nil {
+		return err
+	}
+
+	inviteRecordCount, err := s.userInviteRecordRepository.Count()
+	if err != nil {
+		return err
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf(tip.StatusTipTemplate, userCount, inviteRecordCount))
+	b.safeSend(msg)
+	return nil
+}
+
+func NewStatusCommandHandler(userRepository *repository.UserRepository, userInviteRecordRepository *repository.UserInviteRecordRepository) *StatusCommandHandler {
+	return &StatusCommandHandler{
+		userRepository:             userRepository,
+		userInviteRecordRepository: userInviteRecordRepository,
+	}
+}
+
 type PushDonateCommandHandler struct {
 	userRepository *repository.UserRepository
 }
