@@ -34,8 +34,9 @@ type Bot struct {
 	enableLimiter bool
 	admin         int64
 
-	handlers map[BotCmd]CommandHandler
-	limiters []MessageLimiter
+	handlers     map[BotCmd]CommandHandler
+	limiters     []MessageLimiter
+	gpt4Limiters []MessageLimiter
 }
 
 func (b *Bot) Init(cfg *cfg.Config) error {
@@ -85,17 +86,27 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		NewChatCommandHandler(),
 		NewQueryCommandHandler(userRepository, userInviteRecordRepository),
 	)
-	b.registerLimiter(
-		NewCommonMessageLimiter(),
-		NewSingleMessageLimiter(),
-		NewPrivateMessageLimiter(userRepository),
-		NewRateLimiter(cfg.BotConfig.RateLimiterConfig.Capacity, cfg.BotConfig.RateLimiterConfig.Duration),
-	)
+	initLimiters(cfg, b, userRepository)
 
 	go b.loopAndFinishChatTask()
 
 	log.Printf("[Init] telegram bot init success, bot name: %s", b.tgBot.Self.UserName)
 	return nil
+}
+
+func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserRepository) {
+	common := NewCommonMessageLimiter()
+	singleton := NewSingleMessageLimiter()
+
+	b.registerGPT3Limiter(
+		common, singleton,
+	)
+
+	b.registerGPT4Limiter(
+		common, singleton,
+		NewPrivateMessageLimiter(userRepository),
+		NewRateLimiter(cfg.BotConfig.RateLimiterConfig.Capacity, cfg.BotConfig.RateLimiterConfig.Duration),
+	)
 }
 
 func NewTelegramBot() *Bot {
@@ -243,12 +254,28 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	}
 }
 
-func (b *Bot) registerLimiter(limiters ...MessageLimiter) {
+func (b *Bot) registerLimiter(isGPT4 bool, limiters ...MessageLimiter) {
+	if isGPT4 {
+		b.gpt4Limiters = append(b.gpt4Limiters, limiters...)
+		return
+	}
 	b.limiters = append(b.limiters, limiters...)
+
+}
+
+func (b *Bot) registerGPT3Limiter(limiters ...MessageLimiter) {
+	b.registerLimiter(false, limiters...)
+}
+func (b *Bot) registerGPT4Limiter(limiters ...MessageLimiter) {
+	b.registerLimiter(true, limiters...)
 }
 
 func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
-	for _, limiter := range b.limiters {
+	limiters := b.limiters
+	if IsGPT4Message(m) {
+		limiters = b.gpt4Limiters
+	}
+	for _, limiter := range limiters {
 		ok, err := limiter.Allow(b, m)
 		if !ok {
 			if utils.IsNotEmpty(err) {
@@ -262,7 +289,11 @@ func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 }
 
 func (b *Bot) runLimitersCallBack(m tgbotapi.Message, success bool) {
-	for _, limiter := range b.limiters {
+	limiters := b.limiters
+	if IsGPT4Message(m) {
+		limiters = b.gpt4Limiters
+	}
+	for _, limiter := range limiters {
 		limiter.CallBack(b, m, success)
 	}
 }

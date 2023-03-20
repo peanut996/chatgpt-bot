@@ -90,9 +90,6 @@ func NewPrivateMessageLimiter(userRepository *repository.UserRepository) *Privat
 }
 
 func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
-	if !IsGPT4Message(message) {
-		return true, ""
-	}
 	if !message.Chat.IsPrivate() {
 		return true, ""
 	}
@@ -183,7 +180,7 @@ func NewRateLimiter(capacity int64, duration int64) *RateLimiter {
 }
 
 func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
-	if !IsGPT4Message(message) || !bot.enableLimiter {
+	if !bot.enableLimiter {
 		return true, ""
 	}
 	if !r.limiter.Allow(strconv.FormatInt(message.From.ID, 10)) {
