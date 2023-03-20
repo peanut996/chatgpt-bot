@@ -19,12 +19,14 @@ var (
 
 	DONATE = "donate"
 
+	PUSH = "push"
+
 	_ = "cmd"
 )
 
 func IsBotCmd(cmd string) bool {
 	switch cmd {
-	case START, PING, CHATGPT, LIMITER, PPROF, INVITE, COUNT, QUERY, GPT4, DONATE:
+	case START, PING, CHATGPT, LIMITER, PPROF, INVITE, COUNT, QUERY, GPT4, DONATE, PUSH:
 		return true
 	default:
 		return false

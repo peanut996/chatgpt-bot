@@ -158,3 +158,23 @@ func (u *UserRepository) UpdateCountByUserID(userID string, count string) error 
 	return err
 
 }
+
+func (u *UserRepository) GetAllUserID() ([]string, error) {
+	rows, err := u.db.Query("SELECT user_id FROM user")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var userIDs []string
+	for rows.Next() {
+		var userID string
+		err = rows.Scan(&userID)
+		if err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, userID)
+	}
+	return userIDs, nil
+
+}
