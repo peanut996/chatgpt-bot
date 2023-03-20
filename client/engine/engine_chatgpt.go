@@ -5,7 +5,6 @@ import (
 	"chatgpt-bot/constant/config"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/model"
-	"chatgpt-bot/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -86,7 +85,7 @@ func (e *ChatGPTEngine) chat(ctx model.ChatContext) (string, error) {
 			err, string(body))
 		return "", errors.New(botError.InternalError)
 	}
-	log.Println("[ChatGPT] response from chatgpt: ", utils.ToJson(data))
+
 	if msg, ok := data["message"].(string); ok && msg != "" {
 		return msg, nil
 	}

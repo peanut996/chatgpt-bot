@@ -19,10 +19,8 @@ async def chat():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
     model = request.args.get("model")
-    logging.getLogger("app").info(f"[Engine] chat gpt engine get request: from {user_id}: {sentence} ")
     try:
         res = await session.chat_with_chatgpt(sentence, user_id=user_id, model=model)
-        logging.getLogger("app").info(f"[Engine] chat gpt engine get response: to {user_id}: {res}")
         return {"message": res}
     except OpenAIError as e:
         logging.error(

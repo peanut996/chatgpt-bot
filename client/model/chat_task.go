@@ -20,7 +20,8 @@ type ChatTask struct {
 }
 
 func (c *ChatTask) String() string {
-	return fmt.Sprintf("[ChatTask] [question: %s, answer: %s, chat: %d, from: %d, message id: %d]", c.Question, c.Answer, c.Chat, c.From, c.MessageID)
+	return fmt.Sprintf("[ChatTask] [ chat: %d, from: %d, message id: %d, question: %s, answer: %s,]",
+		c.Chat, c.From, c.MessageID, c.Question, c.Answer)
 }
 
 func (c *ChatTask) GetFormattedQuestion() string {
