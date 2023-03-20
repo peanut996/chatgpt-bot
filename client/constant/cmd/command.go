@@ -17,5 +17,16 @@ var (
 
 	GPT4 = "gpt4"
 
+	DONATE = "donate"
+
 	_ = "cmd"
 )
+
+func IsBotCmd(cmd string) bool {
+	switch cmd {
+	case START, PING, CHATGPT, LIMITER, PPROF, INVITE, COUNT, QUERY, GPT4, DONATE:
+		return true
+	default:
+		return false
+	}
+}

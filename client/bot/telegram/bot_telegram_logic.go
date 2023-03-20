@@ -15,6 +15,10 @@ var (
 	NeedHandleMessageCmd = []BotCmd{cmd.GPT4, cmd.CHATGPT}
 )
 
+func IsGPT4Message(message tgbotapi.Message) bool {
+	return message.IsCommand() && message.Command() == cmd.GPT4
+}
+
 func isNeedHandleMessageCmd(cmd BotCmd) bool {
 	for _, c := range NeedHandleMessageCmd {
 		if c == cmd {

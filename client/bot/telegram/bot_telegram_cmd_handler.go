@@ -26,6 +26,29 @@ type CommandHandler interface {
 	Run(b *Bot, message tgbotapi.Message) error
 }
 
+type DonateCommandHandler struct{}
+
+func (d *DonateCommandHandler) Cmd() BotCmd {
+	return cmd.DONATE
+}
+
+func (d *DonateCommandHandler) Run(bot *Bot, message tgbotapi.Message) error {
+	photoTemplate := "https://raw.githubusercontent.com/peanut996/chatgpt-bot/master/assets/%s.JPG"
+	alipay := fmt.Sprintf(photoTemplate, "alipay")
+	wechat := fmt.Sprintf(photoTemplate, "wechat")
+
+	text := fmt.Sprintf("🙏 感谢您使用我们的机器人！如果您觉得我们的机器人对您有所帮助，欢迎为我们捐赠，以支持我们的运营和发展。\n\n"+
+		"💰 您可以通过以下方式向我们捐赠：\n\n- [微信](%s)\n\n- [支付宝](%s) \n\n"+
+		"💡 如果您有任何其他的捐赠方式或者建议，欢迎联系我们！\n\n"+
+		"👏 再次感谢您的支持，您的捐赠将帮助我们更好地为您提供服务！\n", wechat, alipay)
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+
+	bot.safeSend(msg)
+
+	return nil
+}
+
 type QueryCommandHandler struct {
 	userRepository             *repository.UserRepository
 	userInviteRecordRepository *repository.UserInviteRecordRepository
@@ -350,6 +373,6 @@ func NewChatCommandHandler() *ChatCommandHandler {
 	return &ChatCommandHandler{}
 }
 
-func IsGPT4Message(message tgbotapi.Message) bool {
-	return message.IsCommand() && message.Command() == cmd.GPT4
+func NewDonateCommandHandler() *DonateCommandHandler {
+	return &DonateCommandHandler{}
 }
