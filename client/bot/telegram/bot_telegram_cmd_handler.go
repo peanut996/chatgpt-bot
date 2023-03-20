@@ -36,6 +36,9 @@ func (s *StatusCommandHandler) Cmd() BotCmd {
 }
 
 func (s *StatusCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+	if !b.isBotAdmin(message.From.ID) {
+		return nil
+	}
 	userCount, err := s.userRepository.Count()
 	if err != nil {
 		return err
@@ -58,17 +61,29 @@ func NewStatusCommandHandler(userRepository *repository.UserRepository, userInvi
 	}
 }
 
-type PushDonateCommandHandler struct {
+type PushCommandHandler struct {
 	userRepository *repository.UserRepository
 }
 
-func (p *PushDonateCommandHandler) Cmd() BotCmd {
+func NewPushCommandHandler(userRepository *repository.UserRepository) *PushCommandHandler {
+	return &PushCommandHandler{
+		userRepository: userRepository,
+	}
+}
+
+func (p *PushCommandHandler) Cmd() BotCmd {
 	return cmd.PUSH
 }
 
-func (p *PushDonateCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+func (p *PushCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	if !b.isBotAdmin(message.From.ID) {
 		return fmt.Errorf(tip.NotAdminTip)
+	}
+
+	text := tip.DonateTip
+
+	if utils.IsNotEmpty(message.CommandArguments()) {
+		text = message.CommandArguments()
 	}
 
 	userIDs, err := p.userRepository.GetAllUserID()
@@ -77,14 +92,15 @@ func (p *PushDonateCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	}
 
 	for _, userID := range userIDs {
-		go func(userID string) {
+		go func(userID string, text string) {
 			if utils.IsEmpty(userID) {
 				return
 			}
 			uid, _ := utils.StringToInt64(userID)
-			msg := tgbotapi.NewMessage(uid, tip.DonateTip)
+			msg := tgbotapi.NewMessage(uid, text)
+			msg.ParseMode = tgbotapi.ModeMarkdown
 			b.safeSend(msg)
-		}(userID)
+		}(userID, text)
 	}
 
 	return nil
@@ -99,7 +115,7 @@ func (d *DonateCommandHandler) Cmd() BotCmd {
 func (d *DonateCommandHandler) Run(bot *Bot, message tgbotapi.Message) error {
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, tip.DonateTip)
-
+	msg.ParseMode = tgbotapi.ModeMarkdown
 	bot.safeSend(msg)
 
 	return nil

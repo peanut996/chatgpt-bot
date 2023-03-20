@@ -87,6 +87,8 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		NewChatCommandHandler(),
 		NewQueryCommandHandler(userRepository, userInviteRecordRepository),
 		NewDonateCommandHandler(),
+		NewStatusCommandHandler(userRepository, userInviteRecordRepository),
+		NewPushCommandHandler(userRepository),
 	)
 	initLimiters(cfg, b, userRepository)
 
