@@ -22,10 +22,6 @@ type MessageLimiter interface {
 type CommonMessageLimiter struct {
 }
 
-func NewCommonMessageLimiter() *CommonMessageLimiter {
-	return &CommonMessageLimiter{}
-}
-
 func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	if message.NewChatMembers != nil ||
 		message.LeftChatMember != nil {
@@ -60,12 +56,6 @@ type SingletonMessageLimiter struct {
 	session *sync.Map
 }
 
-func NewSingleMessageLimiter() *SingletonMessageLimiter {
-	return &SingletonMessageLimiter{
-		session: &sync.Map{},
-	}
-}
-
 func (l *SingletonMessageLimiter) Allow(_ *Bot, message tgbotapi.Message) (bool, string) {
 	_, ok := l.session.Load(message.From.ID)
 	if ok {
@@ -79,31 +69,13 @@ func (l *SingletonMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, _ b
 	l.session.Delete(message.From.ID)
 }
 
-type PrivateMessageLimiter struct {
+type RemainCountMessageLimiter struct {
 	userRepository *repository.UserRepository
 }
 
-func NewPrivateMessageLimiter(userRepository *repository.UserRepository) *PrivateMessageLimiter {
-	return &PrivateMessageLimiter{
-		userRepository: userRepository,
-	}
-}
-
-func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
-	if !message.Chat.IsPrivate() {
-		return true, ""
-	}
+func (l *RemainCountMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	userID := message.From.ID
 	userIDString := utils.Int64ToString(userID)
-	// 限制用户加群
-	if bot.limitPrivate {
-		ok := findMemberFromChat(bot, bot.groupName, userID) &&
-			findMemberFromChat(bot, bot.channelName, userID)
-		if !ok {
-			return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
-				bot.channelName, bot.groupName, bot.channelName, bot.groupName)
-		}
-	}
 
 	// 查看用户是否存在 不存在就初始化
 	user, err := l.userRepository.GetByUserID(userIDString)
@@ -119,7 +91,7 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 		}
 		err = l.userRepository.InitUser(userIDString, userName)
 		if err != nil {
-			log.Println("PrivateMessageLimiter] init user error", err)
+			log.Println("RemainCountMessageLimiter] init user error", err)
 			return false, botError.InternalError
 		}
 		return true, ""
@@ -140,6 +112,28 @@ func (l *PrivateMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool,
 	return true, ""
 }
 
+type JoinMessageLimiter struct{}
+
+func (j *JoinMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+	if !message.Chat.IsPrivate() {
+		return true, ""
+	}
+	userID := message.From.ID
+	// 限制用户加群
+	if bot.limitPrivate {
+		ok := findMemberFromChat(bot, bot.groupName, userID) &&
+			findMemberFromChat(bot, bot.channelName, userID)
+		if !ok {
+			return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
+				bot.channelName, bot.groupName, bot.channelName, bot.groupName)
+		}
+	}
+	return true, ""
+}
+
+func (j *JoinMessageLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+}
+
 func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 	findUserConfig := tgbotapi.GetChatMemberConfig{
 		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
@@ -155,7 +149,7 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 	return true
 }
 
-func (l *PrivateMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, success bool) {
+func (l *RemainCountMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, success bool) {
 	if !IsGPT4Message(message) {
 		return
 	}
@@ -173,12 +167,6 @@ type RateLimiter struct {
 	limiter *middleware.Limiter
 }
 
-func NewRateLimiter(capacity int64, duration int64) *RateLimiter {
-	return &RateLimiter{
-		limiter: middleware.NewLimiter(capacity, duration),
-	}
-}
-
 func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	if !bot.enableLimiter {
 		return true, ""
@@ -194,4 +182,30 @@ func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 }
 
 func (r *RateLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+}
+
+func NewRateLimiter(capacity int64, duration int64) *RateLimiter {
+	return &RateLimiter{
+		limiter: middleware.NewLimiter(capacity, duration),
+	}
+}
+
+func NewCommonMessageLimiter() *CommonMessageLimiter {
+	return &CommonMessageLimiter{}
+}
+
+func NewRemainCountMessageLimiter(userRepository *repository.UserRepository) *RemainCountMessageLimiter {
+	return &RemainCountMessageLimiter{
+		userRepository: userRepository,
+	}
+}
+
+func NewSingletonMessageLimiter() *SingletonMessageLimiter {
+	return &SingletonMessageLimiter{
+		session: &sync.Map{},
+	}
+}
+
+func NewJoinMessageLimiter() *JoinMessageLimiter {
+	return &JoinMessageLimiter{}
 }
