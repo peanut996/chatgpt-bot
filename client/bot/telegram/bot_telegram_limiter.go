@@ -72,8 +72,8 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 	}
 
 	isPrivate := message.Chat.IsPrivate()
-	// 私聊或者是回复机器人的消息才处理
-	ok := isPrivate ||
+	// 私聊或者是回复机器人的消息才处理或者是机器人的命令
+	ok := isPrivate || IsGPT4Message(message) ||
 		(message.ReplyToMessage != nil &&
 			message.ReplyToMessage.From.ID == bot.tgBot.Self.ID)
 
