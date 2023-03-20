@@ -35,8 +35,8 @@ type Bot struct {
 	admin         int64
 
 	handlers     map[BotCmd]CommandHandler
-	limiters     []MessageLimiter
-	gpt4Limiters []MessageLimiter
+	limiters     []Limiter
+	gpt4Limiters []Limiter
 }
 
 func (b *Bot) Init(cfg *cfg.Config) error {
@@ -98,11 +98,12 @@ func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserReposi
 	common := NewCommonMessageLimiter()
 	singleton := NewSingletonMessageLimiter()
 	join := NewJoinMessageLimiter()
+	user := NewUserLimiter(userRepository)
 
-	b.registerGPT3Limiter(common, singleton)
+	b.registerGPT3Limiter(common, singleton, user)
 
 	b.registerGPT4Limiter(
-		common, singleton, join,
+		common, singleton, join, user,
 		NewRemainCountMessageLimiter(userRepository),
 		NewRateLimiter(cfg.BotConfig.RateLimiterConfig.Capacity, cfg.BotConfig.RateLimiterConfig.Duration),
 	)
@@ -253,7 +254,7 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	}
 }
 
-func (b *Bot) registerLimiter(isGPT4 bool, limiters ...MessageLimiter) {
+func (b *Bot) registerLimiter(isGPT4 bool, limiters ...Limiter) {
 	if isGPT4 {
 		b.gpt4Limiters = append(b.gpt4Limiters, limiters...)
 		return
@@ -262,10 +263,10 @@ func (b *Bot) registerLimiter(isGPT4 bool, limiters ...MessageLimiter) {
 
 }
 
-func (b *Bot) registerGPT3Limiter(limiters ...MessageLimiter) {
+func (b *Bot) registerGPT3Limiter(limiters ...Limiter) {
 	b.registerLimiter(false, limiters...)
 }
-func (b *Bot) registerGPT4Limiter(limiters ...MessageLimiter) {
+func (b *Bot) registerGPT4Limiter(limiters ...Limiter) {
 	b.registerLimiter(true, limiters...)
 }
 

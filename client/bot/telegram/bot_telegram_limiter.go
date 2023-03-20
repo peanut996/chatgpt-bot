@@ -14,9 +14,40 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type MessageLimiter interface {
+type Limiter interface {
 	Allow(bot *Bot, message tgbotapi.Message) (bool, string)
 	CallBack(bot *Bot, message tgbotapi.Message, success bool)
+}
+
+type UserLimiter struct {
+	userRepository *repository.UserRepository
+}
+
+func (u *UserLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+	user, err := u.userRepository.GetByUserID(utils.Int64ToString(message.From.ID))
+
+	if err != nil {
+		log.Printf("[UserLimiter] get user by user id failed, err: 【%s】\n", err)
+		return false, botError.InternalError
+	}
+
+	if user == nil {
+		userInfo, err := bot.getUserInfo(message.From.ID)
+		if err != nil {
+			return false, err.Error()
+		}
+		err = u.userRepository.InitUser(utils.Int64ToString(message.From.ID), userInfo.String())
+		if err != nil {
+			log.Printf("[UserLimiter] init user failed, err: 【%s】\n", err)
+			return false, botError.InternalError
+		}
+	}
+
+	return true, ""
+
+}
+
+func (u *UserLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
 }
 
 type CommonMessageLimiter struct {
@@ -112,9 +143,9 @@ func (l *RemainCountMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (b
 	return true, ""
 }
 
-type JoinMessageLimiter struct{}
+type JoinLimiter struct{}
 
-func (j *JoinMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+func (j *JoinLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	if !message.Chat.IsPrivate() {
 		return true, ""
 	}
@@ -131,7 +162,7 @@ func (j *JoinMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, st
 	return true, ""
 }
 
-func (j *JoinMessageLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+func (j *JoinLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
 }
 
 func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
@@ -206,6 +237,12 @@ func NewSingletonMessageLimiter() *SingletonMessageLimiter {
 	}
 }
 
-func NewJoinMessageLimiter() *JoinMessageLimiter {
-	return &JoinMessageLimiter{}
+func NewJoinMessageLimiter() *JoinLimiter {
+	return &JoinLimiter{}
+}
+
+func NewUserLimiter(userRepository *repository.UserRepository) *UserLimiter {
+	return &UserLimiter{
+		userRepository: userRepository,
+	}
 }
