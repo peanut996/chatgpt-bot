@@ -42,6 +42,22 @@ func (q *QueryCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 		log.Printf("[QueryCommandHandler] get user by user id failed, err: 【%s】\n", err)
 		return err
 	}
+	if user == nil {
+		userInfo, err := b.getUserInfo(message.From.ID)
+		if err != nil {
+			return err
+		}
+		err = q.userRepository.InitUser(userID, userInfo.String())
+		if err != nil {
+			log.Printf("[QueryCommandHandler] init user failed, err: 【%s】\n", err)
+			return err
+		}
+		user, err = q.userRepository.GetByUserID(userID)
+		if err != nil {
+			log.Printf("[QueryCommandHandler] get user by user id failed, err: 【%s】\n", err)
+			return err
+		}
+	}
 	inviteCount, err := q.userInviteRecordRepository.CountByUserID(userID)
 	if err != nil {
 		log.Printf("[QueryCommandHandler] get user invite count by user id failed, err: 【%s】\n", err)
