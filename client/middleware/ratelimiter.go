@@ -30,7 +30,7 @@ func (l *Limiter) Allow(user string) bool {
 
 	l.refill(user)
 
-	if l.tokens[user] > 0 {
+	if l.tokens[user] > 1 {
 		l.tokens[user]--
 		return true
 	} else {
