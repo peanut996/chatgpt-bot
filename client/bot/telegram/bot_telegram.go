@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"chatgpt-bot/cfg"
+	"chatgpt-bot/constant/cmd"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/db"
@@ -243,8 +244,11 @@ func (b *Bot) registerCommandHandler(handlers ...CommandHandler) {
 }
 
 func (b *Bot) execCommand(message tgbotapi.Message) {
-	cmd := message.Command()
-	handler, ok := b.handlers[cmd]
+	command := message.Command()
+	if !cmd.IsBotCmd(command) {
+		return
+	}
+	handler, ok := b.handlers[command]
 	if !ok {
 		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, tip.UnknownCmdTip))
 		return
