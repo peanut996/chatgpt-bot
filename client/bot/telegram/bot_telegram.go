@@ -11,6 +11,7 @@ import (
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
 	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"strings"
@@ -84,7 +85,6 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler(),
 		NewInviteCommandHandler(userRepository),
 		NewCountCommandHandler(userRepository),
-		NewChatCommandHandler(),
 		NewQueryCommandHandler(userRepository, userInviteRecordRepository),
 		NewDonateCommandHandler(),
 		NewStatusCommandHandler(userRepository, userInviteRecordRepository),
@@ -193,13 +193,14 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 		utils.ToJson(update.Message.From),
 		utils.ToJson(update.Message))
 
-	if update.Message.IsCommand() && !IsGPT4Message(*update.Message) {
+	if update.Message.IsCommand() && !IsGPTMessage(*update.Message) {
 		b.execCommand(*update.Message)
 		return
 	}
 
-	if IsGPT4Message(*update.Message) && strings.Trim(update.Message.CommandArguments(), " ") == "" {
-		b.safeSendMsg(update.Message.Chat.ID, tip.GPT4LackTextTip)
+	if IsGPTMessage(*update.Message) && strings.Trim(update.Message.CommandArguments(), " ") == "" {
+		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(tip.GPTLackTextTipTemplate,
+			update.Message.Command(), update.Message.Command()))
 		return
 	}
 
@@ -215,7 +216,7 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 		return
 	}
 
-	if !IsGPT4Message(message) {
+	if !IsGPTMessage(message) {
 		b.publishChatTask(message, false)
 		return
 	}
@@ -281,7 +282,7 @@ func (b *Bot) registerGPT4Limiter(limiters ...Limiter) {
 
 func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 	limiters := b.limiters
-	if IsGPT4Message(m) {
+	if IsGPTMessage(m) && m.Command() == cmd.GPT4 {
 		limiters = b.gpt4Limiters
 	}
 	for _, limiter := range limiters {
@@ -299,7 +300,7 @@ func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 
 func (b *Bot) runLimitersCallBack(m tgbotapi.Message, success bool) {
 	limiters := b.limiters
-	if IsGPT4Message(m) {
+	if IsGPTMessage(m) && m.Command() == cmd.GPT4 {
 		limiters = b.gpt4Limiters
 	}
 	for _, limiter := range limiters {

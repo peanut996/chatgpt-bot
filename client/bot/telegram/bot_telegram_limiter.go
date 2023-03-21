@@ -73,7 +73,7 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 
 	isPrivate := message.Chat.IsPrivate()
 	// 私聊或者是回复机器人的消息才处理或者是机器人的命令
-	ok := isPrivate || IsGPT4Message(message) ||
+	ok := isPrivate || IsGPTMessage(message) ||
 		(message.ReplyToMessage != nil &&
 			message.ReplyToMessage.From.ID == bot.tgBot.Self.ID)
 
@@ -181,7 +181,7 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 }
 
 func (l *RemainCountMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, success bool) {
-	if !IsGPT4Message(message) {
+	if !IsGPTMessage(message) {
 		return
 	}
 	if success {

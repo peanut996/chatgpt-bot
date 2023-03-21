@@ -11,8 +11,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func IsGPT4Message(message tgbotapi.Message) bool {
-	return message.IsCommand() && message.Command() == cmd.GPT4
+func IsGPTMessage(message tgbotapi.Message) bool {
+	return message.IsCommand() && (message.Command() == cmd.GPT4 || message.Command() == cmd.CHAT)
 }
 
 func (b *Bot) isBotAdmin(from int64) bool {

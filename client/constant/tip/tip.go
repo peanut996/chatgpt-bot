@@ -28,8 +28,8 @@ var (
 		"🔗邀请链接(InviteLink): %s\n\n" +
 		"🔮小提示：邀请1人获得30次聊天次数(Invite 1 user to get 30 chat count)"
 
-	GPT4LackTextTip = "`/gpt4` + blank + your question.\n\n" +
-		"😊「 /gpt4 」+ 空格 + 你的问题"
+	GPTLackTextTipTemplate = "`/%s` + blank + your question.\n\n" +
+		"😊「 /%s 」+ 空格 + 你的问题"
 
 	AlipayQRCodeUrl = "https://raw.githubusercontent.com/peanut996/chatgpt-bot/master/assets/alipay.JPG"
 

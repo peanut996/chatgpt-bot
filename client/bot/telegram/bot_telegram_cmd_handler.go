@@ -235,19 +235,6 @@ func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID s
 	return nil
 }
 
-type ChatCommandHandler struct {
-}
-
-func (c *ChatCommandHandler) Cmd() BotCmd {
-	return cmd.CHATGPT
-}
-
-func (c *ChatCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	log.Println(fmt.Printf("get args: [%s]", message.CommandArguments()))
-	b.safeSendMsg(message.Chat.ID, tip.BotStartTip)
-	return nil
-}
-
 type PingCommandHandler struct {
 }
 
@@ -439,10 +426,6 @@ func NewCountCommandHandler(userRepository *repository.UserRepository) *CountCom
 	return &CountCommandHandler{
 		userRepository: userRepository,
 	}
-}
-
-func NewChatCommandHandler() *ChatCommandHandler {
-	return &ChatCommandHandler{}
 }
 
 func NewDonateCommandHandler() *DonateCommandHandler {
