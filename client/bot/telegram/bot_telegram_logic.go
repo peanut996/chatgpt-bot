@@ -3,6 +3,7 @@ package telegram
 import (
 	"chatgpt-bot/constant/cmd"
 	botError "chatgpt-bot/constant/error"
+	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
 	"fmt"
@@ -101,4 +102,17 @@ func (b *Bot) logToChannel(log string) {
 		msg.ParseMode = tgbotapi.ModeMarkdown
 		b.safeSend(msg)
 	}(log)
+}
+
+func (b *Bot) sendQueueToast(chatID int64, messageID int) {
+	queue := len(b.chatTaskChannel)
+	if queue < 3 {
+		return
+	}
+	text := fmt.Sprintf(tip.QueueTipTemplate, queue, queue)
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ReplyToMessageID = messageID
+	msg.ParseMode = tgbotapi.ModeMarkdown
+	b.safeSend(msg)
+
 }

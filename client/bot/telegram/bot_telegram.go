@@ -26,7 +26,6 @@ type Bot struct {
 	engine engine.Engine
 
 	chatTaskChannel chan model.ChatTask
-	maxQueueChannel chan interface{}
 
 	groupName     string
 	channelName   string
@@ -74,8 +73,8 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		return err
 	}
 
-	b.chatTaskChannel = make(chan model.ChatTask, 1)
-	b.maxQueueChannel = make(chan interface{}, 3)
+	b.chatTaskChannel = make(chan model.ChatTask, 100)
+
 	b.handlers = make(map[BotCmd]CommandHandler)
 
 	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
@@ -148,8 +147,7 @@ func (b *Bot) loopAndFinishChatTask() {
 	for {
 		select {
 		case task := <-b.chatTaskChannel:
-			log.Println("[LoopAndFinishChatTask] got a task to finishChatTask")
-			go b.finishChatTask(task)
+			b.finishChatTask(task)
 		case <-time.After(30 * time.Second):
 		}
 
@@ -157,11 +155,6 @@ func (b *Bot) loopAndFinishChatTask() {
 }
 
 func (b *Bot) finishChatTask(task model.ChatTask) {
-	b.maxQueueChannel <- struct{}{}
-	defer func() {
-		<-b.maxQueueChannel
-	}()
-
 	log.Printf("[finishChatTask] start chat task %s", task.String())
 	b.logToChannel(task.GetFormattedQuestion())
 	b.sendTyping(task.Chat)
@@ -215,6 +208,8 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 		b.runLimitersCallBack(message, false)
 		return
 	}
+
+	b.sendQueueToast(message.Chat.ID, message.MessageID)
 
 	if IsGPTMessage(message) && message.Command() == cmd.GPT4 {
 		b.publishChatTask(message, true)

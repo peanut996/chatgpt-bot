@@ -42,4 +42,7 @@ var (
 
 	StatusTipTemplate = "💁 总用户数：%d\n\n" +
 		"🏆 总邀请记录次数：%d\n"
+
+	QueueTipTemplate = "Current queue count: %d, please wait wait patiently\n\n" +
+		"🔥当前排队人数：%d, 请耐心等候\n\n"
 )
