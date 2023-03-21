@@ -5,5 +5,5 @@ var (
 
 	DefaultCount = 3
 
-	CountWhenInviteOtherUser = 30
+	CountWhenInviteOtherUser = 9999
 )

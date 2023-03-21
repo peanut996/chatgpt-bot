@@ -19,14 +19,14 @@ var (
 	InviteSuccessTip = "Invite success, you can use /invite to get your invite link \n\n" +
 		"😊邀请成功，你可以使用 /invite 来获取你的邀请链接"
 
-	InviteTipTemplate = "You can invite new users to get 30 chat sessions per new user. your invite link: %s\n\n" +
-		"😊你可以邀请新用户获取聊天次数 30次/新用户. 你的邀请链接: %s"
+	InviteTipTemplate = "You can invite 1 new user after that you can use gpt4 chat unlimited. Invite link: %s\n\n" +
+		"😊你可以邀请1个新用户后可无限使用gpt4对话. 你的邀请链接: %s"
 
 	QueryUserInfoTemplate = "💁账号(Account): %s\n\n" +
 		"🏆剩余次数(RemainCount): %d\n" +
 		"🎭邀请人数(InviteUsers): %d\n" +
 		"🔗邀请链接(InviteLink): %s\n\n" +
-		"🔮小提示：邀请1人获得30次聊天次数(Invite 1 user to get 30 chat count)"
+		"🔮小提示：邀请1个新用户后可无限使用gpt4对话(Invite one new user to get gpt4 unlimited)"
 
 	GPTLackTextTipTemplate = "`/%s` + blank + your question.\n\n" +
 		"😊「 /%s 」+ 空格 + 你的问题"
