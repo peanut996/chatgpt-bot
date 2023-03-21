@@ -26,6 +26,7 @@ type Bot struct {
 	engine engine.Engine
 
 	chatTaskChannel chan model.ChatTask
+	gpt4TaskChannel chan model.ChatTask
 
 	groupName     string
 	channelName   string
@@ -74,6 +75,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	}
 
 	b.chatTaskChannel = make(chan model.ChatTask, 100)
+	b.gpt4TaskChannel = make(chan model.ChatTask, 100)
 
 	b.handlers = make(map[BotCmd]CommandHandler)
 
@@ -146,6 +148,8 @@ func (b *Bot) fetchUpdates() {
 func (b *Bot) loopAndFinishChatTask() {
 	for {
 		select {
+		case task := <-b.gpt4TaskChannel:
+			go b.finishChatTask(task)
 		case task := <-b.chatTaskChannel:
 			b.finishChatTask(task)
 		case <-time.After(30 * time.Second):
@@ -209,12 +213,11 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 		return
 	}
 
-	b.sendQueueToast(message.Chat.ID, message.MessageID)
-
 	if IsGPTMessage(message) && message.Command() == cmd.GPT4 {
 		b.publishChatTask(message, true)
 		return
 	}
+	b.sendQueueToast(message.Chat.ID, message.MessageID)
 	b.publishChatTask(message, false)
 
 }
@@ -222,16 +225,17 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
 	log.Printf("[publishChatTask] with message %s", utils.ToJson(message))
 	chatTask := &model.ChatTask{}
-	if isGPT4Task {
-		chatTask = model.NewGPT4ChatTask(message)
-	} else {
-		chatTask = model.NewChatTask(message)
-	}
 	user, err := b.getUserInfo(message.From.ID)
 	if err == nil {
 		chatTask.User = user
 	}
-	b.chatTaskChannel <- *chatTask
+	if isGPT4Task {
+		chatTask = model.NewGPT4ChatTask(message)
+		b.gpt4TaskChannel <- *chatTask
+	} else {
+		chatTask = model.NewChatTask(message)
+		b.chatTaskChannel <- *chatTask
+	}
 	b.sendTyping(chatTask.Chat)
 }
 
