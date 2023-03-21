@@ -3,7 +3,7 @@ package cmd
 var (
 	START = "start"
 	PING  = "ping"
-	CHAT  = "chat"
+	GPT   = "gpt"
 
 	LIMITER = "limiter"
 
@@ -28,7 +28,7 @@ var (
 
 func IsBotCmd(cmd string) bool {
 	switch cmd {
-	case START, PING, CHAT, LIMITER,
+	case START, PING, GPT, LIMITER,
 		PPROF, INVITE, COUNT, QUERY,
 		GPT4, DONATE, PUSH, STATUS:
 		return true

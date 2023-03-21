@@ -42,7 +42,7 @@ func NewChatTask(message tgbotapi.Message) *ChatTask {
 		UUID:       uuid.New().String(),
 		rawMessage: message,
 	}
-	if message.IsCommand() && message.Command() == cmd.CHAT {
+	if message.IsCommand() && message.Command() == cmd.GPT {
 		task.Question = message.CommandArguments()
 	}
 	return task
