@@ -26,11 +26,17 @@ func (c *ChatTask) String() string {
 }
 
 func (c *ChatTask) GetFormattedQuestion() string {
-	return fmt.Sprintf("❓ from %s\n%s", c.User.String(), c.Question)
+	if c.User != nil {
+		return fmt.Sprintf("❓ from %s\n%s", c.User.String(), c.Question)
+	}
+	return fmt.Sprintf("❓ from %d\n%s", c.From, c.Question)
 }
 
 func (c *ChatTask) GetFormattedAnswer() string {
-	return fmt.Sprintf("🅰️ to %s\n%s", c.User.String(), c.Answer)
+	if c.User != nil {
+		return fmt.Sprintf("✅ from %s\n%s", c.User.String(), c.Answer)
+	}
+	return fmt.Sprintf("✅ from %d\n%s", c.From, c.Answer)
 }
 
 func NewChatTask(message tgbotapi.Message) *ChatTask {
