@@ -1,6 +1,7 @@
 package model
 
 import (
+	"chatgpt-bot/bot/telegram"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
@@ -33,7 +34,7 @@ func (c *ChatTask) GetFormattedAnswer() string {
 }
 
 func NewChatTask(message tgbotapi.Message) *ChatTask {
-	return &ChatTask{
+	task := &ChatTask{
 		Question:   message.Text,
 		Chat:       message.Chat.ID,
 		From:       message.From.ID,
@@ -41,6 +42,10 @@ func NewChatTask(message tgbotapi.Message) *ChatTask {
 		UUID:       uuid.New().String(),
 		rawMessage: message,
 	}
+	if telegram.IsGPT3Message(message) {
+		task.Question = message.CommandArguments()
+	}
+	return task
 }
 
 func NewGPT4ChatTask(message tgbotapi.Message) *ChatTask {

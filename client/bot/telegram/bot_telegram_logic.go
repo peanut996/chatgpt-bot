@@ -14,6 +14,9 @@ import (
 func IsGPTMessage(message tgbotapi.Message) bool {
 	return message.IsCommand() && (message.Command() == cmd.GPT4 || message.Command() == cmd.CHAT)
 }
+func IsGPT3Message(message tgbotapi.Message) bool {
+	return message.IsCommand() && message.Command() == cmd.CHAT
+}
 
 func (b *Bot) isBotAdmin(from int64) bool {
 	if b.admin == 0 {
