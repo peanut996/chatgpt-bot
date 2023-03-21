@@ -62,15 +62,31 @@ func (b *Bot) safeSend(msg tgbotapi.MessageConfig) {
 	if msg.Text == "" {
 		return
 	}
-	_, err := b.tgBot.Send(msg)
-	if err == nil {
+	if len(msg.Text) < 4096 {
+		b.sendMessageSilently(msg)
 		return
 	}
-	msg.ParseMode = ""
-	_, err = b.tgBot.Send(msg)
-	if err != nil {
-		log.Printf("[SafeSend] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+	b.sendLargeMessage(msg)
+}
+
+func (b *Bot) sendLargeMessage(msg tgbotapi.MessageConfig) {
+	msgs := utils.SplitMessageByMaxSize(msg.Text, 4000)
+	for _, m := range msgs {
+		msg.Text = m
+		b.sendMessageSilently(msg)
+	}
+}
+
+func (b *Bot) sendMessageSilently(msg tgbotapi.MessageConfig) {
+	if msg.Text == "" {
 		return
+	}
+	msg.ParseMode = tgbotapi.ModeMarkdown
+	_, err := b.tgBot.Send(msg)
+	if err != nil {
+		log.Printf("[SendMessageSilently] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
+		msg.ParseMode = ""
+		_, _ = b.tgBot.Send(msg)
 	}
 }
 
