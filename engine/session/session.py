@@ -132,7 +132,8 @@ class Session:
                 raise e
             except HTTPStatusError as e:
                 if e.response.status_code == 429:
-                    raise ChatGPTError(source="chat_with_chatgpt", message="Too many requests, please retry later")
+                    message = "😱 机器人负载过多，请稍后再试"
+                    raise ChatGPTError(source="chat_with_chatgpt", message=message)
                 elif e.response.status_code >= 500:
                     raise ChatGPTError(source="chat_with_chatgpt", message="OpenAI Server Error")
             except Exception as e:
