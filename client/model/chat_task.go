@@ -34,9 +34,9 @@ func (c *ChatTask) GetFormattedQuestion() string {
 
 func (c *ChatTask) GetFormattedAnswer() string {
 	if c.User != nil {
-		return fmt.Sprintf("✅ from %s\n%s", c.User.String(), c.Answer)
+		return fmt.Sprintf("✅ to %s\n%s", c.User.String(), c.Answer)
 	}
-	return fmt.Sprintf("✅ from %d\n%s", c.From, c.Answer)
+	return fmt.Sprintf("✅ to %d\n%s", c.From, c.Answer)
 }
 
 func NewChatTask(message tgbotapi.Message) *ChatTask {
