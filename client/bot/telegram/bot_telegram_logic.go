@@ -36,8 +36,10 @@ func (b *Bot) getUserInfo(userID int64) (*model.User, error) {
 			ChatID: userID,
 		}})
 	if err != nil {
+		log.Println("[GetUserInfo] get user info failed, err: ", err)
 		return nil, err
 	}
+	log.Println("[GetUserInfo] get user info success: ", utils.ToIndentJson(user))
 	return model.NewUser(user.UserName, user.FirstName, user.LastName), nil
 }
 

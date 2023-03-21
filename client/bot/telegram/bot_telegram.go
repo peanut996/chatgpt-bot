@@ -227,6 +227,7 @@ func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
 	chatTask := &model.ChatTask{}
 	user, err := b.getUserInfo(message.From.ID)
 	if err == nil {
+		log.Println("[publishChatTask] get user info success: ", user.String())
 		chatTask.User = user
 	} else {
 		log.Println("[publishChatTask] get user info error: ", err)
