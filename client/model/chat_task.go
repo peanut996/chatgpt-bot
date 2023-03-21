@@ -1,7 +1,7 @@
 package model
 
 import (
-	"chatgpt-bot/bot/telegram"
+	"chatgpt-bot/constant/cmd"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
@@ -42,7 +42,7 @@ func NewChatTask(message tgbotapi.Message) *ChatTask {
 		UUID:       uuid.New().String(),
 		rawMessage: message,
 	}
-	if telegram.IsGPT3Message(message) {
+	if message.IsCommand() && message.Command() == cmd.CHAT {
 		task.Question = message.CommandArguments()
 	}
 	return task
