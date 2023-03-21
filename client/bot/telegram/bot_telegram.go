@@ -224,19 +224,14 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 
 func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
 	log.Printf("[publishChatTask] with message %s", utils.ToJson(message))
-	chatTask := &model.ChatTask{}
+	chatTask := model.NewChatTask(message)
 	user, err := b.getUserInfo(message.From.ID)
 	if err == nil {
-		log.Println("[publishChatTask] get user info success: ", user.String())
 		chatTask.User = user
-	} else {
-		log.Println("[publishChatTask] get user info error: ", err)
 	}
 	if isGPT4Task {
-		chatTask = model.NewGPT4ChatTask(message)
 		b.gpt4TaskChannel <- *chatTask
 	} else {
-		chatTask = model.NewChatTask(message)
 		b.chatTaskChannel <- *chatTask
 	}
 	b.sendTyping(chatTask.Chat)

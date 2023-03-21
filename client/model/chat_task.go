@@ -48,17 +48,12 @@ func NewChatTask(message tgbotapi.Message) *ChatTask {
 		UUID:       uuid.New().String(),
 		rawMessage: message,
 	}
-	if message.IsCommand() && message.Command() == cmd.GPT {
+	if message.IsCommand() &&
+		(message.Command() == cmd.GPT || message.Command() == cmd.GPT4) {
 		task.Question = message.CommandArguments()
+		task.IsGPT4Message = message.Command() == cmd.GPT4
 	}
 	return task
-}
-
-func NewGPT4ChatTask(message tgbotapi.Message) *ChatTask {
-	chatTask := NewChatTask(message)
-	chatTask.Question = message.CommandArguments()
-	chatTask.IsGPT4Message = true
-	return chatTask
 }
 
 func (c *ChatTask) GetRawMessage() tgbotapi.Message {
