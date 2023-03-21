@@ -216,11 +216,11 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 		return
 	}
 
-	if !IsGPTMessage(message) {
-		b.publishChatTask(message, false)
+	if IsGPTMessage(message) && message.Command() == cmd.GPT4 {
+		b.publishChatTask(message, true)
 		return
 	}
-	b.publishChatTask(message, true)
+	b.publishChatTask(message, false)
 
 }
 
