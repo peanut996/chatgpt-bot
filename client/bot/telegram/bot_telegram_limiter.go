@@ -86,11 +86,14 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 func (l *CommonMessageLimiter) CallBack(b *Bot, m tgbotapi.Message, success bool) {
 	shouldSendTip := func() bool {
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		n := r.Intn(20)
+		n := r.Intn(100)
 		return n == 8
 	}
 	if success && m.Chat.IsPrivate() && shouldSendTip() {
-		b.safeSendMsg(m.Chat.ID, tip.DonateTip)
+		go func() {
+			time.Sleep(time.Second * 30)
+			b.safeSendMsg(m.Chat.ID, tip.DonateTip)
+		}()
 	}
 }
 
