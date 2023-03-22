@@ -2,7 +2,6 @@ package limiter
 
 import (
 	"chatgpt-bot/bot/telegram"
-	"chatgpt-bot/bot/telegram/service"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -55,7 +54,7 @@ func (l *RemainCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 }
 
 func (l *RemainCountMessageLimiter) CallBack(_ telegram.TelegramBot, message tgbotapi.Message, success bool) {
-	if !service.IsGPTMessage(message) {
+	if !IsGPTMessage(message) {
 		return
 	}
 	if success {

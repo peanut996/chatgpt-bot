@@ -2,7 +2,6 @@ package limiter
 
 import (
 	"chatgpt-bot/bot/telegram"
-	"chatgpt-bot/bot/telegram/service"
 	"chatgpt-bot/constant/config"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
@@ -43,7 +42,7 @@ func (l *InviteCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 }
 
 func (l *InviteCountMessageLimiter) CallBack(_ telegram.TelegramBot, message tgbotapi.Message, success bool) {
-	if !service.IsGPTMessage(message) {
+	if !IsGPTMessage(message) {
 		return
 	}
 	if success {

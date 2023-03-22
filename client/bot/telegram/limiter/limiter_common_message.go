@@ -2,7 +2,6 @@ package limiter
 
 import (
 	"chatgpt-bot/bot/telegram"
-	"chatgpt-bot/bot/telegram/service"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -34,7 +33,7 @@ func (l *CommonMessageLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.
 
 	isPrivate := message.Chat.IsPrivate()
 	// 私聊或者是回复机器人的消息才处理或者是机器人的命令
-	ok := isPrivate || service.IsGPTMessage(message) ||
+	ok := isPrivate || IsGPTMessage(message) ||
 		(message.ReplyToMessage != nil &&
 			message.ReplyToMessage.From.ID == bot.SelfID())
 
