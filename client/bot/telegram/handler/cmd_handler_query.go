@@ -3,6 +3,7 @@ package handler
 import (
 	"chatgpt-bot/bot/telegram"
 	"chatgpt-bot/constant/cmd"
+	"chatgpt-bot/constant/config"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -50,7 +51,8 @@ func (q *QueryCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Messa
 	}
 
 	text := fmt.Sprintf(tip.QueryUserInfoTemplate,
-		userID, user.RemainCount, inviteCount, b.GetBotInviteLink(user.InviteCode))
+		userID, user.RemainCount, inviteCount, b.GetBotInviteLink(user.InviteCode),
+		config.AllowGPT4Count, config.AllowGPT4Count)
 	b.SafeReplyMsg(message.Chat.ID, message.MessageID, text)
 	return nil
 }

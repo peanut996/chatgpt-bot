@@ -107,7 +107,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		handler.NewStatusCommandHandler(userRepository, userInviteRecordRepository),
 		handler.NewPushCommandHandler(userRepository),
 	)
-	initLimiters(cfg, b, userRepository)
+	initLimiters(cfg, b, userRepository, userInviteRecordRepository)
 
 	go b.loopAndFinishChatTask()
 
@@ -115,7 +115,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	return nil
 }
 
-func initLimiters(_ *cfg.Config, b *Bot, userRepository *repository.UserRepository) {
+func initLimiters(_ *cfg.Config, b *Bot, userRepository *repository.UserRepository, recordRepository *repository.UserInviteRecordRepository) {
 	common := limiter.NewCommonMessageLimiter()
 	singleton := limiter.NewSingletonMessageLimiter()
 	join := limiter.NewJoinMessageLimiter()
@@ -127,7 +127,7 @@ func initLimiters(_ *cfg.Config, b *Bot, userRepository *repository.UserReposito
 
 	b.registerGPT4Limiter(
 		common, singleton, join, user,
-		limiter.NewRemainCountMessageLimiter(userRepository),
+		limiter.NewInviteCountLimiter(userRepository, recordRepository),
 		limiter.NewRateLimiter(1, 300),
 	)
 }

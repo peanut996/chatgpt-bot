@@ -3,6 +3,7 @@ package handler
 import (
 	"chatgpt-bot/bot/telegram"
 	"chatgpt-bot/constant/cmd"
+	"chatgpt-bot/constant/config"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -28,7 +29,8 @@ func (i *InviteCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Mess
 	}
 	if user != nil {
 		link := b.GetBotInviteLink(user.InviteCode)
-		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
+		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, config.AllowGPT4Count, link,
+			config.AllowGPT4Count, link))
 		return nil
 	} else {
 		userName := ""
@@ -43,7 +45,9 @@ func (i *InviteCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Mess
 		}
 		user, _ := i.userRepository.GetByUserID(userID)
 		link := b.GetBotInviteLink(user.InviteCode)
-		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
+		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate,
+			config.AllowGPT4Count, link,
+			config.AllowGPT4Count, link))
 	}
 	return nil
 }
