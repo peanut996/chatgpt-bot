@@ -1,6 +1,7 @@
-package telegram
+package service
 
 import (
+	"chatgpt-bot/bot/telegram/limiter"
 	"chatgpt-bot/cfg"
 	"chatgpt-bot/constant/cmd"
 	botError "chatgpt-bot/constant/error"
@@ -28,6 +29,7 @@ type Bot struct {
 	chatTaskChannel chan model.ChatTask
 	gpt4TaskChannel chan model.ChatTask
 
+	config        *cfg.Config
 	groupName     string
 	channelName   string
 	limitGroup    bool
@@ -37,11 +39,24 @@ type Bot struct {
 	admin         int64
 
 	handlers     map[BotCmd]CommandHandler
-	limiters     []Limiter
-	gpt4Limiters []Limiter
+	limiters     []limiter.Limiter
+	gpt4Limiters []limiter.Limiter
+}
+
+func (b *Bot) SelfID() int64 {
+	return b.tgBot.Self.ID
+}
+
+func (b *Bot) Config() *cfg.Config {
+	return b.config
+}
+
+func (b *Bot) GetAPIBot() *tgbotapi.BotAPI {
+	return b.tgBot
 }
 
 func (b *Bot) Init(cfg *cfg.Config) error {
+	b.config = cfg
 	b.channelName = cfg.BotConfig.TelegramChannelName
 	b.groupName = cfg.BotConfig.TelegramGroupName
 	b.limitPrivate = cfg.BotConfig.ShouldLimitPrivate
@@ -100,19 +115,19 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 }
 
 func initLimiters(_ *cfg.Config, b *Bot, userRepository *repository.UserRepository) {
-	common := NewCommonMessageLimiter()
-	singleton := NewSingletonMessageLimiter()
-	join := NewJoinMessageLimiter()
-	user := NewUserLimiter(userRepository)
+	common := limiter.NewCommonMessageLimiter()
+	singleton := limiter.NewSingletonMessageLimiter()
+	join := limiter.NewJoinMessageLimiter()
+	user := limiter.NewUserLimiter(userRepository)
 
 	b.registerGPT3Limiter(common, singleton, user,
-		NewRateLimiter(1, 60),
+		limiter.NewRateLimiter(1, 60),
 	)
 
 	b.registerGPT4Limiter(
 		common, singleton, join, user,
-		NewRemainCountMessageLimiter(userRepository),
-		NewRateLimiter(1, 300),
+		limiter.NewRemainCountMessageLimiter(userRepository),
+		limiter.NewRateLimiter(1, 300),
 	)
 }
 
@@ -196,7 +211,7 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 	}
 
 	if IsGPTMessage(*update.Message) && strings.Trim(update.Message.CommandArguments(), " ") == "" {
-		b.safeSendMsg(update.Message.Chat.ID, fmt.Sprintf(tip.GPTLackTextTipTemplate,
+		b.SafeSendMsg(update.Message.Chat.ID, fmt.Sprintf(tip.GPTLackTextTipTemplate,
 			update.Message.Command(), update.Message.Command()))
 		return
 	}
@@ -225,7 +240,7 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
 	log.Printf("[publishChatTask] with message %s", utils.ToJson(message))
 	chatTask := model.NewChatTask(message)
-	user, err := b.getUserInfo(message.From.ID)
+	user, err := b.GetUserInfo(message.From.ID)
 	if err == nil {
 		chatTask.User = user
 	}
@@ -250,18 +265,18 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	}
 	handler, ok := b.handlers[command]
 	if !ok {
-		b.safeSend(tgbotapi.NewMessage(message.Chat.ID, tip.UnknownCmdTip))
+		b.SafeSend(tgbotapi.NewMessage(message.Chat.ID, tip.UnknownCmdTip))
 		return
 	}
 
 	err := handler.Run(b, message)
 	if err != nil {
 		log.Println("exec handler encounter error: " + err.Error())
-		b.safeReplyMsg(message.Chat.ID, message.MessageID, botError.InternalError)
+		b.SafeReplyMsg(message.Chat.ID, message.MessageID, botError.InternalError)
 	}
 }
 
-func (b *Bot) registerLimiter(isGPT4 bool, limiters ...Limiter) {
+func (b *Bot) registerLimiter(isGPT4 bool, limiters ...limiter.Limiter) {
 	if isGPT4 {
 		b.gpt4Limiters = append(b.gpt4Limiters, limiters...)
 		return
@@ -270,10 +285,10 @@ func (b *Bot) registerLimiter(isGPT4 bool, limiters ...Limiter) {
 
 }
 
-func (b *Bot) registerGPT3Limiter(limiters ...Limiter) {
+func (b *Bot) registerGPT3Limiter(limiters ...limiter.Limiter) {
 	b.registerLimiter(false, limiters...)
 }
-func (b *Bot) registerGPT4Limiter(limiters ...Limiter) {
+func (b *Bot) registerGPT4Limiter(limiters ...limiter.Limiter) {
 	b.registerLimiter(true, limiters...)
 }
 

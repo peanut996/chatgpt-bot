@@ -1,4 +1,4 @@
-package bot
+package wechat
 
 import (
 	"chatgpt-bot/cfg"

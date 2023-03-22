@@ -1,6 +1,8 @@
-package telegram
+package limiter
 
 import (
+	"chatgpt-bot/bot/telegram"
+	"chatgpt-bot/bot/telegram/service"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/middleware"
@@ -18,15 +20,15 @@ import (
 )
 
 type Limiter interface {
-	Allow(bot *Bot, message tgbotapi.Message) (bool, string)
-	CallBack(bot *Bot, message tgbotapi.Message, success bool)
+	Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string)
+	CallBack(bot telegram.TelegramBot, message tgbotapi.Message, success bool)
 }
 
 type UserLimiter struct {
 	userRepository *repository.UserRepository
 }
 
-func (u *UserLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+func (u *UserLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
 	user, err := u.userRepository.GetByUserID(utils.Int64ToString(message.From.ID))
 
 	if err != nil {
@@ -35,7 +37,7 @@ func (u *UserLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	}
 
 	if user == nil {
-		userInfo, err := bot.getUserInfo(message.From.ID)
+		userInfo, err := bot.GetUserInfo(message.From.ID)
 		if err != nil {
 			return false, err.Error()
 		}
@@ -50,13 +52,13 @@ func (u *UserLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 
 }
 
-func (u *UserLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+func (u *UserLimiter) CallBack(telegram.TelegramBot, tgbotapi.Message, bool) {
 }
 
 type CommonMessageLimiter struct {
 }
 
-func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+func (l *CommonMessageLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
 	if message.NewChatMembers != nil ||
 		message.LeftChatMember != nil {
 		// 新成员加入或者成员离开不用处理
@@ -69,21 +71,21 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 	}
 
 	if message.ReplyToMessage != nil &&
-		!(message.ReplyToMessage.From.ID == bot.tgBot.Self.ID) {
+		!(message.ReplyToMessage.From.ID == bot.SelfID()) {
 		// 不是回复机器人的不用处理
 		return false, botError.EmptyMessage
 	}
 
 	isPrivate := message.Chat.IsPrivate()
 	// 私聊或者是回复机器人的消息才处理或者是机器人的命令
-	ok := isPrivate || IsGPTMessage(message) ||
+	ok := isPrivate || service.IsGPTMessage(message) ||
 		(message.ReplyToMessage != nil &&
-			message.ReplyToMessage.From.ID == bot.tgBot.Self.ID)
+			message.ReplyToMessage.From.ID == bot.SelfID())
 
 	return ok, ""
 }
 
-func (l *CommonMessageLimiter) CallBack(b *Bot, m tgbotapi.Message, success bool) {
+func (l *CommonMessageLimiter) CallBack(b telegram.TelegramBot, m tgbotapi.Message, success bool) {
 	shouldSendTip := func() bool {
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		n := r.Intn(100)
@@ -92,7 +94,7 @@ func (l *CommonMessageLimiter) CallBack(b *Bot, m tgbotapi.Message, success bool
 	if success && m.Chat.IsPrivate() && shouldSendTip() {
 		go func() {
 			time.Sleep(time.Second * 30)
-			b.safeSendMsg(m.Chat.ID, tip.DonateTip)
+			b.SafeSendMsg(m.Chat.ID, tip.DonateTip)
 		}()
 	}
 }
@@ -101,7 +103,7 @@ type SingletonMessageLimiter struct {
 	session *sync.Map
 }
 
-func (l *SingletonMessageLimiter) Allow(_ *Bot, message tgbotapi.Message) (bool, string) {
+func (l *SingletonMessageLimiter) Allow(_ telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
 	_, ok := l.session.Load(message.From.ID)
 	if ok {
 		return false, botError.OnlyOneChatAtATime
@@ -110,7 +112,7 @@ func (l *SingletonMessageLimiter) Allow(_ *Bot, message tgbotapi.Message) (bool,
 	return true, ""
 }
 
-func (l *SingletonMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, _ bool) {
+func (l *SingletonMessageLimiter) CallBack(_ telegram.TelegramBot, message tgbotapi.Message, _ bool) {
 	l.session.Delete(message.From.ID)
 }
 
@@ -118,7 +120,7 @@ type RemainCountMessageLimiter struct {
 	userRepository *repository.UserRepository
 }
 
-func (l *RemainCountMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+func (l *RemainCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
 	userID := message.From.ID
 	userIDString := utils.Int64ToString(userID)
 
@@ -130,7 +132,7 @@ func (l *RemainCountMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (b
 	if user == nil {
 		// 初始化用户
 		userName := ""
-		tgUser, err := bot.getUserInfo(message.From.ID)
+		tgUser, err := bot.GetUserInfo(message.From.ID)
 		if err == nil {
 			userName = tgUser.String()
 		}
@@ -147,7 +149,7 @@ func (l *RemainCountMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (b
 	if !ok {
 		user, err := l.userRepository.GetByUserID(utils.Int64ToString(userID))
 		code := user.InviteCode
-		link := bot.getBotInviteLink(code)
+		link := bot.GetBotInviteLink(code)
 		if err != nil {
 			return false, botError.InternalError
 		}
@@ -159,34 +161,37 @@ func (l *RemainCountMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (b
 
 type JoinLimiter struct{}
 
-func (j *JoinLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
+func (j *JoinLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
 	if !message.Chat.IsPrivate() {
 		return true, ""
 	}
 	userID := message.From.ID
 	// 限制用户加群
-	if bot.limitPrivate {
-		ok := findMemberFromChat(bot, bot.groupName, userID) &&
-			findMemberFromChat(bot, bot.channelName, userID)
+	config := bot.Config()
+	groupName := config.BotConfig.TelegramGroupName
+	channelName := config.BotConfig.TelegramChannelName
+	if config.BotConfig.ShouldLimitPrivate {
+		ok := findMemberFromChat(bot, groupName, userID) &&
+			findMemberFromChat(bot, channelName, userID)
 		if !ok {
 			return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
-				bot.channelName, bot.groupName, bot.channelName, bot.groupName)
+				channelName, groupName, channelName, groupName)
 		}
 	}
 	return true, ""
 }
 
-func (j *JoinLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+func (j *JoinLimiter) CallBack(telegram.TelegramBot, tgbotapi.Message, bool) {
 }
 
-func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
+func findMemberFromChat(b telegram.TelegramBot, chatName string, userID int64) bool {
 	findUserConfig := tgbotapi.GetChatMemberConfig{
 		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
 			SuperGroupUsername: chatName,
 			UserID:             userID,
 		},
 	}
-	member, err := b.tgBot.GetChatMember(findUserConfig)
+	member, err := b.GetAPIBot().GetChatMember(findUserConfig)
 	if err != nil || member.Status == "left" || member.Status == "kicked" {
 		log.Printf("[ShouldLimitUser] memeber should be limit. id: %d", userID)
 		return false
@@ -194,8 +199,8 @@ func findMemberFromChat(b *Bot, chatName string, userID int64) bool {
 	return true
 }
 
-func (l *RemainCountMessageLimiter) CallBack(_ *Bot, message tgbotapi.Message, success bool) {
-	if !IsGPTMessage(message) {
+func (l *RemainCountMessageLimiter) CallBack(_ telegram.TelegramBot, message tgbotapi.Message, success bool) {
+	if !service.IsGPTMessage(message) {
 		return
 	}
 	if success {
@@ -212,8 +217,8 @@ type RateLimiter struct {
 	limiter *middleware.Limiter
 }
 
-func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
-	if !bot.enableLimiter {
+func (r *RateLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
+	if !bot.Config().RateLimiterConfig.Enable {
 		return true, ""
 	}
 	if !r.limiter.Allow(strconv.FormatInt(message.From.ID, 10)) {
@@ -226,7 +231,7 @@ func (r *RateLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, string) {
 	return true, ""
 }
 
-func (r *RateLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+func (r *RateLimiter) CallBack(telegram.TelegramBot, tgbotapi.Message, bool) {
 }
 
 func NewRateLimiter(capacity int64, duration int64) *RateLimiter {

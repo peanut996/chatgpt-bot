@@ -1,7 +1,8 @@
 package bot
 
 import (
-	"chatgpt-bot/bot/telegram"
+	"chatgpt-bot/bot/telegram/service"
+	"chatgpt-bot/bot/wechat"
 	"chatgpt-bot/cfg"
 )
 
@@ -18,10 +19,10 @@ type Bot interface {
 func GetBot(botType string) Bot {
 	switch botType {
 	case Wechat:
-		return NewWechatBot()
+		return wechat.NewWechatBot()
 	case Telegram:
-		return telegram.NewTelegramBot()
+		return service.NewTelegramBot()
 	default:
-		return telegram.NewTelegramBot()
+		return service.NewTelegramBot()
 	}
 }

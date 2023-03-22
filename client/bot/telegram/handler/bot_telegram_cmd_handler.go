@@ -1,6 +1,7 @@
-package telegram
+package handler
 
 import (
+	"chatgpt-bot/bot/telegram"
 	"chatgpt-bot/constant/cmd"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
@@ -23,7 +24,7 @@ type BotCmd = string
 
 type CommandHandler interface {
 	Cmd() BotCmd
-	Run(b *Bot, message tgbotapi.Message) error
+	Run(t telegram.TelegramBot, message tgbotapi.Message) error
 }
 
 type StatusCommandHandler struct {
@@ -35,8 +36,8 @@ func (s *StatusCommandHandler) Cmd() BotCmd {
 	return cmd.STATUS
 }
 
-func (s *StatusCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	if !b.isBotAdmin(message.From.ID) {
+func (s *StatusCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
+	if !b.IsBotAdmin(message.From.ID) {
 		return nil
 	}
 	userCount, err := s.userRepository.Count()
@@ -50,7 +51,7 @@ func (s *StatusCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	}
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf(tip.StatusTipTemplate, userCount, inviteRecordCount))
-	b.safeSend(msg)
+	b.SafeSend(msg)
 	return nil
 }
 
@@ -75,8 +76,8 @@ func (p *PushCommandHandler) Cmd() BotCmd {
 	return cmd.PUSH
 }
 
-func (p *PushCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	if !b.isBotAdmin(message.From.ID) {
+func (p *PushCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
+	if !b.IsBotAdmin(message.From.ID) {
 		return fmt.Errorf(tip.NotAdminTip)
 	}
 
@@ -99,7 +100,7 @@ func (p *PushCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 			uid, _ := utils.StringToInt64(userID)
 			msg := tgbotapi.NewMessage(uid, text)
 			msg.ParseMode = tgbotapi.ModeMarkdown
-			b.safeSend(msg)
+			b.SafeSend(msg)
 		}(userID, text)
 	}
 
@@ -112,11 +113,11 @@ func (d *DonateCommandHandler) Cmd() BotCmd {
 	return cmd.DONATE
 }
 
-func (d *DonateCommandHandler) Run(bot *Bot, message tgbotapi.Message) error {
+func (d *DonateCommandHandler) Run(bot telegram.TelegramBot, message tgbotapi.Message) error {
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, tip.DonateTip)
 	msg.ParseMode = tgbotapi.ModeMarkdown
-	bot.safeSend(msg)
+	bot.SafeSend(msg)
 
 	return nil
 }
@@ -130,7 +131,7 @@ func (q *QueryCommandHandler) Cmd() BotCmd {
 	return cmd.QUERY
 }
 
-func (q *QueryCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+func (q *QueryCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
 	userID := utils.Int64ToString(message.From.ID)
 	user, err := q.userRepository.GetByUserID(userID)
 	if err != nil {
@@ -138,7 +139,7 @@ func (q *QueryCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 		return err
 	}
 	if user == nil {
-		userInfo, err := b.getUserInfo(message.From.ID)
+		userInfo, err := b.GetUserInfo(message.From.ID)
 		if err != nil {
 			return err
 		}
@@ -160,8 +161,8 @@ func (q *QueryCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	}
 
 	text := fmt.Sprintf(tip.QueryUserInfoTemplate,
-		userID, user.RemainCount, inviteCount, b.getBotInviteLink(user.InviteCode))
-	b.safeReplyMsg(message.Chat.ID, message.MessageID, text)
+		userID, user.RemainCount, inviteCount, b.GetBotInviteLink(user.InviteCode))
+	b.SafeReplyMsg(message.Chat.ID, message.MessageID, text)
 	return nil
 }
 
@@ -185,7 +186,7 @@ func matchInviteCode(code string) bool {
 	return utils.IsNotEmpty(code) && len(code) == 10 && utils.IsMatchString(`^[a-zA-Z]{10}$`, code)
 }
 
-func (c *StartCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+func (c *StartCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
 	log.Println(fmt.Printf("get args: [%s]", message.CommandArguments()))
 	args := message.CommandArguments()
 	if matchInviteCode(args) {
@@ -194,11 +195,11 @@ func (c *StartCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 			log.Printf("[StartCommandHandler] handle invitation failed, err: 【%s】", err)
 		}
 	}
-	b.safeSendMsg(message.Chat.ID, tip.BotStartTip)
+	b.SafeSendMsg(message.Chat.ID, tip.BotStartTip)
 	return nil
 }
 
-func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID string, b *Bot) error {
+func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID string, b telegram.TelegramBot) error {
 	user, err := c.userRepository.GetUserByInviteCode(inviteCode)
 	if err != nil {
 		log.Printf("[handleInvitation] find user by invite code failed, err: 【%s】", err)
@@ -231,7 +232,7 @@ func (c *StartCommandHandler) handleInvitation(inviteCode string, inviteUserID s
 		return err
 	}
 	originUserID, _ := utils.StringToInt64(user.UserID)
-	b.safeSendMsg(originUserID, tip.InviteSuccessTip)
+	b.SafeSendMsg(originUserID, tip.InviteSuccessTip)
 	return nil
 }
 
@@ -242,8 +243,8 @@ func (c *PingCommandHandler) Cmd() BotCmd {
 	return cmd.PING
 }
 
-func (c *PingCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	b.safeSendMsg(message.Chat.ID, tip.BotPingTip)
+func (c *PingCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
+	b.SafeSendMsg(message.Chat.ID, tip.BotPingTip)
 	return nil
 }
 
@@ -254,15 +255,16 @@ func (c *LimiterCommandHandler) Cmd() BotCmd {
 	return cmd.LIMITER
 }
 
-func (c *LimiterCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+func (c *LimiterCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "")
-	if !b.isBotAdmin(message.From.ID) {
+	if !b.IsBotAdmin(message.From.ID) {
 		msg.Text = tip.NotAdminTip
 	} else {
-		b.enableLimiter = utils.ParseBoolString(message.CommandArguments())
-		msg.Text = fmt.Sprintf("limiter status is %v now", b.enableLimiter)
+		limiter := utils.ParseBoolString(message.CommandArguments())
+		b.Config().RateLimiterConfig.Enable = limiter
+		msg.Text = fmt.Sprintf("limiter status is %v now", limiter)
 	}
-	b.safeSend(msg)
+	b.SafeSend(msg)
 	return nil
 }
 
@@ -273,11 +275,11 @@ func (c *PprofCommandHandler) Cmd() BotCmd {
 	return cmd.PPROF
 }
 
-func (c *PprofCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+func (c *PprofCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "")
-	if !b.isBotAdmin(message.From.ID) {
+	if !b.IsBotAdmin(message.From.ID) {
 		msg.Text = tip.NotAdminTip
-		b.safeSend(msg)
+		b.SafeSend(msg)
 		return nil
 	}
 
@@ -292,7 +294,7 @@ func (c *PprofCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	}
 
 	msg.Text = botError.InternalError
-	b.safeSend(msg)
+	b.SafeSend(msg)
 	return nil
 }
 
@@ -318,9 +320,9 @@ func dumpProfile() (string, bool) {
 	return tmpFile.Name(), true
 }
 
-func sendFile(b *Bot, chatID int64, filePath string) error {
+func sendFile(b telegram.TelegramBot, chatID int64, filePath string) error {
 	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FilePath(filePath))
-	_, err := b.tgBot.Send(fileMsg)
+	_, err := b.GetAPIBot().Send(fileMsg)
 	if err != nil {
 		log.Printf("[SendFile] send file failed, err: 【%s】", err)
 		return err
@@ -337,7 +339,7 @@ func (i *InviteCommandHandler) Cmd() BotCmd {
 	return cmd.INVITE
 }
 
-func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
+func (i *InviteCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
 	userID := utils.Int64ToString(message.From.ID)
 	user, err := i.userRepository.GetByUserID(userID)
 	if err != nil {
@@ -345,12 +347,12 @@ func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 		return err
 	}
 	if user != nil {
-		link := b.getBotInviteLink(user.InviteCode)
-		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
+		link := b.GetBotInviteLink(user.InviteCode)
+		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
 		return nil
 	} else {
 		userName := ""
-		tgUser, err := b.getUserInfo(message.From.ID)
+		tgUser, err := b.GetUserInfo(message.From.ID)
 		if err == nil {
 			userName = tgUser.String()
 		}
@@ -360,8 +362,8 @@ func (i *InviteCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 			return err
 		}
 		user, _ := i.userRepository.GetByUserID(userID)
-		link := b.getBotInviteLink(user.InviteCode)
-		b.safeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
+		link := b.GetBotInviteLink(user.InviteCode)
+		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf(tip.InviteTipTemplate, link, link))
 	}
 	return nil
 }
@@ -374,9 +376,9 @@ func (c *CountCommandHandler) Cmd() BotCmd {
 	return cmd.COUNT
 }
 
-func (c *CountCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
-	if !b.isBotAdmin(message.From.ID) {
-		b.safeSendMsg(message.Chat.ID, tip.NotAdminTip)
+func (c *CountCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
+	if !b.IsBotAdmin(message.From.ID) {
+		b.SafeSendMsg(message.Chat.ID, tip.NotAdminTip)
 		return nil
 	}
 	args := message.CommandArguments()
@@ -390,10 +392,10 @@ func (c *CountCommandHandler) Run(b *Bot, message tgbotapi.Message) error {
 	err := c.userRepository.UpdateCountByUserID(params[0], params[1])
 	if err != nil {
 		log.Printf("failed to set count. params: %s, err: %s", args, err.Error())
-		b.safeSendMsg(message.Chat.ID, fmt.Sprintf("failed to set count. params: %s, err: %s", args, err.Error()))
+		b.SafeSendMsg(message.Chat.ID, fmt.Sprintf("failed to set count. params: %s, err: %s", args, err.Error()))
 		return nil
 	}
-	b.safeSendMsg(message.Chat.ID, "success")
+	b.SafeSendMsg(message.Chat.ID, "success")
 	return nil
 }
 
