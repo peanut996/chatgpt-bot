@@ -99,7 +99,7 @@ class Session:
                 conversation_id = session.conversation_id
                 parent_id = session.parent_id
                 logging.info(
-                    f"[Session] ask open ai user {user_id}, conversation_id: {conversation_id}, parent_id: {parent_id} ")
+                    f"[Session] ask open ai user {user_id}, model: {model},conversation_id: {conversation_id}, parent_id: {parent_id} ")
                 async for data in credential.chat_gpt_bot.ask(sentence,
                                                               conversation_id=conversation_id,
                                                               parent_id=parent_id):

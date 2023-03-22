@@ -3,6 +3,7 @@ package model
 import (
 	"chatgpt-bot/constant/cmd"
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 )
@@ -21,8 +22,8 @@ type ChatTask struct {
 }
 
 func (c *ChatTask) String() string {
-	return fmt.Sprintf("[ChatTask] [ chat: %d, from: %d, message id: %d, question: %s, answer: %s,]",
-		c.Chat, c.From, c.MessageID, c.Question, c.Answer)
+	return fmt.Sprintf("[ChatTask] gpt-4: %t chat: %d, from: %d, message id: %d, question: %s, answer: %s,]",
+		c.IsGPT4Message, c.Chat, c.From, c.MessageID, c.Question, c.Answer)
 }
 
 func (c *ChatTask) GetFormattedQuestion() string {

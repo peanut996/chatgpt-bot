@@ -202,9 +202,11 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 	if update.Message == nil {
 		return
 	}
-	log.Printf("[Update] 【chat】:%s, 【from】:%s, 【msg】:%s", utils.ToJson(update.Message.Chat),
-		utils.ToJson(update.Message.From),
-		utils.ToJson(update.Message))
+	log.Printf("[Update] 【msg】:%s", utils.ToJson(update.Message))
+
+	log.Printf("[Update] 【type】:%s, 【from】:%s 【text】: %s",
+		update.Message.Chat.Type, model.From(update.Message.From).String(),
+		update.Message.Text)
 
 	if update.Message.IsCommand() && !IsGPTMessage(*update.Message) {
 		b.execCommand(*update.Message)

@@ -1,6 +1,10 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
 
 type User struct {
 	UserName string `json:"username,omitempty"`
@@ -22,5 +26,13 @@ func NewUser(username, firstName, lastName string) *User {
 		UserName:  username,
 		FirstName: firstName,
 		LastName:  lastName,
+	}
+}
+
+func From(u *tgbotapi.User) *User {
+	return &User{
+		UserName:  u.UserName,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
 	}
 }
