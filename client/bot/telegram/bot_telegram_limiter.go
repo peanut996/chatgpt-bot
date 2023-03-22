@@ -2,14 +2,17 @@ package telegram
 
 import (
 	botError "chatgpt-bot/constant/error"
+	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/middleware"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -80,7 +83,15 @@ func (l *CommonMessageLimiter) Allow(bot *Bot, message tgbotapi.Message) (bool, 
 	return ok, ""
 }
 
-func (l *CommonMessageLimiter) CallBack(*Bot, tgbotapi.Message, bool) {
+func (l *CommonMessageLimiter) CallBack(b *Bot, m tgbotapi.Message, success bool) {
+	shouldSendTip := func() bool {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		n := r.Intn(20)
+		return n == 8
+	}
+	if success && m.Chat.IsPrivate() && shouldSendTip() {
+		b.safeSendMsg(m.Chat.ID, tip.DonateTip)
+	}
 }
 
 type SingletonMessageLimiter struct {
