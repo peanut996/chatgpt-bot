@@ -1,6 +1,7 @@
 package service
 
 import (
+	"chatgpt-bot/bot/telegram/handler"
 	"chatgpt-bot/bot/telegram/limiter"
 	"chatgpt-bot/cfg"
 	"chatgpt-bot/constant/cmd"
@@ -38,7 +39,7 @@ type Bot struct {
 	enableLimiter bool
 	admin         int64
 
-	handlers     map[BotCmd]CommandHandler
+	handlers     map[handler.BotCmd]handler.CommandHandler
 	limiters     []limiter.Limiter
 	gpt4Limiters []limiter.Limiter
 }
@@ -92,19 +93,19 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	b.chatTaskChannel = make(chan model.ChatTask, 100)
 	b.gpt4TaskChannel = make(chan model.ChatTask, 100)
 
-	b.handlers = make(map[BotCmd]CommandHandler)
+	b.handlers = make(map[handler.BotCmd]handler.CommandHandler)
 
 	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
 
 	b.registerCommandHandler(
-		NewStartCommandHandler(userRepository, userInviteRecordRepository),
-		NewPingCommandHandler(), NewPprofCommandHandler(), NewLimiterCommandHandler(),
-		NewInviteCommandHandler(userRepository),
-		NewCountCommandHandler(userRepository),
-		NewQueryCommandHandler(userRepository, userInviteRecordRepository),
-		NewDonateCommandHandler(),
-		NewStatusCommandHandler(userRepository, userInviteRecordRepository),
-		NewPushCommandHandler(userRepository),
+		handler.NewStartCommandHandler(userRepository, userInviteRecordRepository),
+		handler.NewPingCommandHandler(), handler.NewPprofCommandHandler(), handler.NewLimiterCommandHandler(),
+		handler.NewInviteCommandHandler(userRepository),
+		handler.NewCountCommandHandler(userRepository),
+		handler.NewQueryCommandHandler(userRepository, userInviteRecordRepository),
+		handler.NewDonateCommandHandler(),
+		handler.NewStatusCommandHandler(userRepository, userInviteRecordRepository),
+		handler.NewPushCommandHandler(userRepository),
 	)
 	initLimiters(cfg, b, userRepository)
 
@@ -252,9 +253,9 @@ func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
 	b.sendTyping(chatTask.Chat)
 }
 
-func (b *Bot) registerCommandHandler(handlers ...CommandHandler) {
-	for _, handler := range handlers {
-		b.handlers[handler.Cmd()] = handler
+func (b *Bot) registerCommandHandler(handlers ...handler.CommandHandler) {
+	for _, commandHandler := range handlers {
+		b.handlers[commandHandler.Cmd()] = commandHandler
 	}
 }
 
@@ -263,15 +264,15 @@ func (b *Bot) execCommand(message tgbotapi.Message) {
 	if !cmd.IsBotCmd(command) {
 		return
 	}
-	handler, ok := b.handlers[command]
+	commandHandler, ok := b.handlers[command]
 	if !ok {
 		b.SafeSend(tgbotapi.NewMessage(message.Chat.ID, tip.UnknownCmdTip))
 		return
 	}
 
-	err := handler.Run(b, message)
+	err := commandHandler.Run(b, message)
 	if err != nil {
-		log.Println("exec handler encounter error: " + err.Error())
+		log.Println("[CommandHandler]exec handler encounter error: " + err.Error())
 		b.SafeReplyMsg(message.Chat.ID, message.MessageID, botError.InternalError)
 	}
 }
@@ -297,11 +298,11 @@ func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 	if IsGPTMessage(m) && m.Command() == cmd.GPT4 {
 		limiters = b.gpt4Limiters
 	}
-	for _, limiter := range limiters {
-		ok, err := limiter.Allow(b, m)
+	for _, l := range limiters {
+		ok, err := l.Allow(b, m)
 		if !ok {
 			if utils.IsNotEmpty(err) {
-				log.Printf("[CheckLimiter] limiter encounter type: %s error: %s", reflect.TypeOf(limiter).String(), err)
+				log.Printf("[CheckLimiter] limiter encounter type: %s error: %s", reflect.TypeOf(l).String(), err)
 				b.sendErrorMessage(m.Chat.ID, m.MessageID, err)
 			}
 			return false
@@ -315,7 +316,7 @@ func (b *Bot) runLimitersCallBack(m tgbotapi.Message, success bool) {
 	if IsGPTMessage(m) && m.Command() == cmd.GPT4 {
 		limiters = b.gpt4Limiters
 	}
-	for _, limiter := range limiters {
-		limiter.CallBack(b, m, success)
+	for _, l := range limiters {
+		l.CallBack(b, m, success)
 	}
 }
