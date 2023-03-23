@@ -24,24 +24,15 @@ import (
 )
 
 type Bot struct {
+	config *cfg.Config
 	tgBot  *tgbotapi.BotAPI
 	engine engine.Engine
 
 	chatTaskChannel chan model.ChatTask
 	gpt4TaskChannel chan model.ChatTask
-
-	config        *cfg.Config
-	groupName     string
-	channelName   string
-	limitGroup    bool
-	limitPrivate  bool
-	logChannelID  int64
-	enableLimiter bool
-	admin         int64
-
-	handlers     map[handler.BotCmd]handler.CommandHandler
-	limiters     []limiter.Limiter
-	gpt4Limiters []limiter.Limiter
+	handlers        map[handler.BotCmd]handler.CommandHandler
+	limiters        []limiter.Limiter
+	gpt4Limiters    []limiter.Limiter
 }
 
 func (b *Bot) SelfID() int64 {
@@ -58,16 +49,13 @@ func (b *Bot) GetAPIBot() *tgbotapi.BotAPI {
 
 func (b *Bot) Init(cfg *cfg.Config) error {
 	b.config = cfg
-	b.channelName = cfg.BotConfig.TelegramChannelName
-	b.groupName = cfg.BotConfig.TelegramGroupName
-	b.limitPrivate = cfg.BotConfig.ShouldLimitPrivate
-	b.limitGroup = cfg.BotConfig.ShouldLimitGroup
-	b.logChannelID = cfg.BotConfig.LogChannelID
-	b.admin = cfg.BotConfig.AdminID
+	if cfg.GPT4Limiter == nil || cfg.GPT3Limiter == nil {
+		return errors.New(botError.MissingRequiredConfig + ": limiters")
+	}
 
 	if utils.IsAnyStringEmpty(
-		b.channelName, b.groupName) {
-		return errors.New(botError.MissingRequiredConfig)
+		b.config.TelegramChannelName, b.config.TelegramGroupName) {
+		return errors.New(botError.MissingRequiredConfig + ": group and channel name")
 	}
 
 	d := db.NewSQLiteDB()
@@ -95,8 +83,6 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 
 	b.handlers = make(map[handler.BotCmd]handler.CommandHandler)
 
-	b.enableLimiter = cfg.BotConfig.RateLimiterConfig.Enable
-
 	b.registerCommandHandler(
 		handler.NewStartCommandHandler(userRepository, userInviteRecordRepository),
 		handler.NewPingCommandHandler(), handler.NewPprofCommandHandler(), handler.NewLimiterCommandHandler(),
@@ -115,20 +101,20 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 	return nil
 }
 
-func initLimiters(_ *cfg.Config, b *Bot, userRepository *repository.UserRepository, recordRepository *repository.UserInviteRecordRepository) {
+func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserRepository, recordRepository *repository.UserInviteRecordRepository) {
 	common := limiter.NewCommonMessageLimiter()
 	singleton := limiter.NewSingletonMessageLimiter()
 	join := limiter.NewJoinMessageLimiter()
 	user := limiter.NewUserLimiter(userRepository)
 
 	b.registerGPT3Limiter(common, singleton, user,
-		limiter.NewRateLimiter(1, 60),
+		limiter.NewRateLimiter(cfg.GPT3Limiter.Capacity, cfg.GPT3Limiter.Duration),
 	)
 
 	b.registerGPT4Limiter(
 		common, singleton, join, user,
 		limiter.NewInviteCountLimiter(userRepository, recordRepository),
-		limiter.NewRateLimiter(1, 300),
+		limiter.NewRateLimiter(cfg.GPT4Limiter.Capacity, cfg.GPT4Limiter.Duration),
 	)
 }
 
@@ -232,25 +218,25 @@ func (b *Bot) handleMessage(message tgbotapi.Message) {
 		return
 	}
 
-	if IsGPTMessage(message) && message.Command() == cmd.GPT4 {
-		b.publishChatTask(message, true)
-		return
+	if !IsGPT4Message(message) {
+		b.sendQueueToast(message.Chat.ID, message.MessageID)
 	}
-	b.sendQueueToast(message.Chat.ID, message.MessageID)
-	b.publishChatTask(message, false)
+
+	b.publishChatTask(message)
 
 }
 
-func (b *Bot) publishChatTask(message tgbotapi.Message, isGPT4Task bool) {
+func (b *Bot) publishChatTask(message tgbotapi.Message) {
 	log.Printf("[publishChatTask] with message %s", utils.ToJson(message))
 	chatTask := model.NewChatTask(message)
 	user, err := b.GetUserInfo(message.From.ID)
 	if err == nil {
 		chatTask.User = user
 	}
-	if isGPT4Task {
+	if IsGPT4Message(message) && !b.config.Downgrade {
 		b.gpt4TaskChannel <- *chatTask
 	} else {
+		chatTask.IsGPT4Message = false
 		b.chatTaskChannel <- *chatTask
 	}
 	b.sendTyping(chatTask.Chat)

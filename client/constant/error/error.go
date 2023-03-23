@@ -9,8 +9,8 @@ var (
 	LimitUserCountTemplate = "Your chat limit has been reached. Invite one new user to get gpt4 unlimited. your invite link: %s\n\n" +
 		"😢您的聊天次数已耗尽，邀请新用户后可获得聊天次数. 你的邀请链接: %s"
 
-	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, please wait. \n\n" +
-		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，请耐心等待\n"
+	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, remain %d seconds. \n\n" +
+		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，还剩 %d 秒\n"
 
 	LimitUserGroupAndChannelTemplate = "Before you join the channel %s and group %s, you can not send private message to me. \n\n" +
 		"😅 你必须先加入频道 %s 和群组 %s 才能和我私聊"

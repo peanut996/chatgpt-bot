@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	botError "chatgpt-bot/constant/error"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -24,7 +26,7 @@ func NewLimiter(capacity int64, duration int64) *Limiter {
 	}
 }
 
-func (l *Limiter) Allow(user string) bool {
+func (l *Limiter) Allow(user string) (bool, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -32,9 +34,13 @@ func (l *Limiter) Allow(user string) bool {
 
 	if l.tokens[user] >= 1 {
 		l.tokens[user]--
-		return true
+		return true, nil
 	} else {
-		return false
+		remainSecond := int64((1 - l.tokens[user]) / l.rate)
+		text := fmt.Sprintf(botError.RateLimitMessageTemplate,
+			l.capacity, l.duration/60, remainSecond,
+			l.duration/60, l.capacity, remainSecond)
+		return false, fmt.Errorf(text)
 	}
 
 }

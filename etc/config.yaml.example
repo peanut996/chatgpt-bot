@@ -4,14 +4,16 @@ bot:
   channelName: name
   groupName: name
   botName: name
-  logChannel: id
-  loginType: "desktop"
-  limitGroup: false
-  limitPrivate: true
-  rateLimiter:
-    enable: true
-    capacity: 5
-    duration: 900
+  admin: 12323
+  downgrade: false
+  groupChatLimiter: false
+  privateChatLimiter: true
+  gpt3Limiter:
+    capacity: 1
+    duration: 60
+  gpt4Limiter:
+    capacity: 1
+    duration: 300
 
 engine:
   port: 5005

@@ -5,7 +5,7 @@ var (
 	PING  = "ping"
 	GPT   = "gpt"
 
-	LIMITER = "limiter"
+	DOWN = "downgrade"
 
 	PPROF = "pprof"
 
@@ -28,7 +28,7 @@ var (
 
 func IsBotCmd(cmd string) bool {
 	switch cmd {
-	case START, PING, GPT, LIMITER,
+	case START, PING, GPT, DOWN,
 		PPROF, INVITE, COUNT, QUERY,
 		GPT4, DONATE, PUSH, STATUS:
 		return true

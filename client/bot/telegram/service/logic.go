@@ -16,11 +16,15 @@ func IsGPTMessage(message tgbotapi.Message) bool {
 	return message.IsCommand() && (message.Command() == cmd.GPT4 || message.Command() == cmd.GPT)
 }
 
+func IsGPT4Message(message tgbotapi.Message) bool {
+	return message.IsCommand() && message.Command() == cmd.GPT4
+}
+
 func (b *Bot) IsBotAdmin(from int64) bool {
-	if b.admin == 0 {
+	if b.config.AdminID == 0 {
 		return false
 	}
-	return b.admin == from
+	return b.config.AdminID == from
 }
 
 func (b *Bot) GetBotInviteLink(code string) string {
@@ -111,7 +115,7 @@ func (b *Bot) SafeReplyMsg(chatID int64, messageID int, text string) {
 
 func (b *Bot) logToChannel(log string) {
 	go func(s string) {
-		msg := tgbotapi.NewMessage(b.logChannelID, s)
+		msg := tgbotapi.NewMessage(b.config.LogChannelID, s)
 		msg.ParseMode = tgbotapi.ModeMarkdown
 		b.SafeSend(msg)
 	}(log)

@@ -11,7 +11,11 @@ import (
 type JoinLimiter struct{}
 
 func (j *JoinLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
-	if !message.Chat.IsPrivate() {
+	if message.Chat.IsPrivate() && !bot.Config().PrivateChatLimiter {
+		return true, ""
+	}
+
+	if !message.Chat.IsPrivate() && !bot.Config().GroupChatLimiter {
 		return true, ""
 	}
 	userID := message.From.ID
@@ -19,13 +23,11 @@ func (j *JoinLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 	config := bot.Config()
 	groupName := config.BotConfig.TelegramGroupName
 	channelName := config.BotConfig.TelegramChannelName
-	if config.BotConfig.ShouldLimitPrivate {
-		ok := findMemberFromChat(bot, groupName, userID) &&
-			findMemberFromChat(bot, channelName, userID)
-		if !ok {
-			return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
-				channelName, groupName, channelName, groupName)
-		}
+	ok := findMemberFromChat(bot, groupName, userID) &&
+		findMemberFromChat(bot, channelName, userID)
+	if !ok {
+		return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
+			channelName, groupName, channelName, groupName)
 	}
 	return true, ""
 }
