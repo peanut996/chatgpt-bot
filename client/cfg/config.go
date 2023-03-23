@@ -45,6 +45,7 @@ type BotConfig struct {
 }
 
 type RateLimiterConfig struct {
+	Strict   bool  `yaml:"strict"`
 	Capacity int64 `yaml:"capacity"`
 	Duration int64 `yaml:"duration"`
 }

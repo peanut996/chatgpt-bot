@@ -9,9 +9,11 @@ bot:
   groupChatLimiter: false
   privateChatLimiter: true
   gpt3Limiter:
+    strict: true
     capacity: 1
     duration: 60
   gpt4Limiter:
+    strict: true
     capacity: 1
     duration: 300
 

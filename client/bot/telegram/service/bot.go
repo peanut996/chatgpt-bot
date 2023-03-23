@@ -105,17 +105,25 @@ func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserReposi
 	common := limiter.NewCommonMessageLimiter()
 	singleton := limiter.NewSingletonMessageLimiter()
 	join := limiter.NewJoinMessageLimiter()
+	invite := limiter.NewInviteCountLimiter(userRepository, recordRepository)
 	user := limiter.NewUserLimiter(userRepository)
+	b.registerGPT3Limiter(common, singleton, user)
+	b.registerGPT4Limiter(common, singleton, user)
 
-	b.registerGPT3Limiter(common, singleton, user,
+	if cfg.GPT3Limiter.Strict {
+		b.registerGPT3Limiter(join, invite)
+	}
+	if cfg.GPT4Limiter.Strict {
+		b.registerGPT4Limiter(join, invite)
+	}
+
+	b.registerGPT3Limiter(
 		limiter.NewRateLimiter(cfg.GPT3Limiter.Capacity, cfg.GPT3Limiter.Duration),
 	)
-
 	b.registerGPT4Limiter(
-		common, singleton, join, user,
-		limiter.NewInviteCountLimiter(userRepository, recordRepository),
 		limiter.NewRateLimiter(cfg.GPT4Limiter.Capacity, cfg.GPT4Limiter.Duration),
 	)
+
 }
 
 func NewTelegramBot() *Bot {
