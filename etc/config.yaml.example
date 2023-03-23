@@ -22,3 +22,7 @@ engine:
   chatgpt:
     tokens:
       - "email:password:conversation_id"
+
+database:
+  type: sqlite
+  path: "../etc/bot.db"
