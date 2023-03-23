@@ -1,6 +1,9 @@
 package tip
 
-import "fmt"
+import (
+	"chatgpt-bot/constant/config"
+	"fmt"
+)
 
 var (
 	BotPingTip    = "pong"
@@ -31,14 +34,10 @@ var (
 	GPTLackTextTipTemplate = "`/%s` + blank + your question.\n\n" +
 		"😊「 /%s 」+ 空格 + 你的问题"
 
-	AlipayQRCodeUrl = "https://raw.githubusercontent.com/peanut996/chatgpt-bot/master/assets/alipay.JPG"
-
-	WechatQRCodeUrl = "https://raw.githubusercontent.com/peanut996/chatgpt-bot/master/assets/wechat.JPG"
-
-	DonateTip = fmt.Sprintf("🙏 感谢您使用我们的机器人！如果您觉得我们的机器人对您有所帮助，欢迎为我们捐赠，以支持我们的运营和发展。\n\n"+
-		"💰 您可以通过以下方式向我们捐赠：\n\n- [微信](%s)\n\n- [支付宝](%s) \n\n"+
+	DonateTip = fmt.Sprintf("🙏 感谢您使用我们的机器人！如果您觉得我们的机器人对您有所帮助，欢迎为我们捐赠1️⃣元，以支持我们的运营和发展。\n\n"+
+		"💰 您可以通过以下方式向我们捐赠1️⃣元：\n\n- [微信(Wechat)](%s)\n\n- [支付宝(Alipay)](%s) \n\n"+
 		"💡 如果您有任何其他的捐赠方式或者建议，欢迎联系我们！\n\n"+
-		"👏 再次感谢您的支持，您的捐赠将帮助我们更好地为您提供服务！\n", WechatQRCodeUrl, AlipayQRCodeUrl)
+		"👏 再次感谢您的支持，您的捐赠将帮助我们更好地为您提供服务！\n", config.WechatQRCodeUrl, config.AlipayQRCodeUrl)
 
 	StatusTipTemplate = "💁 总用户数：%d\n\n" +
 		"🏆 总邀请记录次数：%d\n"

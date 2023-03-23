@@ -9,3 +9,10 @@ var (
 
 	AllowGPT4Count = 3
 )
+
+var (
+	BaseUrl         = "https://raw.githubusercontent.com/peanut996/bucket/master/img/"
+	WechatQRCodeUrl = BaseUrl + "wechat.JPG"
+
+	AlipayQRCodeUrl = BaseUrl + "alipay.JPG"
+)
