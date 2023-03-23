@@ -151,6 +151,7 @@ func (b *Bot) fetchUpdates() {
 		select {
 		case update, ok := <-botChannel:
 			if !ok {
+				b.tgBot.StopReceivingUpdates()
 				botChannel = b.tgBot.GetUpdatesChan(config)
 				log.Println("[FetchUpdates] channel closed, fetch again")
 				continue
