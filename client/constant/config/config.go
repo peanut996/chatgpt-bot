@@ -3,9 +3,9 @@ package config
 var (
 	ChatGPTTimeoutSeconds = 360
 
-	DefaultCount = 1
+	DefaultCount = 5
 
-	CountWhenInviteOtherUser = 9999
+	CountWhenInviteOtherUser = 100
 
 	AllowGPT4Count = 3
 )

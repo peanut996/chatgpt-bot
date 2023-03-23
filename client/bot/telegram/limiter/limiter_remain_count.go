@@ -2,6 +2,7 @@ package limiter
 
 import (
 	"chatgpt-bot/bot/telegram"
+	"chatgpt-bot/constant/config"
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -47,16 +48,13 @@ func (l *RemainCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 		if err != nil {
 			return false, botError.InternalError
 		}
-		return false, fmt.Sprintf(botError.LimitUserCountTemplate, link, link)
+		return false, fmt.Sprintf(botError.LimitUserCountTemplate, config.CountWhenInviteOtherUser, link, config.CountWhenInviteOtherUser, link)
 	}
 
 	return true, ""
 }
 
 func (l *RemainCountMessageLimiter) CallBack(_ telegram.TelegramBot, message tgbotapi.Message, success bool) {
-	if !IsGPTMessage(message) {
-		return
-	}
 	if success {
 		err := l.userRepository.DecreaseCount(utils.Int64ToString(message.From.ID))
 		if err != nil {

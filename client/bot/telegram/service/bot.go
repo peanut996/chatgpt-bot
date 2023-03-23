@@ -106,12 +106,14 @@ func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserReposi
 	singleton := limiter.NewSingletonMessageLimiter()
 	join := limiter.NewJoinMessageLimiter()
 	invite := limiter.NewInviteCountLimiter(userRepository, recordRepository)
+	count := limiter.NewRemainCountMessageLimiter(userRepository)
 	user := limiter.NewUserLimiter(userRepository)
 	b.registerGPT3Limiter(common, singleton, user)
 	b.registerGPT4Limiter(common, singleton, user)
 
 	if cfg.GPT3Limiter.Strict {
-		b.registerGPT3Limiter(join, invite)
+
+		b.registerGPT3Limiter(join, count)
 	}
 	if cfg.GPT4Limiter.Strict {
 		b.registerGPT4Limiter(join, invite)

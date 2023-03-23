@@ -6,8 +6,8 @@ var (
 
 	OnlyOneChatAtATime = "you are chatting with me, please wait for a while. \n\n" +
 		"😅你已经发送了一条信息，请耐心等待"
-	LimitUserCountTemplate = "Your chat limit has been reached. Invite one new user to get gpt4 unlimited. your invite link: %s\n\n" +
-		"😢您的聊天次数已耗尽，邀请新用户后可获得聊天次数. 你的邀请链接: %s"
+	LimitUserCountTemplate = "Your chat limit has been reached. Invite one new user to get more %d times. your invite link: %s\n\n" +
+		"😢您的聊天次数已耗尽，邀请新用户后可获得%d聊天次数. 你的邀请链接: %s"
 
 	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, remain %d seconds. \n\n" +
 		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，还剩 %d 秒\n"
