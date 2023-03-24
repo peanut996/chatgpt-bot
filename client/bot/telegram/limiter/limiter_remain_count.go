@@ -19,23 +19,11 @@ func (l *RemainCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 	userID := message.From.ID
 	userIDString := utils.Int64ToString(userID)
 
-	// 查看用户是否存在 不存在就初始化
 	user, err := l.userRepository.GetByUserID(userIDString)
 	if err != nil {
 		return false, botError.InternalError
 	}
-	if user == nil {
-		// 初始化用户
-		userName := ""
-		tgUser, err := bot.GetUserInfo(message.From.ID)
-		if err == nil {
-			userName = tgUser.String()
-		}
-		err = l.userRepository.InitUser(userIDString, userName)
-		if err != nil {
-			log.Println("RemainCountMessageLimiter] init user error", err)
-			return false, botError.InternalError
-		}
+	if user.Donated() {
 		return true, ""
 	}
 

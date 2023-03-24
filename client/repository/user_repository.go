@@ -76,9 +76,9 @@ func (u *UserRepository) InitUser(userID string, userName string) error {
 func (u *UserRepository) GetByUserID(userID string) (*persist.User, error) {
 	user := &persist.User{}
 	user.UserID = userID
-	row := u.db.QueryRow("SELECT remain_count, invite_code, user_name FROM user WHERE user_id = ? LIMIT 1", userID)
+	row := u.db.QueryRow("SELECT remain_count, invite_code, user_name, is_donate FROM user WHERE user_id = ? LIMIT 1", userID)
 
-	err := row.Scan(&user.RemainCount, &user.InviteCode, &user.UserName)
+	err := row.Scan(&user.RemainCount, &user.InviteCode, &user.UserName, &user.IsDonate)
 	if err != nil && utils.IsNotEmptyRow(err) {
 		return nil, err
 	}

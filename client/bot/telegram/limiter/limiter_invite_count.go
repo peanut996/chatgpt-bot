@@ -21,6 +21,14 @@ func (l *InviteCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 	userID := message.From.ID
 	userIDString := utils.Int64ToString(userID)
 
+	user, err := l.userRepository.GetByUserID(utils.Int64ToString(userID))
+	if err != nil {
+		return false, botError.InternalError
+	}
+	if user.Donated() {
+		return true, ""
+	}
+
 	count, err := l.userInviteRecordRepository.CountByUserID(userIDString)
 	if err != nil {
 		return false, botError.InternalError
@@ -28,7 +36,6 @@ func (l *InviteCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 	ok := count >= int64(config.AllowGPT4Count)
 	// 限制用户使用次数
 	if !ok {
-		user, err := l.userRepository.GetByUserID(utils.Int64ToString(userID))
 		code := user.InviteCode
 		link := bot.GetBotInviteLink(code)
 		if err != nil {

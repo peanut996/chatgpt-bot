@@ -7,9 +7,10 @@ create table user
     id           INTEGER not null
         primary key autoincrement,
     user_id      TEXT    not null,
-    user_name    text,
+    user_name    TEXT,
     remain_count INTEGER default 0,
-    invite_code  TEXT
+    invite_code  TEXT,
+    is_donate INTEGER DEFAULT 0
 );
 
 create index idx_invite_link
