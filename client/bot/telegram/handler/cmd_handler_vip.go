@@ -30,7 +30,8 @@ func (v *VIPCommandHandler) Run(t telegram.TelegramBot, message tgbotapi.Message
 	if err != nil {
 		return err
 	}
-	return fmt.Errorf("success")
+	t.SafeSend(tgbotapi.NewMessage(message.Chat.ID, "success"))
+	return nil
 }
 
 func NewVIPCommandHandler(userRepository *repository.UserRepository) *VIPCommandHandler {
