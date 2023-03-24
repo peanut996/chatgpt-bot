@@ -14,6 +14,11 @@ type UserLimiter struct {
 }
 
 func (u *UserLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
+	userInfo, err := bot.GetUserInfo(message.From.ID)
+	if err != nil {
+		return false, err.Error()
+	}
+
 	user, err := u.userRepository.GetByUserID(utils.Int64ToString(message.From.ID))
 
 	if err != nil {
@@ -22,13 +27,17 @@ func (u *UserLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 	}
 
 	if user == nil {
-		userInfo, err := bot.GetUserInfo(message.From.ID)
-		if err != nil {
-			return false, err.Error()
-		}
 		err = u.userRepository.InitUser(utils.Int64ToString(message.From.ID), userInfo.String())
 		if err != nil {
 			log.Printf("[UserLimiter] init user failed, err: 【%s】\n", err)
+			return false, botError.InternalError
+		}
+	}
+
+	if user.UserName != userInfo.String() {
+		err := u.userRepository.UpdateUserName(userInfo.UserName, user.UserID)
+		if err != nil {
+			log.Printf("[UserLimiter] update name failed, err: 【%s】\n", err)
 			return false, botError.InternalError
 		}
 	}
