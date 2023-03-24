@@ -27,6 +27,7 @@ var (
 		"🔮小提示：「 /gpt 」命令没有邀请人数限制"
 
 	QueryUserInfoTemplate = "💁账号(Account): %s\n\n" +
+		"🥇捐赠用户(Donated): %t\n" +
 		"🏆剩余次数(RemainCount): %d\n" +
 		"🎭邀请人数(InviteUsers): %d\n" +
 		"🔗邀请链接(InviteLink): %s\n\n" +
