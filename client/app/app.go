@@ -3,6 +3,7 @@ package app
 import (
 	"chatgpt-bot/bot"
 	"chatgpt-bot/cfg"
+	"chatgpt-bot/utils"
 	"log"
 	"os"
 	"os/signal"
@@ -30,6 +31,7 @@ func GetApp() *App {
 }
 
 func (a *App) Init(cfg *cfg.Config) error {
+	log.Println("[App] Run with config: \n" + utils.ToIndentJson(cfg))
 	a.b = bot.GetBot(cfg.BotConfig.BotType)
 	err := a.b.Init(cfg)
 	if err != nil {

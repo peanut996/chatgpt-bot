@@ -36,7 +36,9 @@ type BotConfig struct {
 	WechatBotName       string `yaml:"botName"`
 	WechatLoginType     string `yaml:"loginType"`
 	AdminID             int64  `yaml:"admin"`
-	Downgrade           bool   `yaml:"downgrade"`
+	DonateProbability   int    `yaml:"donate"`
+
+	Downgrade bool `yaml:"downgrade"`
 
 	GPT3Limiter        *RateLimiterConfig `yaml:"gpt3Limiter"`
 	GPT4Limiter        *RateLimiterConfig `yaml:"gpt4Limiter"`

@@ -43,8 +43,8 @@ func (l *CommonMessageLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.
 func (l *CommonMessageLimiter) CallBack(b telegram.TelegramBot, m tgbotapi.Message, success bool) {
 	shouldSendTip := func() bool {
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		n := r.Intn(100)
-		return n == 8
+		n := r.Intn(b.Config().BotConfig.DonateProbability)
+		return n == 0
 	}
 	if success && m.Chat.IsPrivate() && shouldSendTip() {
 		go func() {

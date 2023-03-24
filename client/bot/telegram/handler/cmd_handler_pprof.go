@@ -67,7 +67,7 @@ func dumpProfile() (string, bool) {
 
 func sendFile(b telegram.TelegramBot, chatID int64, filePath string) error {
 	fileMsg := tgbotapi.NewDocument(chatID, tgbotapi.FilePath(filePath))
-	_, err := b.GetAPIBot().Send(fileMsg)
+	_, err := b.TGBot().Send(fileMsg)
 	if err != nil {
 		log.Printf("[SendFile] send file failed, err: 【%s】", err)
 		return err

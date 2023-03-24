@@ -42,7 +42,7 @@ func findMemberFromChat(b telegram.TelegramBot, chatName string, userID int64) b
 			UserID:             userID,
 		},
 	}
-	member, err := b.GetAPIBot().GetChatMember(findUserConfig)
+	member, err := b.TGBot().GetChatMember(findUserConfig)
 	if err != nil || member.Status == "left" || member.Status == "kicked" {
 		log.Printf("[ShouldLimitUser] memeber should be limit. id: %d", userID)
 		return false

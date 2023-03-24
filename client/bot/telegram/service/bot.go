@@ -43,7 +43,7 @@ func (b *Bot) Config() *cfg.Config {
 	return b.config
 }
 
-func (b *Bot) GetAPIBot() *tgbotapi.BotAPI {
+func (b *Bot) TGBot() *tgbotapi.BotAPI {
 	return b.tgBot
 }
 

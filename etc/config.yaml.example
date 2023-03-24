@@ -5,6 +5,7 @@ bot:
   groupName: name
   botName: name
   admin: 12323
+  donate: 10
   downgrade: false
   groupChatLimiter: false
   privateChatLimiter: true
