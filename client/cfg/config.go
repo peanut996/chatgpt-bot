@@ -38,8 +38,8 @@ type BotConfig struct {
 	AdminID             int64  `yaml:"admin"`
 	DonateProbability   int    `yaml:"donate"`
 
-	Downgrade bool `yaml:"downgrade"`
-
+	Downgrade          bool               `yaml:"downgrade"`
+	EnableRateLimiter  bool               `yaml:"enableRateLimiter"`
 	GPT3Limiter        *RateLimiterConfig `yaml:"gpt3Limiter"`
 	GPT4Limiter        *RateLimiterConfig `yaml:"gpt4Limiter"`
 	PrivateChatLimiter bool               `yaml:"privateChatLimiter"`

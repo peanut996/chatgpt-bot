@@ -13,7 +13,7 @@ type RateLimiter struct {
 }
 
 func (r *RateLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) (bool, string) {
-	if !bot.Config().Downgrade {
+	if !bot.Config().EnableRateLimiter {
 		return true, ""
 	}
 	allow, err := r.limiter.Allow(strconv.FormatInt(message.From.ID, 10))

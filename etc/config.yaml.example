@@ -7,6 +7,7 @@ bot:
   admin: 12323
   donate: 10
   downgrade: false
+  enableRateLimiter: true
   groupChatLimiter: false
   privateChatLimiter: true
   gpt3Limiter:

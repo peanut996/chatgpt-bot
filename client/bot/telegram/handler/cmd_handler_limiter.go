@@ -20,8 +20,15 @@ func (c *DowngradeCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.M
 	if !b.IsBotAdmin(message.From.ID) {
 		msg.Text = tip.NotAdminTip
 	} else {
-		b.Config().Downgrade = !b.Config().Downgrade
-		msg.Text = fmt.Sprintf("downgrade mode is %v now", b.Config().Downgrade)
+		if message.CommandArguments() == "gpt" {
+			b.Config().Downgrade = !b.Config().Downgrade
+			msg.Text = fmt.Sprintf("downgrade mode is %v now", b.Config().Downgrade)
+		}
+		if message.CommandArguments() == "rate" {
+			b.Config().EnableRateLimiter = !b.Config().EnableRateLimiter
+			msg.Text = fmt.Sprintf("enable rate limiter is %v now", b.Config().EnableRateLimiter)
+		}
+		msg.Text = "Do nothing. Available is `gpt` or `rate`"
 	}
 	b.SafeSend(msg)
 	return nil
