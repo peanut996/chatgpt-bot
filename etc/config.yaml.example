@@ -10,10 +10,15 @@ bot:
   groupChatLimiter: false
   privateChatLimiter: true
   gpt3Limiter:
+    join: true
+    count: true
     strict: true
     capacity: 1
     duration: 60
   gpt4Limiter:
+    join: true
+    count: true
+    invite: true
     strict: true
     capacity: 1
     duration: 300

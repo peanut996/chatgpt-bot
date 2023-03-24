@@ -47,9 +47,11 @@ type BotConfig struct {
 }
 
 type RateLimiterConfig struct {
-	Strict   bool  `yaml:"strict"`
-	Capacity int64 `yaml:"capacity"`
-	Duration int64 `yaml:"duration"`
+	Join        bool  `yaml:"join"`
+	RemainCount bool  `yaml:"count"`
+	Invite      bool  `yaml:"invite"`
+	Capacity    int64 `yaml:"capacity"`
+	Duration    int64 `yaml:"duration"`
 }
 
 func NewConfig() *Config {
