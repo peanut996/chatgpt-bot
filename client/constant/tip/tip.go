@@ -22,8 +22,9 @@ var (
 	InviteSuccessTip = "Invite success, you can use /invite to get your invite link \n\n" +
 		"😊邀请成功，你可以使用 /invite 来获取你的邀请链接"
 
-	InviteTipTemplate = "You can invite %d new user after that you can use gpt4 chat unlimited. Invite link: %s\n\n" +
-		"😊邀请%d个新用户后可无限使用gpt4对话. 你的邀请链接: %s"
+	InviteTipTemplate = "You can invite %d new user after that you can use /gpt4 chat unlimited. Invite link: %s. You can still use /gpt chat.\n\n" +
+		"😊邀请%d个新用户后可无限使用gpt4对话. 你的邀请链接: %s\n\n" +
+		"🔮小提示：「 /gpt 」命令没有邀请人数限制"
 
 	QueryUserInfoTemplate = "💁账号(Account): %s\n\n" +
 		"🏆剩余次数(RemainCount): %d\n" +
