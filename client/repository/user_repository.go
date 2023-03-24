@@ -189,7 +189,7 @@ func (u *UserRepository) Count() (int, error) {
 	return count, nil
 }
 
-func (u *UserRepository) UpdateUserToVIP(userId int64) error {
-	_, err := u.db.Exec("UPDATE user SET is_donate = 1 WHERE user_id = ?", utils.Int64ToString(userId))
+func (u *UserRepository) UpdateUserToVIP(userId string) error {
+	_, err := u.db.Exec("UPDATE user SET is_donate = 1 WHERE user_id = ?", userId)
 	return err
 }
