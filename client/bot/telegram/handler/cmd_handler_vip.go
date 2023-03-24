@@ -24,7 +24,7 @@ func (v *VIPCommandHandler) Run(t telegram.TelegramBot, message tgbotapi.Message
 	}
 	args := message.CommandArguments()
 	if args == "" {
-		t.SafeSend(tgbotapi.NewMessage(message.Chat.ID, botError.MissingRequiredConfig+"id"))
+		t.SafeSend(tgbotapi.NewMessage(message.Chat.ID, botError.MissingRequiredConfig+" : id"))
 		return nil
 	}
 	err := v.userRepository.UpdateUserToVIP(args)
