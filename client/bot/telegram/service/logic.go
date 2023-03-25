@@ -2,7 +2,6 @@ package service
 
 import (
 	"chatgpt-bot/constant/cmd"
-	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/model"
 	"chatgpt-bot/utils"
@@ -47,18 +46,6 @@ func (b *Bot) sendTyping(chatID int64) {
 	_, _ = b.tgBot.Send(msg)
 }
 
-func (b *Bot) sendErrorMessage(chatID int64, msgID int, text string) {
-	msg := tgbotapi.NewMessage(chatID, text)
-	msg.ReplyToMessageID = msgID
-	_, err := b.tgBot.Send(msg)
-	if err != nil {
-		log.Printf("[SendErrorMessage] send message failed, err: 【%s】, msg: 【%+v】", err, msg)
-		msg.Text = botError.SendBackMsgFailed
-		_, _ = b.tgBot.Send(msg)
-		return
-	}
-}
-
 func (b *Bot) SafeSend(msg tgbotapi.MessageConfig) {
 	if msg.Text == "" {
 		return
@@ -68,6 +55,11 @@ func (b *Bot) SafeSend(msg tgbotapi.MessageConfig) {
 		return
 	}
 	b.sendLargeMessage(msg)
+}
+
+func (b *Bot) SafeSendWithoutPreview(msg tgbotapi.MessageConfig) {
+	msg.DisableWebPagePreview = true
+	b.SafeSend(msg)
 }
 
 func (b *Bot) sendLargeMessage(msg tgbotapi.MessageConfig) {
@@ -107,9 +99,22 @@ func (b *Bot) SafeSendMsg(chatID int64, text string) {
 	b.SafeSend(tgbotapi.NewMessage(chatID, text))
 }
 
+func (b *Bot) SafeSendMsgWithoutPreview(chatID int64, text string) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.DisableWebPagePreview = true
+	b.SafeSend(msg)
+}
+
 func (b *Bot) SafeReplyMsg(chatID int64, messageID int, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyToMessageID = messageID
+	b.SafeSend(msg)
+}
+
+func (b *Bot) SafeReplyMsgWithoutPreview(chatID int64, messageID int, text string) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ReplyToMessageID = messageID
+	msg.DisableWebPagePreview = true
 	b.SafeSend(msg)
 }
 
