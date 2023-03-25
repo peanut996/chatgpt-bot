@@ -5,6 +5,7 @@ import (
 	botError "chatgpt-bot/constant/error"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"strings"
 )
 
 type JoinLimiter struct{}
@@ -22,8 +23,8 @@ func (j *JoinLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 	config := bot.Config()
 	groupName := config.BotConfig.TelegramGroupName
 	channelName := config.BotConfig.TelegramChannelName
-	groupUrl := "https://t.me/" + groupName
-	channelUrl := "https://t.me/" + channelName
+	groupUrl := "https://t.me/" + strings.ReplaceAll(groupName, "@", "")
+	channelUrl := "https://t.me/" + strings.ReplaceAll(channelName, "@", "")
 	ok := findMemberFromChat(bot, groupName, userID) &&
 		findMemberFromChat(bot, channelName, userID)
 	if !ok {
