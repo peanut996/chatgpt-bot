@@ -9,10 +9,10 @@ var (
 	LimitUserCountTemplate = "Your chat limit has been reached. Invite one new user to get more %d times. your invite link: %s\n\n" +
 		"😢您的聊天次数已耗尽，邀请新用户后可获得%d聊天次数. 你的邀请链接: %s"
 
-	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, remain %d seconds." +
+	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, remain %d seconds.\n" +
 		"Tip: you can invite new user to avoid the rate limiter.\n\n" +
-		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，还剩 %d 秒\n" +
-		"🔮小提示：邀请新用户可解除GPT3消息速率限制"
+		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，还剩 %d 秒\n\n" +
+		"🔮小提示：邀请新用户可解除GPT3消息速率限制, 使用 「 /invite 」 获取邀请链接"
 
 	LimitUserGroupAndChannel = "Before you join the channel and group, you can not send message to me. \n\n" +
 		"😅 你必须先加入频道和群组才能和我聊天"

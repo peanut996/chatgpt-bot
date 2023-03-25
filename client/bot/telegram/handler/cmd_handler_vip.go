@@ -6,7 +6,6 @@ import (
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/repository"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -20,7 +19,8 @@ func (v *VIPCommandHandler) Cmd() BotCmd {
 
 func (v *VIPCommandHandler) Run(t telegram.TelegramBot, message tgbotapi.Message) error {
 	if !t.IsBotAdmin(message.From.ID) {
-		return fmt.Errorf(tip.NotAdminTip)
+		t.SafeSendMsg(message.Chat.ID, tip.NotAdminTip)
+		return nil
 	}
 	args := message.CommandArguments()
 	if args == "" {
