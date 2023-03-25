@@ -47,4 +47,7 @@ var (
 
 	QueueTipTemplate = "Current queue count: %d, please wait wait patiently\n\n" +
 		"🔥当前排队人数：%d, 请耐心等候\n\n"
+
+	PrepareReplyTip = "Preparing reply, please wait patiently\n\n" +
+		"🔥正在准备回复，请耐心等候\n\n"
 )
