@@ -10,6 +10,7 @@ import (
 )
 
 type RateLimiter struct {
+	isGPT4Limiter              bool
 	limiter                    *middleware.Limiter
 	userRepository             *repository.UserRepository
 	userInviteRecordRepository *repository.UserInviteRecordRepository
@@ -29,16 +30,17 @@ func (r *RateLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 		return true, ""
 	}
 
-	count, err := r.userInviteRecordRepository.CountByUserID(user.UserID)
-	if err != nil {
-		log.Printf("[RateLimiter] error when get user %d: %s", message.From.ID, err.Error())
-		return false, err.Error()
-	}
+	if !r.isGPT4Limiter {
+		count, err := r.userInviteRecordRepository.CountByUserID(user.UserID)
+		if err != nil {
+			log.Printf("[RateLimiter] error when get user %d: %s", message.From.ID, err.Error())
+			return false, err.Error()
+		}
 
-	if count > 0 {
-		return true, ""
+		if count > 0 {
+			return true, ""
+		}
 	}
-
 	allow, err := r.limiter.Allow(userIDString)
 	if !allow {
 		log.Printf("[RateLimiter] user %d is chatting with me, ignore message %s", message.From.ID, message.Text)
@@ -51,11 +53,13 @@ func (r *RateLimiter) CallBack(telegram.TelegramBot, tgbotapi.Message, bool) {
 }
 
 func NewRateLimiter(capacity int64, duration int64,
+	isGPT4Limiter bool,
 	userRepository *repository.UserRepository,
 	recordRepository *repository.UserInviteRecordRepository) *RateLimiter {
 	return &RateLimiter{
 		limiter:                    middleware.NewLimiter(capacity, duration),
 		userRepository:             userRepository,
 		userInviteRecordRepository: recordRepository,
+		isGPT4Limiter:              isGPT4Limiter,
 	}
 }
