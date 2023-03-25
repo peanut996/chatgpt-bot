@@ -193,13 +193,6 @@ func (b *Bot) finishChatTask(task model.ChatTask) {
 	if task.IsGPT4Message {
 		chatCtx.Model = "gpt-4"
 	}
-	prepare := tgbotapi.NewMessage(task.Chat, tip.PrepareReplyTip)
-	prepare.ReplyToMessageID = task.MessageID
-	sent, err := b.tgBot.Send(prepare)
-	if err != nil {
-		b.runLimitersCallBack(task.GetRawMessage(), false)
-		return
-	}
 	res, err := b.engine.Chat(chatCtx)
 	if err != nil {
 		task.Answer = err.Error()
@@ -207,7 +200,7 @@ func (b *Bot) finishChatTask(task model.ChatTask) {
 		task.Answer = res
 	}
 	b.sendTyping(task.Chat)
-	b.sendFromChatTask(task, sent.MessageID)
+	b.sendFromChatTask(task)
 	b.logToChannel(task.GetFormattedAnswer())
 
 	b.runLimitersCallBack(task.GetRawMessage(), true)

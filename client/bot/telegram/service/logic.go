@@ -58,10 +58,6 @@ func (b *Bot) SafeSend(msg tgbotapi.MessageConfig) {
 	b.sendLargeMessage(msg)
 }
 
-func (b *Bot) Send(c tgbotapi.Chattable) (tgbotapi.Message, error) {
-	return b.tgBot.Send(c)
-}
-
 func (b *Bot) SendAutoDeleteMessage(msg tgbotapi.MessageConfig, duration time.Duration) {
 	newMsg, err := b.tgBot.Send(msg)
 	if err != nil {
@@ -104,22 +100,12 @@ func (b *Bot) sendMessageSilently(msg tgbotapi.MessageConfig) {
 	}
 }
 
-func (b *Bot) sendFromChatTask(task model.ChatTask, sentID int) {
-	msgs := utils.SplitMessageByMaxSize(task.Answer, 4000)
-	if len(msgs) <= 1 {
-		edit := tgbotapi.NewEditMessageText(task.Chat, sentID, task.Question)
-		edit.ParseMode = tgbotapi.ModeMarkdown
-		edit.Text = task.Answer
-		_, err := b.Send(edit)
-		if err != nil {
-			log.Println("[sendFromChatTask]send message failed, err: " + err.Error())
-		}
-		return
-	}
+func (b *Bot) sendFromChatTask(task model.ChatTask) {
 	msg := tgbotapi.NewMessage(task.Chat, task.Question)
 	msg.ParseMode = tgbotapi.ModeMarkdown
 	msg.Text = task.Answer
 	msg.ReplyToMessageID = task.MessageID
+	msgs := utils.SplitMessageByMaxSize(task.Answer, 4000)
 	for _, m := range msgs {
 		msg.Text = m
 		b.SafeSend(msg)

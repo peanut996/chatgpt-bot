@@ -19,7 +19,6 @@ type TelegramBot interface {
 	GetBotInviteLink(code string) string
 	GetUserInfo(userID int64) (*model.User, error)
 
-	Send(c tgbotapi.Chattable) (tgbotapi.Message, error)
 	SafeSend(msg tgbotapi.MessageConfig)
 	SafeSendWithoutPreview(msg tgbotapi.MessageConfig)
 	SafeReplyMsg(chatID int64, messageID int, text string)
