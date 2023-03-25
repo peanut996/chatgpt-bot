@@ -315,7 +315,7 @@ func (b *Bot) checkLimiters(m tgbotapi.Message) bool {
 		if !ok {
 			if utils.IsNotEmpty(err) {
 				log.Printf("[CheckLimiter] limiter encounter type: %s error: %s", reflect.TypeOf(l).String(), err)
-				b.SafeReplyMsgWithoutPreview(m.Chat.ID, m.MessageID, err)
+				b.SafeReplyMsg(m.Chat.ID, m.MessageID, err)
 			}
 			return false
 		}
