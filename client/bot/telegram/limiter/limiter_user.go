@@ -60,7 +60,9 @@ func (u *UserLimiter) CallBack(t telegram.TelegramBot, m tgbotapi.Message, succe
 		if err == nil && user != nil && !user.Donated() {
 			go func() {
 				time.Sleep(time.Second * 30)
-				t.SafeSendMsg(m.Chat.ID, tip.DonateTip)
+				msg := tgbotapi.NewMessage(m.Chat.ID, tip.DonateTip)
+				msg.ParseMode = tgbotapi.ModeMarkdown
+				t.SendAutoDeleteMessage(msg, time.Second*30)
 			}()
 		}
 

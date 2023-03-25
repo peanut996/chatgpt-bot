@@ -5,6 +5,7 @@ import (
 	"chatgpt-bot/constant/cmd"
 	"chatgpt-bot/constant/tip"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"time"
 )
 
 type DonateCommandHandler struct{}
@@ -17,8 +18,7 @@ func (d *DonateCommandHandler) Run(bot telegram.TelegramBot, message tgbotapi.Me
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, tip.DonateTip)
 	msg.ParseMode = tgbotapi.ModeMarkdown
-	bot.SafeSend(msg)
-
+	bot.SendAutoDeleteMessage(msg, time.Second*30)
 	return nil
 }
 func NewDonateCommandHandler() *DonateCommandHandler {

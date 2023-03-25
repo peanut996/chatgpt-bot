@@ -7,6 +7,7 @@ import (
 	"chatgpt-bot/utils"
 	"fmt"
 	"log"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -57,6 +58,22 @@ func (b *Bot) SafeSend(msg tgbotapi.MessageConfig) {
 	b.sendLargeMessage(msg)
 }
 
+func (b *Bot) SendAutoDeleteMessage(msg tgbotapi.MessageConfig, duration time.Duration) {
+	newMsg, err := b.tgBot.Send(msg)
+	if err != nil {
+		log.Println("[SendAutoDeleteMessage]send message failed, err: " + err.Error())
+		return
+	}
+	go func(bot *tgbotapi.BotAPI, message tgbotapi.Message, duration time.Duration) {
+		time.Sleep(duration)
+		deleteMessage := tgbotapi.NewDeleteMessage(message.Chat.ID, message.MessageID)
+		_, err := bot.Send(deleteMessage)
+		if err != nil {
+			log.Println("[SendAutoDeleteMessage]delete message failed, err: " + err.Error())
+		}
+	}(b.tgBot, newMsg, duration)
+}
+
 func (b *Bot) SafeSendWithoutPreview(msg tgbotapi.MessageConfig) {
 	msg.DisableWebPagePreview = true
 	b.SafeSend(msg)
@@ -96,6 +113,10 @@ func (b *Bot) sendFromChatTask(task model.ChatTask) {
 }
 
 func (b *Bot) SafeSendMsg(chatID int64, text string) {
+	b.SafeSend(tgbotapi.NewMessage(chatID, text))
+}
+
+func (b *Bot) SafeSendMsgAutoDelete(chatID int64, text string) {
 	b.SafeSend(tgbotapi.NewMessage(chatID, text))
 }
 
