@@ -120,8 +120,8 @@ func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserReposi
 	}
 
 	b.registerGPT3Limiter(
-		limiter.NewRateLimiter(cfg.GPT3Limiter.Capacity, cfg.GPT3Limiter.Duration),
-	)
+		limiter.NewRateLimiter(cfg.GPT3Limiter.Capacity, cfg.GPT3Limiter.Duration,
+			userRepository, recordRepository))
 
 	if cfg.GPT4Limiter.Join {
 		b.registerGPT4Limiter(join)
@@ -136,8 +136,8 @@ func initLimiters(cfg *cfg.Config, b *Bot, userRepository *repository.UserReposi
 	}
 
 	b.registerGPT4Limiter(
-		limiter.NewRateLimiter(cfg.GPT4Limiter.Capacity, cfg.GPT4Limiter.Duration),
-	)
+		limiter.NewRateLimiter(cfg.GPT4Limiter.Capacity, cfg.GPT4Limiter.Duration,
+			userRepository, recordRepository))
 
 }
 
