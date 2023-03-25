@@ -38,6 +38,7 @@ func (j *JoinLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 		}
 		markup := tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{{button1, button2}}}
 		msg.ReplyMarkup = markup
+		bot.SafeSend(msg)
 		return false, botError.EmptyMessage
 	}
 	return true, ""
