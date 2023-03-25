@@ -6,6 +6,7 @@ import (
 	"chatgpt-bot/db"
 	"chatgpt-bot/model/persist"
 	"chatgpt-bot/utils"
+	"database/sql"
 	"errors"
 )
 
@@ -164,7 +165,30 @@ func (u *UserRepository) GetAllUserID() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
+
+	var userIDs []string
+	for rows.Next() {
+		var userID string
+		err = rows.Scan(&userID)
+		if err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, userID)
+	}
+	return userIDs, nil
+
+}
+func (u *UserRepository) GetAllUserIDNotDonated() ([]string, error) {
+	rows, err := u.db.Query("SELECT user_id FROM user where is_donate != 1")
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
 
 	var userIDs []string
 	for rows.Next() {

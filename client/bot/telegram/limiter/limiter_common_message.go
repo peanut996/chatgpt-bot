@@ -3,11 +3,8 @@ package limiter
 import (
 	"chatgpt-bot/bot/telegram"
 	botError "chatgpt-bot/constant/error"
-	"chatgpt-bot/constant/tip"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"math/rand"
 	"strings"
-	"time"
 )
 
 type CommonMessageLimiter struct {
@@ -40,18 +37,8 @@ func (l *CommonMessageLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.
 	return ok, ""
 }
 
-func (l *CommonMessageLimiter) CallBack(b telegram.TelegramBot, m tgbotapi.Message, success bool) {
-	shouldSendTip := func() bool {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		n := r.Intn(b.Config().BotConfig.DonateProbability)
-		return n == 0
-	}
-	if success && m.Chat.IsPrivate() && shouldSendTip() {
-		go func() {
-			time.Sleep(time.Second * 30)
-			b.SafeSendMsg(m.Chat.ID, tip.DonateTip)
-		}()
-	}
+func (l *CommonMessageLimiter) CallBack(telegram.TelegramBot, tgbotapi.Message, bool) {
+
 }
 
 func NewCommonMessageLimiter() *CommonMessageLimiter {

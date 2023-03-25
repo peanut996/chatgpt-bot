@@ -3,10 +3,13 @@ package limiter
 import (
 	"chatgpt-bot/bot/telegram"
 	botError "chatgpt-bot/constant/error"
+	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"math/rand"
+	"time"
 )
 
 type UserLimiter struct {
@@ -46,7 +49,22 @@ func (u *UserLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 
 }
 
-func (u *UserLimiter) CallBack(telegram.TelegramBot, tgbotapi.Message, bool) {
+func (u *UserLimiter) CallBack(t telegram.TelegramBot, m tgbotapi.Message, success bool) {
+	shouldSendTip := func() bool {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		n := r.Intn(t.Config().BotConfig.DonateProbability)
+		return n == 0
+	}
+	if success && m.Chat.IsPrivate() && shouldSendTip() {
+		user, err := u.userRepository.GetByUserID(utils.Int64ToString(m.From.ID))
+		if err == nil && user != nil && !user.Donated() {
+			go func() {
+				time.Sleep(time.Second * 30)
+				t.SafeSendMsg(m.Chat.ID, tip.DonateTip)
+			}()
+		}
+
+	}
 }
 
 func NewUserLimiter(userRepository *repository.UserRepository) *UserLimiter {

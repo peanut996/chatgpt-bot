@@ -29,19 +29,32 @@ func (p *PushCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Messag
 		return fmt.Errorf(tip.NotAdminTip)
 	}
 
-	text := tip.DonateTip
+	userIDs := make([]string, 1)
+	text := ""
 
 	if utils.IsNotEmpty(message.CommandArguments()) {
 		text = message.CommandArguments()
+		ids, err := p.userRepository.GetAllUserID()
+		if err != nil {
+			return err
+		}
+		userIDs = ids
+	} else {
+		text = tip.DonateTip
+		ids, err := p.userRepository.GetAllUserIDNotDonated()
+		if err != nil {
+			return err
+		}
+		userIDs = ids
 	}
 
-	userIDs, err := p.userRepository.GetAllUserID()
-	if err != nil {
-		return err
-	}
-
+	speedChannel := make(chan struct{}, 10)
 	for _, userID := range userIDs {
+		speedChannel <- struct{}{}
 		go func(userID string, text string) {
+			defer func() {
+				<-speedChannel
+			}()
 			if utils.IsEmpty(userID) {
 				return
 			}
