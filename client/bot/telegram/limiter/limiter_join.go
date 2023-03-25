@@ -3,7 +3,6 @@ package limiter
 import (
 	"chatgpt-bot/bot/telegram"
 	botError "chatgpt-bot/constant/error"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
@@ -23,11 +22,23 @@ func (j *JoinLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 	config := bot.Config()
 	groupName := config.BotConfig.TelegramGroupName
 	channelName := config.BotConfig.TelegramChannelName
+	groupUrl := "https://t.me/" + groupName
+	channelUrl := "https://t.me/" + channelName
 	ok := findMemberFromChat(bot, groupName, userID) &&
 		findMemberFromChat(bot, channelName, userID)
 	if !ok {
-		return false, fmt.Sprintf(botError.LimitUserGroupAndChannelTemplate,
-			channelName, groupName, channelName, groupName)
+		msg := tgbotapi.NewMessage(message.Chat.ID, botError.LimitUserGroupAndChannel)
+		button1 := tgbotapi.InlineKeyboardButton{
+			URL:  &channelUrl,
+			Text: "频道(Channel)",
+		}
+		button2 := tgbotapi.InlineKeyboardButton{
+			URL:  &groupUrl,
+			Text: "群组(Group)",
+		}
+		markup := tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{{button1, button2}}}
+		msg.ReplyMarkup = markup
+		return false, botError.EmptyMessage
 	}
 	return true, ""
 }
