@@ -33,7 +33,7 @@ func (l *InviteCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 	if err != nil {
 		return false, botError.InternalError
 	}
-	ok := count >= int64(config.AllowGPT4Count)
+	ok := count >= int64(config.AllowByInviteCount)
 	// 限制用户使用次数
 	if !ok {
 		code := user.InviteCode
@@ -41,8 +41,8 @@ func (l *InviteCountMessageLimiter) Allow(bot telegram.TelegramBot, message tgbo
 		if err != nil {
 			return false, botError.InternalError
 		}
-		return false, fmt.Sprintf(tip.InviteTipTemplate, config.AllowGPT4Count, link,
-			config.AllowGPT4Count, link)
+		return false, fmt.Sprintf(tip.InviteTipTemplate, config.AllowByInviteCount, link,
+			config.AllowByInviteCount, link)
 	}
 
 	return true, ""

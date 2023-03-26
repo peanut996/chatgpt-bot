@@ -52,7 +52,7 @@ func (q *QueryCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Messa
 
 	text := fmt.Sprintf(tip.QueryUserInfoTemplate,
 		userID, user.Donated(), user.RemainCount, inviteCount, b.GetBotInviteLink(user.InviteCode),
-		config.AllowGPT4Count, config.AllowGPT4Count)
+		config.AllowByInviteCount, config.AllowByInviteCount)
 	b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, text)
 	return nil
 }

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"chatgpt-bot/constant/config"
 	botError "chatgpt-bot/constant/error"
 	"fmt"
 	"sync"
@@ -39,7 +40,7 @@ func (l *Limiter) Allow(user string) (bool, error) {
 		remainSecond := int64((1 - l.tokens[user]) / l.rate)
 		text := fmt.Sprintf(botError.RateLimitMessageTemplate,
 			l.capacity, l.duration/60, remainSecond,
-			l.duration/60, l.capacity, remainSecond)
+			l.duration/60, l.capacity, remainSecond, config.AllowByInviteCount)
 		return false, fmt.Errorf(text)
 	}
 

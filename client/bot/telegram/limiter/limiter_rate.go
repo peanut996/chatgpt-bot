@@ -2,6 +2,7 @@ package limiter
 
 import (
 	"chatgpt-bot/bot/telegram"
+	"chatgpt-bot/constant/config"
 	"chatgpt-bot/middleware"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -37,7 +38,7 @@ func (r *RateLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.Message) 
 			return false, err.Error()
 		}
 
-		if count > 0 {
+		if count > int64(config.AllowByInviteCount) {
 			return true, ""
 		}
 	}

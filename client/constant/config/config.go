@@ -7,7 +7,7 @@ var (
 
 	CountWhenInviteOtherUser = 100
 
-	AllowGPT4Count = 3
+	AllowByInviteCount = 3
 )
 
 var (
