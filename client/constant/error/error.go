@@ -12,7 +12,7 @@ var (
 	RateLimitMessageTemplate = "You are chatting with me too frequently, can only send %d messages in %d min, remain %d seconds.\n" +
 		"Tip: you can invite new user to avoid the rate limiter.\n\n" +
 		"😅你聊天太频繁了, 只能在 %d 分钟内发送 %d 条消息，还剩 %d 秒\n\n" +
-		"🔮小提示：邀请新用户可解除GPT3消息速率限制, 使用 「 /invite 」 获取邀请链接"
+		"🔮小提示：成为捐赠用户或邀请新用户可解除消息速率限制, 使用 「 /invite 」 获取邀请链接"
 
 	LimitUserGroupAndChannel = "Before you join the channel and group, you can not send message to me. \n\n" +
 		"😅 你必须先加入频道和群组才能和我聊天"

@@ -34,7 +34,7 @@ var (
 		"🏆剩余次数(RemainCount): %d\n" +
 		"🎭邀请人数(InviteUsers): %d\n" +
 		"🔗邀请链接(InviteLink): %s\n\n" +
-		"🔮小提示：邀请%d个新用户后可无限使用gpt4对话(Invite %d new user to get gpt4 unlimited)"
+		"🔮小提示：成为捐赠用户或邀请%d个新用户后可无限使用gpt4对话(Invite %d new user to get gpt4 unlimited)"
 
 	GPTLackTextTipTemplate = "`/%s` + blank + your question.\n\n" +
 		"😊「 /%s 」+ 空格 + 你的问题"
