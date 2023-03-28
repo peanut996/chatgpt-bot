@@ -5,9 +5,9 @@ var (
 
 	DefaultCount = 10
 
-	CountWhenInviteOtherUser = 100
+	CountWhenInviteOtherUser = 30
 
-	AllowByInviteCount = 3
+	AllowByInviteCount = 5
 )
 
 var (
