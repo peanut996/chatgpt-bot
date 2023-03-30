@@ -224,7 +224,7 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 	}
 
 	if IsGPTMessage(*update.Message) && strings.Trim(update.Message.CommandArguments(), " ") == "" {
-		b.SafeSendMsg(update.Message.Chat.ID, fmt.Sprintf(tip.GPTLackTextTipTemplate,
+		b.SafeReplyMsg(update.Message.Chat.ID, update.Message.MessageID, fmt.Sprintf(tip.GPTLackTextTipTemplate,
 			update.Message.Command(), update.Message.Command()))
 		return
 	}

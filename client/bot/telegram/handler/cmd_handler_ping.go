@@ -15,7 +15,7 @@ func (c *PingCommandHandler) Cmd() BotCmd {
 }
 
 func (c *PingCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
-	b.SafeSendMsg(message.Chat.ID, tip.BotPingTip)
+	b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, tip.BotPingTip)
 	return nil
 }
 func NewPingCommandHandler() *PingCommandHandler {

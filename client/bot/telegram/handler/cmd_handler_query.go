@@ -10,6 +10,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"time"
 )
 
 type QueryCommandHandler struct {
@@ -53,7 +54,11 @@ func (q *QueryCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Messa
 	text := fmt.Sprintf(tip.QueryUserInfoTemplate,
 		userID, user.Donated(), user.RemainCount, inviteCount, b.GetBotInviteLink(user.InviteCode),
 		config.AllowByInviteCount, config.AllowByInviteCount)
-	b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, text)
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	msg.ReplyToMessageID = message.MessageID
+	msg.ParseMode = "Markdown"
+	msg.DisableWebPagePreview = true
+	b.SendAutoDeleteMessage(msg, time.Second*30)
 	return nil
 }
 

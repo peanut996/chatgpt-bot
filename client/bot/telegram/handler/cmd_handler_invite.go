@@ -28,7 +28,7 @@ func (i *InviteCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Mess
 	}
 	if user != nil {
 		link := b.GetBotInviteLink(user.InviteCode)
-		b.SafeSendMsgWithoutPreview(message.Chat.ID, fmt.Sprintf(tip.InviteLinkTemplate, link, link))
+		b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, fmt.Sprintf(tip.InviteLinkTemplate, link, link))
 		return nil
 	} else {
 		userName := ""
@@ -43,7 +43,7 @@ func (i *InviteCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Mess
 		}
 		user, _ := i.userRepository.GetByUserID(userID)
 		link := b.GetBotInviteLink(user.InviteCode)
-		b.SafeSendMsgWithoutPreview(message.Chat.ID, fmt.Sprintf(tip.InviteLinkTemplate, link, link))
+		b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, fmt.Sprintf(tip.InviteLinkTemplate, link, link))
 	}
 	return nil
 }

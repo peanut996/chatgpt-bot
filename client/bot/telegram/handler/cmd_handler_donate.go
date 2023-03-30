@@ -18,6 +18,7 @@ func (d *DonateCommandHandler) Run(bot telegram.TelegramBot, message tgbotapi.Me
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, tip.DonateTip)
 	msg.ParseMode = tgbotapi.ModeMarkdown
+	msg.ReplyToMessageID = message.MessageID
 	bot.SendAutoDeleteMessage(msg, time.Second*30)
 	return nil
 }
