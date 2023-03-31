@@ -5,7 +5,7 @@ from revChatGPT.V1 import AsyncChatbot as ChatGPTBot
 
 
 class Credential:
-    def __init__(self, email, password, conversation_id=None, verbose=False):
+    def __init__(self, email, password, access_token=None, conversation_id=None,  verbose=False):
         self.email = email
         self.password = password
         self.conversation_id = conversation_id
@@ -15,6 +15,7 @@ class Credential:
         self.chat_gpt_bot = ChatGPTBot(config={
             'email': email,
             'password': password,
+            'access_token': access_token,
             'verbose': verbose,
         }, conversation_id=conversation_id)
 
@@ -34,9 +35,11 @@ class Credential:
     def parse(credential_str: str):
         credential = credential_str.split(":")
         length = len(credential)
-        if length != 2 and length != 3:
+        if length != 2 and length != 3 and length != 4:
             raise Exception("token format error")
         if length == 2:
             return Credential(credential[0], credential[1])
-        else:
+        elif length == 3:
             return Credential(credential[0], credential[1], credential[2])
+        else:
+            return Credential(credential[0], credential[1], credential[2], credential[3])
