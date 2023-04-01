@@ -3,8 +3,9 @@ package limiter
 import (
 	"chatgpt-bot/bot/telegram"
 	botError "chatgpt-bot/constant/error"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type CommonMessageLimiter struct {
@@ -23,7 +24,7 @@ func (l *CommonMessageLimiter) Allow(bot telegram.TelegramBot, message tgbotapi.
 	}
 
 	if message.ReplyToMessage != nil &&
-		!(message.ReplyToMessage.From.ID == bot.SelfID()) {
+		!(message.ReplyToMessage.From.ID == bot.SelfID()) && !IsGPTMessage(message) {
 		// 不是回复机器人的不用处理
 		return false, botError.EmptyMessage
 	}
