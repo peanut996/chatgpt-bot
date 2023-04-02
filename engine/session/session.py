@@ -2,7 +2,7 @@ import asyncio
 import logging
 import random
 import time
-from typing import List, Dict
+from typing import List, Dict, AsyncGenerator
 
 import OpenAIAuth
 from httpx import HTTPStatusError
@@ -112,6 +112,66 @@ class Session:
                     raise Exception("empty response")
                 session.update(conversation_id=conversation_id, parent_id=parent_id)
                 return res
+            except ChatGPTError as e:
+                credential.refresh_token()
+                self._clean_session(user_id)
+                logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
+                error_code = e.code
+                if error_code >= 500:
+                    e.code = ChatGPTErrorType.SERVER_ERROR
+                    e.message = "OpenAI Server Error"
+                elif error_code == 429:
+                    e.code = ChatGPTErrorType.RATE_LIMIT_ERROR
+                    e.message = "Too many requests, please retry later"
+                elif error_code == ChatGPTErrorType.EXPIRED_ACCESS_TOKEN_ERROR or \
+                        error_code == ChatGPTErrorType.INVALID_ACCESS_TOKEN_ERROR:
+                    e.message = "OpenAI Token Invalid, please retry"
+                else:
+                    e.code = ChatGPTErrorType.UNKNOWN_ERROR
+                    e.message = "Unknown Error"
+                raise e
+            except HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    message = "😱 机器人负载过多，请稍后再试"
+                    raise ChatGPTError(source="chat_with_chatgpt", message=message)
+                elif e.response.status_code >= 500:
+                    raise ChatGPTError(source="chat_with_chatgpt", message="OpenAI Server Error")
+            except Exception as e:
+                credential.refresh_token()
+                self._clean_session(user_id)
+                logging.error("ChatGPTBot error: {}".format(e))
+                raise e
+
+    async def chat_stream_with_chatgpt(self, sentence: str, user_id=None, model=None) -> AsyncGenerator[str, None]:
+        session = self._get_user_session(user_id) if not model else self._get_user_gpt4_session(user_id)
+        credential = self._get_credential_from_session(session)
+        credential.chat_gpt_bot.conversation_id = None
+        logging.info("ChatGPTBot using token: {}".format(credential.email))
+
+        if credential.lock is None:
+            credential.lock = asyncio.Lock()
+
+        async with credential.lock:
+            try:
+                if model is not None:
+                    credential.chat_gpt_bot.config['model'] = model
+                else:
+                    credential.chat_gpt_bot.config['model'] = None
+                prev_text = ""
+                conversation_id = session.conversation_id
+                parent_id = session.parent_id
+                logging.info(
+                    f"[Session] ask open ai user {user_id}, model: {model},conversation_id: {conversation_id}, parent_id: {parent_id} ")
+                async for data in credential.chat_gpt_bot.ask(sentence,
+                                                              conversation_id=conversation_id,
+                                                              parent_id=parent_id):
+                    message = data["message"][len(prev_text):]
+                    prev_text = data["message"]
+                    conversation_id = data["conversation_id"]
+                    parent_id = data["parent_id"]
+                    session.update(conversation_id=conversation_id, parent_id=parent_id)
+                    yield message
+
             except ChatGPTError as e:
                 credential.refresh_token()
                 self._clean_session(user_id)
