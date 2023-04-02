@@ -39,8 +39,8 @@ var (
 	GPTLackTextTipTemplate = "`/%s` + blank + your question.\n\n" +
 		"😊「 /%s 」+ 空格 + 你的问题"
 
-	DonateTip = fmt.Sprintf("🙏 感谢您使用我们的机器人！如果您觉得我们的机器人对您有所帮助，欢迎为我们捐赠1️⃣元，以支持我们的运营和发展。\n\n"+
-		"💰 您可以通过以下方式向我们捐赠1️⃣元：\n\n- [微信(Wechat)](%s)\n\n- [支付宝(Alipay)](%s) \n\n"+
+	DonateTip = fmt.Sprintf("🙏 感谢您使用我们的机器人！如果您觉得我们的机器人对您有所帮助，欢迎为我们捐赠，以支持我们的运营和发展。\n\n"+
+		"💰 您可以通过以下方式向我们捐赠：\n\n- [微信(Wechat)](%s)\n\n- [支付宝(Alipay)](%s) \n\n"+
 		"💡 如果您有任何其他的捐赠方式或者建议，欢迎联系我们！\n\n"+
 		"👏 再次感谢您的支持，您的捐赠将帮助我们更好地为您提供服务！\n\n"+
 		"🔮 提示: 捐赠用户不再会接收此提示!", config.WechatQRCodeUrl, config.AlipayQRCodeUrl)
