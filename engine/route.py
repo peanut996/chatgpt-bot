@@ -1,16 +1,46 @@
 import argparse
 import logging
+import asyncio
 import os
 import traceback
 from OpenAIAuth import Error as OpenAIError
 from revChatGPT.typings import Error as ChatGPTError
-from quart import Quart, request, Response, stream_with_context
+from quart import Quart, request, Response, stream_with_context, make_response
+from datetime import datetime
+import json
+import time
 
-from engine.session.session import Session
+from session.session import Session
 
 app = Quart(__name__)
 session: Session
 
+from dataclasses import dataclass
+
+@dataclass
+class ServerSentEvent:
+    data: str
+    event: str | None = 'event'
+    id: int | None = None
+    retry: int | None = None
+
+    def encode(self) -> bytes:
+        if self.data != '[DONE]':
+            self.data = json.dumps({
+                'message': self.data,
+            })
+        message = f"data: {self.data}"
+        if self.event is not None:
+            message = f"{message}\nevent: {self.event}"
+        if self.id is not None:
+            message = f"{message}\nid: {self.id}"
+        if self.retry is not None:
+            message = f"{message}\nretry: {self.retry}"
+        message = f"{message}\r\n\r\n"
+        return message.encode('utf-8')
+    @staticmethod
+    def done_event():
+        return ServerSentEvent("[DONE]", event="event")
 
 @app.route('/chat', methods=["GET"])
 async def chat():
@@ -33,27 +63,41 @@ async def chat():
 
 
 @app.route('/chat-stream', methods=["GET"])
-async def chat():
+async def chat_stream():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
     model = request.args.get("model")
-    try:
-        async def generate():
+
+    async def send_events():
+        try:
             async for message in session.chat_stream_with_chatgpt(sentence, user_id=user_id, model=model):
-                yield message
+                yield ServerSentEvent(message).encode()
+        except OpenAIError as exception:
+            logging.error(
+                "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
+            yield ServerSentEvent(exception.details).encode()
+        except ChatGPTError as exception:
+            logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
+            yield ServerSentEvent(exception.message).encode()
+        except Exception as exception:
+            logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
+            msg = str(exception) if len(str(exception)) != 0 else "Internal Server Error"
+            yield ServerSentEvent(msg).encode()
+        finally:
+            yield ServerSentEvent.done_event().encode()
 
-        return Response(stream_with_context(generate()), content_type='text/plain')
-    except OpenAIError as e:
-        logging.error(
-            "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
-        return {"detail": e.details, "code": e.status_code}
-    except ChatGPTError as e:
-        logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
-        return {"detail": e.message, "code": e.code}
-    except Exception as e:
-        logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
-        return {"detail": str(e) if len(str(e)) != 0 else "Internal Server Error", "code": 500}
 
+
+    response = await make_response(
+        send_events(),
+        {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Transfer-Encoding': 'chunked',
+        },
+    )
+    response.timeout = None
+    return response
 
 @app.route('/ping')
 def ping():
