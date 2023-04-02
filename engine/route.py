@@ -1,14 +1,10 @@
-import argparse
-import logging
-import asyncio
-import os
-import traceback
-from OpenAIAuth import Error as OpenAIError
-from revChatGPT.typings import Error as ChatGPTError
-from quart import Quart, request, Response, stream_with_context, make_response
-from datetime import datetime
 import json
-import time
+import logging
+import traceback
+
+from OpenAIAuth import Error as OpenAIError
+from quart import Quart, request, make_response
+from revChatGPT.typings import Error as ChatGPTError
 
 from session.session import Session
 
@@ -17,12 +13,13 @@ session: Session
 
 from dataclasses import dataclass
 
+
 @dataclass
 class ServerSentEvent:
     data: str
-    event: str | None = 'event'
-    id: int | None = None
-    retry: int | None = None
+    event: str = 'event'
+    id: int = None
+    retry: int = None
 
     def encode(self) -> bytes:
         if self.data != '[DONE]':
@@ -38,9 +35,11 @@ class ServerSentEvent:
             message = f"{message}\nretry: {self.retry}"
         message = f"{message}\r\n\r\n"
         return message.encode('utf-8')
+
     @staticmethod
     def done_event():
         return ServerSentEvent("[DONE]", event="event")
+
 
 @app.route('/chat', methods=["GET"])
 async def chat():
@@ -74,10 +73,10 @@ async def chat_stream():
                 yield ServerSentEvent(message).encode()
         except OpenAIError as exception:
             logging.error(
-                "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
+                "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(exception.status_code, exception.details))
             yield ServerSentEvent(exception.details).encode()
         except ChatGPTError as exception:
-            logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
+            logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(exception.message))
             yield ServerSentEvent(exception.message).encode()
         except Exception as exception:
             logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
@@ -85,8 +84,6 @@ async def chat_stream():
             yield ServerSentEvent(msg).encode()
         finally:
             yield ServerSentEvent.done_event().encode()
-
-
 
     response = await make_response(
         send_events(),
@@ -98,6 +95,7 @@ async def chat_stream():
     )
     response.timeout = None
     return response
+
 
 @app.route('/ping')
 def ping():
