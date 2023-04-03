@@ -45,7 +45,7 @@ class ServerSentEvent:
 async def chat():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
-    model = request.args.get("model")
+    model = request.args.get("model") or 'text-davinci-002-render-sha'
     try:
         res = await session.chat_with_chatgpt(sentence, user_id=user_id, model=model)
         return {"message": res}
@@ -65,7 +65,7 @@ async def chat():
 async def chat_stream():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
-    model = request.args.get("model")
+    model = request.args.get("model") or 'text-davinci-002-render-sha'
 
     async def send_events():
         try:

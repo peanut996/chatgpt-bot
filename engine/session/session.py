@@ -26,7 +26,9 @@ class Session:
         self.chat_gpt_bot = None
         self.edge_gpt_bot = None
         self.user_to_session: Dict[str, UserSession] = dict()
+        self.user_to_paid_session: Dict[str, UserSession] = dict()
         self.user_to_gpt4_session: Dict[str, UserSession] = dict()
+
         self.verbose = config['engine'].get('debug', False)
         for c in self.chatgpt_credentials:
             c.set_verbose(self.verbose)
@@ -64,6 +66,23 @@ class Session:
             self.user_to_session[user_id] = session
             return session
 
+    def _get_user_paid_session(self, user_id) -> UserSession:
+        if user_id in self.user_to_paid_session:
+            return self.user_to_paid_session[user_id]
+        else:
+            credential = self._get_random_chat_gpt_credential()
+            session = UserSession(user_id=user_id, credential=credential)
+            self.user_to_paid_session[user_id] = session
+            return session
+
+    def _get_session_from_model_and_id(self, user_id, model='text-davinci-002-render-sha'):
+        if model == 'gpt-4':
+            return self._get_user_gpt4_session(user_id)
+        elif model == 'text-davinci-002-render-paid':
+            return self._get_user_paid_session(user_id)
+        else:
+            return self._get_user_session(user_id)
+
     def _get_user_gpt4_session(self, user_id) -> UserSession:
         if user_id in self.user_to_gpt4_session:
             return self.user_to_gpt4_session[user_id]
@@ -79,8 +98,8 @@ class Session:
             session.credential = credential
         return session.credential
 
-    async def chat_with_chatgpt(self, sentence: str, user_id=None, model=None) -> str:
-        session = self._get_user_session(user_id) if not model else self._get_user_gpt4_session(user_id)
+    async def chat_with_chatgpt(self, sentence: str, user_id=None, model='text-davinci-002-render-sha') -> str:
+        session = self._get_session_from_model_and_id(user_id, model)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
         logging.info("ChatGPTBot using token: {}".format(credential.email))
@@ -142,8 +161,8 @@ class Session:
                 logging.error("ChatGPTBot error: {}".format(e))
                 raise e
 
-    async def chat_stream_with_chatgpt(self, sentence: str, user_id=None, model=None) -> AsyncGenerator[str, None]:
-        session = self._get_user_session(user_id) if not model else self._get_user_gpt4_session(user_id)
+    async def chat_stream_with_chatgpt(self, sentence: str, user_id=None, model='text-davinci-002-render-sha') -> AsyncGenerator[str, None]:
+        session = self._get_session_from_model_and_id(user_id, model)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
         logging.info("ChatGPTBot using token: {}".format(credential.email))
