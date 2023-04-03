@@ -22,7 +22,7 @@ class ServerSentEvent:
     retry: int = None
 
     def encode(self) -> bytes:
-        if self.data != '[DONE]':
+        if self.data != '[DONE]' and self.data != '[START]':
             self.data = json.dumps({
                 'message': self.data,
             })
@@ -39,6 +39,10 @@ class ServerSentEvent:
     @staticmethod
     def done_event():
         return ServerSentEvent("[DONE]", event="event")
+
+    @staticmethod
+    def start_event():
+        return ServerSentEvent("[START]", event="event")
 
 
 @app.route('/chat', methods=["GET"])
@@ -69,6 +73,7 @@ async def chat_stream():
 
     async def send_events():
         try:
+            yield ServerSentEvent.start_event().encode()
             async for message in session.chat_stream_with_chatgpt(sentence, user_id=user_id, model=model):
                 yield ServerSentEvent(message).encode()
         except OpenAIError as exception:
