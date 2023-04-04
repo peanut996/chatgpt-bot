@@ -32,4 +32,16 @@ var (
 
 	ExceedMaxGenerateInviteCodeTimes = "You have exceeded the maximum number of times to generate invite code, please try again later \n\n" +
 		"😐你已经超过了生成邀请码的最大次数，请稍后再试"
+
+	OnlyAllowInPrivate = "Only allow in private chat \n\n" +
+		"😐只允许在私聊中使用"
+
+	OnlyAllowInGroup = "Only allow in group \n\n" +
+		"😐只允许在群组中使用"
+
+	OnlyAllowInChannel = "Only allow in channel \n\n" +
+		"😐只允许在频道中使用"
+
+	CannotGetAccessCodeTemplate = "Cannot get access code, become a donor or invite %d new users to obtain an access code. Use `/invite` to get an invitation link. \n\n" +
+		"😐无法获取访问码，成为捐赠用户或邀请%d个新用户可获取访问码，使用 「 /invite 」 获取邀请链接"
 )

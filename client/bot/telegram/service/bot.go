@@ -93,6 +93,7 @@ func (b *Bot) Init(cfg *cfg.Config) error {
 		handler.NewStatusCommandHandler(userRepository, userInviteRecordRepository),
 		handler.NewPushCommandHandler(userRepository),
 		handler.NewVIPCommandHandler(userRepository),
+		handler.NewAccessCommandHandler(userRepository, userInviteRecordRepository, cfg.BotConfig.SALT),
 	)
 	initLimiters(cfg, b, userRepository, userInviteRecordRepository)
 

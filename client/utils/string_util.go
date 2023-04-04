@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"crypto/md5"
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"regexp"
 	"strconv"
@@ -76,4 +78,10 @@ func IsMatchString(pattern, str string) bool {
 
 func StringToInt64(str string) (int64, error) {
 	return strconv.ParseInt(str, 10, 64)
+}
+
+func GetAccessCode(invitationCode, salt string) string {
+	hash := md5.Sum([]byte(invitationCode + salt))
+	token := invitationCode + "-" + fmt.Sprintf("%x", hash)[:10]
+	return token
 }

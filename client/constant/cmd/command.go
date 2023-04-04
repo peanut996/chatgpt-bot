@@ -25,6 +25,8 @@ var (
 
 	STATUS = "status"
 
+	ACCESS = "access"
+
 	_ = "cmd"
 )
 
@@ -32,7 +34,8 @@ func IsBotCmd(cmd string) bool {
 	switch cmd {
 	case START, PING, GPT, DOWN,
 		PPROF, INVITE, COUNT, QUERY,
-		GPT4, DONATE, PUSH, STATUS, VIP:
+		GPT4, DONATE, PUSH, STATUS, VIP,
+		ACCESS:
 		return true
 	default:
 		return false
