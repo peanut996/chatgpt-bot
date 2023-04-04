@@ -51,6 +51,6 @@ var (
 	QueueTipTemplate = "Current queue count: %d, please wait wait patiently\n\n" +
 		"🔥当前排队人数：%d, 请耐心等候\n\n"
 
-	AccessCodeTipTemplate = "Your access code is: %s\n\n" +
-		"😊你的访问码是: %s\n\n"
+	AccessCodeTipTemplate = "Your access code: `%s`\n\n" +
+		"😊你的访问码是: `%s`\n\n"
 )
