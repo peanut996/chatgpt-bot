@@ -19,7 +19,7 @@ type AccessCommandHandler struct {
 }
 
 func (a *AccessCommandHandler) Cmd() BotCmd {
-	return cmd.PING
+	return cmd.ACCESS
 }
 
 func (a *AccessCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
