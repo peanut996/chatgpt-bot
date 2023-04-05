@@ -6,6 +6,7 @@ import (
 	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/repository"
+	"chatgpt-bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -27,11 +28,22 @@ func (v *VIPCommandHandler) Run(t telegram.TelegramBot, message tgbotapi.Message
 		t.SafeSend(tgbotapi.NewMessage(message.Chat.ID, botError.MissingRequiredConfig+" : id"))
 		return nil
 	}
-	err := v.userRepository.UpdateUserToVIP(args)
+	user, err := v.userRepository.GetByUserID(args)
 	if err != nil {
 		return err
 	}
-	t.SafeSend(tgbotapi.NewMessage(message.Chat.ID, "success"))
+	if user == nil {
+		t.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, "user not found")
+		return nil
+	}
+	err = v.userRepository.UpdateUserToVIP(args)
+	if err != nil {
+		return err
+	}
+
+	chatID, _ := utils.StringToInt64(user.UserID)
+	t.SafeSendMsg(chatID, tip.BecomeDonorTip)
+	t.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, "success")
 	return nil
 }
 

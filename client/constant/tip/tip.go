@@ -34,7 +34,7 @@ var (
 		"🏆剩余次数(RemainCount): %d\n" +
 		"🎭邀请人数(InviteUsers): %d\n" +
 		"🔗邀请链接(InviteLink): %s\n\n" +
-		"🔮小提示：成为捐赠用户或邀请%d个新用户后可使用gpt4对话(Invite %d new user to get gpt4 unlimited)"
+		"🔮小提示：成为捐赠用户或邀请%d个新用户后可使用gpt4对话(Invite %d new user to get gpt4)"
 
 	GPTLackTextTipTemplate = "`/%s` + blank + your question.\n\n" +
 		"😊「 /%s 」+ 空格 + 你的问题"
@@ -53,4 +53,7 @@ var (
 
 	AccessCodeTipTemplate = "Your access code: `%s`\n\n" +
 		"😊你的访问码是: `%s`\n\n"
+
+	BecomeDonorTip = "Congratulations! You have become a donor. \n\n" +
+		"🎉你已经成为捐赠用户，谢谢您的支持。"
 )
