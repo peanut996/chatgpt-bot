@@ -28,7 +28,7 @@ func (a *AccessCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Mess
 		return nil
 	}
 	user, err := a.userRepository.GetByUserID(utils.Int64ToString(message.From.ID))
-	if err != nil {
+	if err != nil || user == nil {
 		b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, botError.InternalError)
 		return nil
 	}

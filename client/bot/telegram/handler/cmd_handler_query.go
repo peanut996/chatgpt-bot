@@ -4,6 +4,7 @@ import (
 	"chatgpt-bot/bot/telegram"
 	"chatgpt-bot/constant/cmd"
 	"chatgpt-bot/constant/config"
+	botError "chatgpt-bot/constant/error"
 	"chatgpt-bot/constant/tip"
 	"chatgpt-bot/repository"
 	"chatgpt-bot/utils"
@@ -23,6 +24,10 @@ func (q *QueryCommandHandler) Cmd() BotCmd {
 }
 
 func (q *QueryCommandHandler) Run(b telegram.TelegramBot, message tgbotapi.Message) error {
+	if !message.Chat.IsPrivate() {
+		b.SafeReplyMsgWithoutPreview(message.Chat.ID, message.MessageID, botError.OnlyAllowInPrivate)
+		return nil
+	}
 	userID := utils.Int64ToString(message.From.ID)
 	user, err := q.userRepository.GetByUserID(userID)
 	if err != nil {
