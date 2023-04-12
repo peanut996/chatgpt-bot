@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback
+import asyncio
 
 from OpenAIAuth import Error as OpenAIError
 from quart import Quart, request, make_response
@@ -44,6 +45,10 @@ class ServerSentEvent:
     def start_event():
         return ServerSentEvent("[START]", event="event")
 
+    @staticmethod
+    def keep_event():
+        return ServerSentEvent("[KEEP]", event="event")
+
 
 @app.route('/chat', methods=["GET"])
 async def chat():
@@ -74,8 +79,23 @@ async def chat_stream():
     async def send_events():
         try:
             yield ServerSentEvent.start_event().encode()
-            async for message in session.chat_stream_with_chatgpt(sentence, user_id=user_id, model=model):
-                yield ServerSentEvent(message).encode()
+
+            async def chat_stream_with_timeout(stream):
+                while True:
+                    try:
+                        chunk_msg = await asyncio.wait_for(anext(stream), timeout=10.0)
+                        yield chunk_msg
+                    except asyncio.TimeoutError:
+                        yield None
+                    except StopAsyncIteration:
+                        break
+
+            stream_generator = session.chat_stream_with_chatgpt(sentence, user_id=user_id, model=model)
+            async for message in chat_stream_with_timeout(stream_generator):
+                if message is None:
+                    yield ServerSentEvent.keep_event().encode()
+                else:
+                    yield ServerSentEvent(message).encode()
         except OpenAIError as exception:
             logging.error(
                 "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(exception.status_code, exception.details))
