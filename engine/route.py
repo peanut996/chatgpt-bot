@@ -14,6 +14,9 @@ session: Session
 
 from dataclasses import dataclass
 
+STREAM_TIMEOUT = 'app_quart_stream_timeout'
+STREAM_DONE = 'app_quart_stream_done'
+
 
 @dataclass
 class ServerSentEvent:
@@ -23,7 +26,7 @@ class ServerSentEvent:
     retry: int = None
 
     def encode(self) -> bytes:
-        if self.data != '[DONE]' and self.data != '[START]':
+        if self.data != '[DONE]' and self.data != '[START]' and self.data != '[KEEP]':
             self.data = json.dumps({
                 'message': self.data,
             })
@@ -77,25 +80,32 @@ async def chat_stream():
     model = request.args.get("model") or 'text-davinci-002-render-sha'
 
     async def send_events():
+        async def put_stream_to_queue(stream, queue):
+            async for message in stream:
+                await queue.put(message)
+            await queue.put(STREAM_DONE)
         try:
             yield ServerSentEvent.start_event().encode()
 
-            async def chat_stream_with_timeout(stream):
-                while True:
-                    try:
-                        chunk_msg = await asyncio.wait_for(anext(stream), timeout=10.0)
-                        yield chunk_msg
-                    except asyncio.TimeoutError:
-                        yield None
-                    except StopAsyncIteration:
-                        break
-
             stream_generator = session.chat_stream_with_chatgpt(sentence, user_id=user_id, model=model)
-            async for message in chat_stream_with_timeout(stream_generator):
-                if message is None:
+            queue = asyncio.Queue()
+            asyncio.create_task(put_stream_to_queue(stream_generator, queue))
+
+            while True:
+                try:
+                    message = await asyncio.wait_for(queue.get(), timeout=12)
+                except asyncio.TimeoutError:
+                    message = STREAM_TIMEOUT
+
+                if queue.empty() and message is STREAM_DONE:
+                    break
+                if message is STREAM_TIMEOUT:
                     yield ServerSentEvent.keep_event().encode()
                 else:
                     yield ServerSentEvent(message).encode()
+
+
+
         except OpenAIError as exception:
             logging.error(
                 "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(exception.status_code, exception.details))
