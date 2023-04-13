@@ -78,6 +78,7 @@ async def chat_stream():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
     model = request.args.get("model") or 'text-davinci-002-render-sha'
+    start_time = asyncio.get_event_loop().time()
 
     async def send_events():
         async def put_stream_to_queue(stream, queue):
@@ -100,6 +101,11 @@ async def chat_stream():
                 if queue.empty() and message is STREAM_DONE:
                     break
                 if message is STREAM_TIMEOUT:
+                    current_time = asyncio.get_event_loop().time()
+                    if current_time - start_time > 120:
+                        logging.warning("[Engine] chat gpt engine get stream timeout")
+                        await stream_generator.aclose()
+                        break
                     yield ServerSentEvent.keep_event().encode()
                 else:
                     yield ServerSentEvent(message).encode()
