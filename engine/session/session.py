@@ -211,7 +211,7 @@ class Session:
                 raise e
             except HTTPStatusError as e:
                 if e.response.status_code == 429:
-                    message = "😱 机器人负载过多，请稍后再试"
+                    message = "😱 机器人负载过多，请稍后再试(The robot is overwhelmed, please try again later)"
                     raise ChatGPTError(source="chat_with_chatgpt", message=message)
                 elif e.response.status_code >= 500:
                     raise ChatGPTError(source="chat_with_chatgpt", message="OpenAI Server Error")

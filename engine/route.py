@@ -110,6 +110,7 @@ async def chat_stream():
                     if current_time - start_time > 120:
                         should_stop = True
                         logging.warning("[Engine] chat gpt engine get stream timeout")
+                        yield ServerSentEvent("😱 机器人负载过多，请稍后再试(The robot is overwhelmed, please try again later)").encode()
                         break
                     yield ServerSentEvent.keep_event().encode()
                 else:
