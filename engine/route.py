@@ -58,6 +58,8 @@ async def chat():
     sentence = request.args.get("sentence")
     user_id = request.args.get("user_id")
     model = request.args.get("model") or 'text-davinci-002-render-sha'
+    if model not in ['gpt-4', 'text-davinci-002-render-sha', 'text-davinci-002-render-paid']:
+        raise Exception("model not supported")
     try:
         res = await session.chat_with_chatgpt(sentence, user_id=user_id, model=model)
         return {"message": res}
@@ -79,8 +81,8 @@ async def chat_stream():
     sentence = request_data.get("sentence")
     user_id = request_data.get("user_id")
     model = request_data.get("model") or 'text-davinci-002-render-sha'
-    if model not in ['gpt-4', 'text-davinci-002-render-sha', 'text-davinci-002-render-sha-paid']:
-        return make_response("Invalid model", 400)
+    if model not in ['gpt-4', 'text-davinci-002-render-sha', 'text-davinci-002-render-paid']:
+        raise Exception("model not supported")
     start_time = asyncio.get_event_loop().time()
 
     async def send_events():
