@@ -1,7 +1,8 @@
+import asyncio
 import json
 import logging
 import traceback
-import asyncio
+from dataclasses import dataclass
 
 from OpenAIAuth import Error as OpenAIError
 from quart import Quart, request, make_response
@@ -12,7 +13,7 @@ from session.session import Session
 app = Quart(__name__)
 session: Session
 
-from dataclasses import dataclass
+
 
 STREAM_TIMEOUT = 'app_quart_stream_timeout'
 STREAM_DONE = 'app_quart_stream_done'
