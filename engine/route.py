@@ -89,11 +89,20 @@ async def chat_stream():
         should_stop = False
 
         async def put_stream_to_queue(stream, queue):
-            async for message in stream:
-                if should_stop is True:
-                    break
-                await queue.put(message)
-            await queue.put(STREAM_DONE)
+            try:
+                async for message in stream:
+                    if should_stop is True:
+                        break
+                    await queue.put(message)
+            except ChatGPTError as e:
+                await queue.put(e.message)
+            except OpenAIError as exception:
+                await queue.put(exception.details)
+            except Exception as exception:
+                msg = str(exception) if len(str(exception)) != 0 else "Internal Server Error"
+                await queue.put(msg)
+            finally:
+                await queue.put(STREAM_DONE)
 
         try:
             yield ServerSentEvent.start_event().encode()
@@ -115,26 +124,12 @@ async def chat_stream():
                     if current_time - start_time > 120:
                         should_stop = True
                         logging.warning("[Engine] chat gpt engine get stream timeout")
-                        yield ServerSentEvent("😱 机器人负载过多，请稍后再试(The robot is overwhelmed, please try again later)").encode()
+                        yield ServerSentEvent(
+                            "😱 机器人负载过多，请稍后再试(The robot is overwhelmed, please try again later)").encode()
                         break
                     yield ServerSentEvent.keep_event().encode()
                 else:
                     yield ServerSentEvent(message).encode()
-
-
-
-        except OpenAIError as exception:
-            logging.error(
-                "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(exception.status_code,
-                                                                                              exception.details))
-            yield ServerSentEvent(exception.details).encode()
-        except ChatGPTError as exception:
-            logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(exception.message))
-            yield ServerSentEvent(exception.message).encode()
-        except Exception as exception:
-            logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
-            msg = str(exception) if len(str(exception)) != 0 else "Internal Server Error"
-            yield ServerSentEvent(msg).encode()
         finally:
             yield ServerSentEvent.done_event().encode()
 
