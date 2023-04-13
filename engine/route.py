@@ -73,11 +73,14 @@ async def chat():
         return {"detail": str(e) if len(str(e)) != 0 else "Internal Server Error", "code": 500}
 
 
-@app.route('/chat-stream', methods=["GET"])
+@app.route('/chat-stream', methods=["POST"])
 async def chat_stream():
-    sentence = request.args.get("sentence")
-    user_id = request.args.get("user_id")
-    model = request.args.get("model") or 'text-davinci-002-render-sha'
+    request_data = await request.get_json()
+    sentence = request_data.get("sentence")
+    user_id = request_data.get("user_id")
+    model = request_data.get("model") or 'text-davinci-002-render-sha'
+    if model not in ['gpt-4', 'text-davinci-002-render-sha', 'text-davinci-002-render-sha-paid']:
+        return make_response("Invalid model", 400)
     start_time = asyncio.get_event_loop().time()
 
     async def send_events():
