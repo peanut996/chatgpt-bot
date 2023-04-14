@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import traceback
 from dataclasses import dataclass
 
@@ -65,14 +64,14 @@ async def chat():
         res = await session.chat_with_chatgpt(sentence, user_id=user_id, model=model)
         return {"message": res}
     except OpenAIError as e:
-        logging.error(
+        app.logger.error(
             "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
         return {"detail": e.details, "code": e.status_code}
     except ChatGPTError as e:
-        logging.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
+        app.logger.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
         return {"detail": e.message, "code": e.code}
     except Exception as e:
-        logging.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
+        app.logger.error(f"[Engine] chat gpt engine get error: {traceback.format_exc()}")
         return {"detail": str(e) if len(str(e)) != 0 else "Internal Server Error", "code": 500}
 
 
@@ -124,7 +123,7 @@ async def chat_stream():
                     current_time = asyncio.get_event_loop().time()
                     if current_time - start_time > 120:
                         should_stop = True
-                        logging.warning("[Engine] chat gpt engine get stream timeout")
+                        app.logger.warning("[Engine] chat gpt engine get stream timeout")
                         yield ServerSentEvent(
                             "😱 机器人负载过多，请稍后再试(The robot is overwhelmed, please try again later)").encode()
                         break

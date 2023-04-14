@@ -102,7 +102,6 @@ class Session:
         session = self._get_session_from_model_and_id(user_id, model)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
-        logging.info("ChatGPTBot using token: {}".format(credential.email))
 
         if credential.lock is None:
             credential.lock = asyncio.Lock()
@@ -118,7 +117,8 @@ class Session:
                 conversation_id = session.conversation_id
                 parent_id = session.parent_id
                 logging.info(
-                    f"[Session] ask open ai user {user_id}, model: {model},conversation_id: {conversation_id}, parent_id: {parent_id} ")
+                    f"[Session] ask open ai user {user_id}, model: {model}, sentence: {sentence}, " +
+                    f"conversation_id: {conversation_id}, parent_id: {parent_id} ")
                 async for data in credential.chat_gpt_bot.ask(sentence,
                                                               conversation_id=conversation_id,
                                                               parent_id=parent_id):
@@ -165,7 +165,6 @@ class Session:
         session = self._get_session_from_model_and_id(user_id, model)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
-        logging.info("ChatGPTBot using token: {}".format(credential.email))
 
         if credential.lock is None:
             credential.lock = asyncio.Lock()
@@ -180,7 +179,8 @@ class Session:
                 conversation_id = session.conversation_id
                 parent_id = session.parent_id
                 logging.info(
-                    f"[Session] ask open ai user {user_id}, model: {model},conversation_id: {conversation_id}, parent_id: {parent_id} ")
+                    f"[Session] ask open ai user {user_id}, model: {model}, sentence: {sentence}, " +
+                    f"conversation_id: {conversation_id}, parent_id: {parent_id} ")
                 async for data in credential.chat_gpt_bot.ask(sentence,
                                                               conversation_id=conversation_id,
                                                               parent_id=parent_id):
