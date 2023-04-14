@@ -6,8 +6,8 @@ from tool import load_config
 
 
 def main():
-    logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    app.logger.setLevel(logging.WARNING)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    app.logger.setLevel(logging.INFO)
     config = load_config()
     session = Session(config=config)
     port = config['engine']['port']
