@@ -1,4 +1,4 @@
-OpenAIAuth==0.3.2
+OpenAIAuth==0.3.6
 PyYAML==6.0
 quart==0.18.3
-revChatGPT==4.0.11
+revChatGPT==4.2.2
