@@ -1,6 +1,7 @@
 import logging
 import random
 import time
+import uuid
 from typing import List, Dict, AsyncGenerator
 
 import OpenAIAuth
@@ -98,13 +99,16 @@ class Session:
         session = self._get_session_from_model_and_id(user_id, model)
         credential = self._get_credential_from_session(session)
         credential.chat_gpt_bot.conversation_id = None
+        if session.conversation_id is None:
+            session.conversation_id = uuid.uuid4()
+
         try:
             conversation_id = session.conversation_id
             parent_id = session.parent_id
             logging.info(
                 f"[Session] ask open ai user {user_id}, model: {model}, sentence: {sentence}, " +
                 f"conversation_id: {conversation_id}, parent_id: {parent_id} ")
-            res = credential.chat_gpt_bot.ask(sentence)
+            res = credential.chat_gpt_bot.ask(sentence, convo_id=conversation_id)
             if len(res) == 0:
                 raise Exception("empty response")
             return res
@@ -138,6 +142,8 @@ class Session:
     async def chat_stream_with_chatgpt(self, sentence: str, user_id=None, model='text-davinci-002-render-sha') -> AsyncGenerator[str, None]:
         session = self._get_session_from_model_and_id(user_id, model)
         credential = self._get_credential_from_session(session)
+        if session.conversation_id is None:
+            session.conversation_id = uuid.uuid4()
         credential.chat_gpt_bot.conversation_id = None
 
         try:
@@ -146,7 +152,7 @@ class Session:
             logging.info(
                 f"[Session] ask open ai user {user_id}, model: {model}, sentence: {sentence}, " +
                 f"conversation_id: {conversation_id}, parent_id: {parent_id} ")
-            async for data in credential.chat_gpt_bot.ask_stream_async(sentence):
+            async for data in credential.chat_gpt_bot.ask_stream_async(sentence, convo_id=conversation_id):
                 yield data
 
         except ChatGPTError as e:
