@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   go-chatgpt-api:
     container_name: go-chatgpt-api
