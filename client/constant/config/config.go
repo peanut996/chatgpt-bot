@@ -11,8 +11,11 @@ var (
 )
 
 var (
-	BaseUrl         = "https://raw.githubusercontent.com/peanut996/bucket/master/img/"
+	BaseUrl = "https://raw.githubusercontent.com/peanut996/bucket/master/img/"
+
 	WechatQRCodeUrl = BaseUrl + "wechat.JPG"
 
 	AlipayQRCodeUrl = BaseUrl + "alipay.JPG"
+
+	WebSiteUrl = "🔗 https://chat.fuckopenai.world"
 )
