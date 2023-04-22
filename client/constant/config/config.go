@@ -17,5 +17,5 @@ var (
 
 	AlipayQRCodeUrl = BaseUrl + "alipay.JPG"
 
-	WebSiteUrl = "🔗https://chat.fuckopenai.world"
+	WebSiteUrl = "🔗 https://chat.fuckopenai.world"
 )

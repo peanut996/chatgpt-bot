@@ -11,7 +11,7 @@ var (
 		"🔥未知命令，请发送 /start 来开始聊天"
 	BotStartTip = "Please reply to this message with your question, and I will respond to you. \n" +
 		"You can also private message me or add me to your group chat. \n" +
-		"If you want to chat with me, use the command '/gpt' followed by a space and your question, for example, '/gpt How is the weather today?'. \nFor conversations with GPT-4, please go to website\n" + config.WebSiteUrl + " \n\n" +
+		"If you want to chat with me, use the command '/gpt' followed by a space and your question, for example, '/gpt How is the weather today?'. \nFor conversations with GPT-4, please go to website: \n" + config.WebSiteUrl + " \n\n" +
 		"😊请在这条消息下回复你的问题，我会回复你的 \n" +
 		"🔥你也可以私聊我或者把我加到你的群组聊天 \n" +
 		"🤖如果你想和我聊些什么「 /gpt 」+ 空格 + 你的问题，如【/gpt 今天天气怎么样?】. \nGPT-4对话请前往Web客户端：\n" + config.WebSiteUrl
@@ -53,7 +53,7 @@ var (
 
 	AccessCodeTipTemplate = "Your access code: `%s`\n\n" +
 		"😊你的访问码是: `%s`\n\n" +
-		"🌐Web客户端地址：" + config.WebSiteUrl
+		"🌐Web客户端地址：\n" + config.WebSiteUrl
 
 	BecomeDonorTip = "Congratulations! You have become a donor. \n\n" +
 		"🎉你已经成为捐赠用户，谢谢您的支持。"
