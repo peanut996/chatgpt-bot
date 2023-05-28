@@ -2,8 +2,6 @@ import asyncio
 import json
 import traceback
 from dataclasses import dataclass
-
-from OpenAIAuth import Error as OpenAIError
 from quart import Quart, request, make_response
 from revChatGPT.typings import Error as ChatGPTError
 
@@ -63,10 +61,6 @@ async def chat():
     try:
         res = await session.chat_with_chatgpt(sentence, user_id=user_id, model=model)
         return {"message": res}
-    except OpenAIError as e:
-        app.logger.error(
-            "[Engine] chat gpt engine get open api error: status: {}, details: {}".format(e.status_code, e.details))
-        return {"detail": e.details, "code": e.status_code}
     except ChatGPTError as e:
         app.logger.error("[Engine] chat gpt engine get chat gpt error: {}".format(e.message))
         return {"detail": e.message, "code": e.code}
@@ -96,8 +90,6 @@ async def chat_stream():
                     await queue.put(message)
             except ChatGPTError as e:
                 await queue.put(e.message)
-            except OpenAIError as exception:
-                await queue.put(exception.details)
             except Exception as exception:
                 msg = str(exception) if len(str(exception)) != 0 else "Internal Server Error"
                 await queue.put(msg)
