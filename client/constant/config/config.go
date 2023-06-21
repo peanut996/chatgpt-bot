@@ -7,7 +7,7 @@ var (
 
 	CountWhenInviteOtherUser = 30
 
-	AllowByInviteCount = 5
+	AllowByInviteCount = 8
 )
 
 var (

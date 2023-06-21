@@ -53,7 +53,7 @@ var (
 
 	AccessCodeTipTemplate = "Your access code: `%s`\n\n" +
 		"😊你的访问码是: `%s`\n\n" +
-		"🌐Web客户端地址：\n" + config.WebSiteUrl
+		"🌐Web客户端地址：\n\n" + config.WebSiteUrl
 
 	BecomeDonorTip = "Congratulations! You have become a donor. \n\n" +
 		"🎉你已经成为捐赠用户，谢谢您的支持。"
